@@ -1,5 +1,5 @@
 import { Exclude } from 'class-transformer';
-import { UserDocument } from 'src/types/user.type';
+import { IUser } from 'src/types/user.type';
 
 export class UserResponseDto {
   _id: string;
@@ -18,13 +18,13 @@ export class UserResponseDto {
 
 export class AuthResponseDto {
   message: string;
-  user: UserDocument;
+  user: IUser;
   token: string;
 }
 
 export class RegisterResponseDto {
   message: string;
-  user: UserDocument;
+  user: IUser;
 }
 
 export interface CreateUserData {

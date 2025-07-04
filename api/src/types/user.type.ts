@@ -8,3 +8,11 @@ export interface UserDocument extends Document {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface IUser {
+  _id?: string;
+  email: string;
+  role: string;
+  createdAt: Date;
+  updatedAt: Date;
+}

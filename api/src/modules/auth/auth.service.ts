@@ -8,6 +8,7 @@ import {
   CreateUserData,
 } from './dto/response.dto';
 import { UserDocument } from 'src/types/user.type';
+import { toSafeUser } from 'utils/user';
 
 @Injectable()
 export class AuthService {
@@ -39,7 +40,7 @@ export class AuthService {
       role,
     };
     const user = await this.userService.create(userData);
-    return { message: 'User registered successfully', user };
+    return { message: 'User registered successfully', user: toSafeUser(user) };
   }
 
   async login(email: string, password: string): Promise<AuthResponseDto> {
@@ -51,6 +52,6 @@ export class AuthService {
     const payload = { email: user.email, sub: user._id.toString() };
     const token = this.jwtService.sign(payload);
 
-    return { message: 'Login successful', user, token };
+    return { message: 'Login successful', user: toSafeUser(user), token };
   }
 }

@@ -8,7 +8,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: process.env.JWT_SECRET || 'default-secret-key',
+      secretOrKey: (() => {
+        if (!process.env.JWT_SECRET) {
+          throw new Error(
+            'JWT_SECRET environment variable is not set. Please configure it before starting the application.',
+          );
+        }
+        return process.env.JWT_SECRET;
+      })(),
     });
   }
 

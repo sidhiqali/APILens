@@ -2,12 +2,14 @@ import {
   Body,
   Controller,
   Post,
+  Res,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 import { RegisterRequestDto, LoginRequestDto } from './dto/request.dto';
 import { AuthService } from './auth.service';
 import { AuthResponseDto, RegisterResponseDto } from './dto/response.dto';
+import { Response } from 'express';
 
 @Controller('auth')
 // validation pipe to strip unwanted fields
@@ -23,7 +25,17 @@ export class AuthController {
   }
 
   @Post('login')
-  async login(@Body() dto: LoginRequestDto): Promise<AuthResponseDto> {
-    return this.authService.login(dto.email, dto.password);
+  async login(
+    @Body() dto: LoginRequestDto,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<AuthResponseDto> {
+    const result = await this.authService.login(dto.email, dto.password);
+    response.cookie('access_token', result.token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+    return result;
   }
 }

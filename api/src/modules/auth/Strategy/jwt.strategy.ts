@@ -2,24 +2,37 @@ import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { JwtPayload, ValidatedUser } from 'src/types/jwt.type';
+import { ConfigService } from '@nestjs/config';
+import { Request } from 'express';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor() {
+  constructor(private configService: ConfigService) {
+    const jwtSecret = configService.get<string>('JWT_SECRET');
+    if (!jwtSecret) {
+      throw new Error(
+        'JWT_SECRET environment variable is not set. Please configure it before starting the application.',
+      );
+    }
+
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: (() => {
-        if (!process.env.JWT_SECRET) {
-          throw new Error(
-            'JWT_SECRET environment variable is not set. Please configure it before starting the application.',
-          );
-        }
-        return process.env.JWT_SECRET;
-      })(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        ExtractJwt.fromAuthHeaderAsBearerToken(),
+        (request: Request) => {
+          const cookies = request.cookies as Record<string, string> | undefined;
+          return cookies?.access_token || null;
+        },
+      ]),
+      secretOrKey: jwtSecret,
     });
   }
 
   validate(payload: JwtPayload): ValidatedUser {
-    return { userId: payload.sub, email: payload.email };
+    // Simple explicit return with proper typing
+    const validatedUser: ValidatedUser = {
+      userId: payload.sub,
+      email: payload.email,
+    };
+    return validatedUser;
   }
 }

@@ -7,5 +7,5 @@ export function toSafeUser(user: UserDocument): IUser {
     role: user.role,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
-  };
+  }; 
 }

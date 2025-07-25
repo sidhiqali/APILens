@@ -13,10 +13,15 @@ import { Api } from 'src/Schemas/api.schema';
 import { OpenAPISpec } from 'src/types/api.type';
 import { UpdateApiDto } from './dto/update-api.dto';
 import { ApiHealthDto, ApiStatsDto } from './dto/api.dto';
+import { diffOpenApi } from 'utils/api-diff';
+import { Changelog } from 'src/Schemas/changelog-schema';
 
 @Injectable()
 export class ApisService {
-  constructor(@InjectModel(Api.name) private apiModel: Model<Api>) {}
+  constructor(
+    @InjectModel(Api.name) private apiModel: Model<Api>,
+    @InjectModel(Changelog.name) private changelogModel: Model<Changelog>,
+  ) {}
 
   async registerApi(
     dto: CreateApiDto,
@@ -208,6 +213,41 @@ export class ApisService {
       recentChanges,
       totalChanges: totalChanges[0]?.total || 0,
     };
+  }
+
+  async refreshApi(id: string): Promise<{ changed: boolean; summary: string }> {
+    const api = await this.apiModel.findById(id);
+    if (!api) throw new NotFoundException('API not found');
+    const oldSpec = api.latestSpec;
+
+    // Fetch new spec
+    const response = await axios.get(api.openApiUrl);
+    const newSpec = response.data;
+
+    // Diff
+    const diff = diffOpenApi(oldSpec, newSpec);
+
+    if (diff.changed) {
+      // Save changelog
+      await this.changelogModel.create({
+        apiId: api._id,
+        previousVersion: oldSpec.info?.version,
+        newVersion: newSpec.info?.version,
+        diffSummary: diff.summary,
+      });
+
+      // Update api doc
+      api.latestSpec = newSpec;
+      api.version = newSpec.info?.version;
+      api.lastChecked = new Date();
+      await api.save();
+    } else {
+      // Just update lastChecked
+      api.lastChecked = new Date();
+      await api.save();
+    }
+
+    return diff;
   }
 
   async getApisByTag(tag: string, userId: string): Promise<ApiResponseDto[]> {

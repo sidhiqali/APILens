@@ -1,20 +1,20 @@
-import { IsString, IsUrl, IsOptional, IsArray, IsIn } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsArray,
+  IsIn,
+  IsBoolean,
+} from 'class-validator';
 
-export class CreateApiDto {
-  @IsString()
-  apiName: string;
-
-  @IsUrl()
-  openApiUrl: string;
-
+export class UpdateApiDto {
   @IsOptional()
   @IsString()
-  type: string = 'openapi';
+  apiName?: string;
 
   @IsOptional()
   @IsString()
   @IsIn(['5m', '15m', '1h', '6h', '1d'])
-  checkFrequency: string = '1h';
+  checkFrequency?: string;
 
   @IsOptional()
   @IsArray()
@@ -24,4 +24,8 @@ export class CreateApiDto {
   @IsOptional()
   @IsString()
   description?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 }

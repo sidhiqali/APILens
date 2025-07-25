@@ -76,7 +76,7 @@ export class ApisService {
     }
   }
 
-  async getAllApis(userId: string): Promise<ApiResponseDto[]> {
+  async getAllApis(userId?: string): Promise<ApiResponseDto[]> {
     const apis = await this.apiModel.find({ userId }).sort({ createdAt: -1 });
 
     return apis.map((api) => this.toResponseDto(api));

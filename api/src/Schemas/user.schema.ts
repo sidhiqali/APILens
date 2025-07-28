@@ -3,7 +3,7 @@ import { Document } from 'mongoose';
 
 @Schema({ timestamps: true })
 export class User extends Document {
-  @Prop({ required: true, unique: true })
+  @Prop({ required: true, unique: true, index: true })
   email: string;
 
   @Prop({ required: true })
@@ -11,6 +11,33 @@ export class User extends Document {
 
   @Prop({ default: 'user' })
   role: string;
+
+  @Prop({ default: false })
+  isEmailVerified: boolean;
+
+  @Prop()
+  emailVerificationToken: string;
+
+  @Prop()
+  emailVerificationExpires: Date;
+
+  @Prop()
+  passwordResetToken: string;
+
+  @Prop()
+  passwordResetExpires: Date;
+
+  @Prop()
+  refreshToken: string;
+
+  @Prop()
+  refreshTokenExpires: Date;
+
+  @Prop()
+  lastLoginAt: Date;
+
+  @Prop({ default: true })
+  isActive: boolean;
 
   @Prop({
     type: Object,
@@ -27,6 +54,21 @@ export class User extends Document {
     nonBreakingChanges: boolean;
     apiErrors: boolean;
   };
+
+  @Prop()
+  firstName: string;
+
+  @Prop()
+  lastName: string;
+
+  @Prop()
+  avatar: string;
+
+  @Prop()
+  timezone: string;
+
+  @Prop({ default: 'en' })
+  language: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

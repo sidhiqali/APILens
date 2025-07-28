@@ -11,6 +11,14 @@ import {
   ApiSnapshotSchema,
 } from 'src/Schemas/api-snapshot.schema';
 import { ChangeDetectorService } from './change-detector.service';
+import { SmartSchedulerService } from '../schedules/smart-scheduler.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import {
+  Notification,
+  NotificationSchema,
+} from 'src/Schemas/notification.schema';
+import { User, UserSchema } from 'src/Schemas/user.schema';
+import { EmailService } from '../notifications/email.service';
 
 @Module({
   imports: [
@@ -19,10 +27,18 @@ import { ChangeDetectorService } from './change-detector.service';
       { name: Changelog.name, schema: ChangelogSchema },
       { name: ApiSnapshot.name, schema: ApiSnapshotSchema },
       { name: ApiChange.name, schema: ApiChangeSchema },
+      { name: Notification.name, schema: NotificationSchema },
+      { name: User.name, schema: UserSchema }, // Assuming NotificationSchema is defined
     ]),
   ],
   controllers: [ApisController],
-  providers: [ApisService, ChangeDetectorService],
+  providers: [
+    ApisService,
+    ChangeDetectorService,
+    SmartSchedulerService,
+    NotificationsService,
+    EmailService,
+  ],
   exports: [ApisService],
 })
 export class ApisModule {}

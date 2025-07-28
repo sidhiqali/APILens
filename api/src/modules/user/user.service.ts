@@ -2,10 +2,10 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User } from 'src/Schemas/user.schema';
-import { CreateUserData } from '../auth/dto/response.dto';
 import { UserDocument, IUser } from 'src/types/user.type';
 import { NotificationPreferencesDto } from '../auth/dto/auth-extended.dto';
 import { toSafeUser } from 'utils/user';
+import { CreateUserData } from 'src/types/auth.type';
 
 @Injectable()
 export class UserService {
@@ -83,7 +83,6 @@ export class UserService {
       password: hashedPassword,
       passwordResetToken: null,
       passwordResetExpires: null,
-      // Invalidate all refresh tokens for security
       refreshToken: null,
       refreshTokenExpires: null,
     });
@@ -100,7 +99,6 @@ export class UserService {
   async updatePassword(userId: string, hashedPassword: string): Promise<void> {
     await this.userModel.findByIdAndUpdate(userId, {
       password: hashedPassword,
-      // Invalidate refresh tokens for security
       refreshToken: null,
       refreshTokenExpires: null,
     });

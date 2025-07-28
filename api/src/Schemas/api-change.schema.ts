@@ -11,7 +11,7 @@ export interface ChangeDetail {
 
 @Schema({ timestamps: true })
 export class ApiChange extends Document {
-  @Prop({ type: Types.ObjectId, ref: 'Api', required: true })
+  @Prop({ type: Types.ObjectId, ref: 'Api', required: true, index: true })
   apiId: Types.ObjectId;
 
   @Prop({ required: true })
@@ -35,7 +35,7 @@ export class ApiChange extends Document {
   @Prop({ type: Array, required: true })
   changes: ChangeDetail[];
 
-  @Prop({ required: true })
+  @Prop({ required: true, index: true })
   detectedAt: Date;
 
   @Prop({ default: false })
@@ -55,3 +55,21 @@ export class ApiChange extends Document {
 }
 
 export const ApiChangeSchema = SchemaFactory.createForClass(ApiChange);
+
+// Most important - Recent changes by API
+ApiChangeSchema.index({ apiId: 1, detectedAt: -1 });
+
+//  Dashboard - Unacknowledged changes by API
+ApiChangeSchema.index({ apiId: 1, acknowledged: 1 });
+
+//  Alerts - Critical unacknowledged changes
+ApiChangeSchema.index({ severity: 1, acknowledged: 1 });
+
+//  Analytics - Breaking changes timeline
+ApiChangeSchema.index({ changeType: 1, detectedAt: -1 });
+
+// Prioritization - High impact changes
+ApiChangeSchema.index({ impactScore: -1, detectedAt: -1 });
+
+//  User workflow - Changes acknowledged by specific user
+ApiChangeSchema.index({ acknowledgedBy: 1, acknowledgedAt: -1 });

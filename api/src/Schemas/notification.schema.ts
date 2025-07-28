@@ -3,13 +3,13 @@ import { Document, Types } from 'mongoose';
 
 @Schema({ timestamps: true })
 export class Notification extends Document {
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true, index: true })
   userId: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'Api' })
+  @Prop({ type: Types.ObjectId, ref: 'Api', index: true })
   apiId: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'ApiChange' })
+  @Prop({ type: Types.ObjectId, ref: 'ApiChange', index: true })
   changeId: Types.ObjectId;
 
   @Prop({
@@ -30,7 +30,7 @@ export class Notification extends Document {
   })
   severity: string;
 
-  @Prop({ default: false })
+  @Prop({ default: false, index: true })
   read: boolean;
 
   @Prop()
@@ -52,3 +52,18 @@ export class Notification extends Document {
 }
 
 export const NotificationSchema = SchemaFactory.createForClass(Notification);
+
+// Most important - User's unread notifications
+NotificationSchema.index({ userId: 1, read: 1, createdAt: -1 });
+
+// Critical notifications across system
+NotificationSchema.index({ severity: 1, read: 1, createdAt: -1 });
+
+// API-specific notifications
+NotificationSchema.index({ apiId: 1, createdAt: -1 });
+
+// Notification type filtering
+NotificationSchema.index({ type: 1, createdAt: -1 });
+
+// User's notifications by severity (critical first)
+NotificationSchema.index({ userId: 1, severity: 1, createdAt: -1 });

@@ -1,4 +1,3 @@
-// api/src/types/user.type.ts
 import { Document, Types } from 'mongoose';
 
 export interface UserDocument extends Document {

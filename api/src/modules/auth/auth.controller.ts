@@ -87,7 +87,6 @@ export class AuthController {
   ): Promise<AuthResponseDto> {
     const result = await this.authService.login(dto.email, dto.password);
 
-    // Set HTTP-only cookies
     response.cookie('access_token', result.token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -168,7 +167,6 @@ export class AuthController {
   ): Promise<RefreshTokenResponseDto> {
     const result = await this.authService.refreshToken(dto.refreshToken);
 
-    // Update cookies
     response.cookie('access_token', result.accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -200,11 +198,9 @@ export class AuthController {
     @Request() req,
     @Res({ passthrough: true }) response: Response,
   ): Promise<LogoutResponseDto> {
-    // Clear cookies
     response.clearCookie('access_token');
     response.clearCookie('refresh_token');
 
-    // Invalidate refresh token in database
     await this.userService.updateRefreshToken(req.user.userId, null, null);
 
     return { message: 'Logged out successfully' };

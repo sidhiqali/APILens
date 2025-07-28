@@ -1,4 +1,3 @@
-// api/src/modules/auth/auth.service.ts
 import {
   Injectable,
   UnauthorizedException,
@@ -11,11 +10,7 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
-import {
-  AuthResponseDto,
-  RegisterResponseDto,
-  CreateUserData,
-} from './dto/response.dto';
+import { AuthResponseDto, RegisterResponseDto } from './dto/response.dto';
 import { UserDocument } from 'src/types/user.type';
 import { toSafeUser } from 'utils/user';
 import { EmailService } from '../notifications/email.service';
@@ -25,6 +20,7 @@ import {
   ResetPasswordResponseDto,
   VerifyEmailResponseDto,
 } from './dto/auth-responses.dto';
+import { CreateUserData } from 'src/types/auth.type';
 
 @Injectable()
 export class AuthService {
@@ -55,7 +51,6 @@ export class AuthService {
     password: string,
     role: string = 'user',
   ): Promise<RegisterResponseDto> {
-    // Check if user already exists
     const existingUser = await this.userService.findByEmail(email);
     if (existingUser) {
       throw new ConflictException('User with this email already exists');
@@ -76,7 +71,6 @@ export class AuthService {
 
     const user = await this.userService.create(userData);
 
-    // Send verification email
     this.sendVerificationEmail(email, emailVerificationToken);
 
     return {
@@ -98,12 +92,10 @@ export class AuthService {
       );
     }
 
-    // Update last login
     await this.userService.updateLastLogin(user._id.toString());
 
     const tokens = this.generateTokens(user);
 
-    // Save refresh token
     await this.userService.updateRefreshToken(
       user._id.toString(),
       tokens.refreshToken,
@@ -121,7 +113,6 @@ export class AuthService {
   async forgotPassword(email: string): Promise<ForgotPasswordResponseDto> {
     const user = await this.userService.findByEmail(email);
     if (!user) {
-      // Don't reveal if email exists
       return {
         message:
           'If an account with that email exists, we have sent a password reset link.',
@@ -195,7 +186,6 @@ export class AuthService {
 
     const tokens = this.generateTokens(user);
 
-    // Update refresh token
     await this.userService.updateRefreshToken(
       user._id.toString(),
       tokens.refreshToken,

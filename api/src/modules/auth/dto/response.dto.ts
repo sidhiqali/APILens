@@ -71,12 +71,3 @@ export class RegisterResponseDto {
   @ApiProperty({ description: 'User information', type: UserResponseDto })
   user: IUser;
 }
-
-export interface CreateUserData {
-  email: string;
-  password: string;
-  role: string;
-  emailVerificationToken?: string;
-  emailVerificationExpires?: Date;
-  isEmailVerified?: boolean;
-}

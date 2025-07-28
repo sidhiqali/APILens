@@ -3,7 +3,7 @@ import { Document, Types } from 'mongoose';
 
 @Schema({ timestamps: true })
 export class ApiSnapshot extends Document {
-  @Prop({ type: Types.ObjectId, ref: 'Api', required: true })
+  @Prop({ type: Types.ObjectId, ref: 'Api', required: true, index: true })
   apiId: Types.ObjectId;
 
   @Prop({ required: true })
@@ -12,7 +12,7 @@ export class ApiSnapshot extends Document {
   @Prop({ type: Object, required: true })
   spec: any;
 
-  @Prop({ required: true })
+  @Prop({ required: true, index: true })
   detectedAt: Date;
 
   @Prop({ type: Object })

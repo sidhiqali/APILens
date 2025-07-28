@@ -1,29 +1,21 @@
-// api/src/app.module.ts
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
-
-// Core modules
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-
-// Feature modules
 import { AuthModule } from './modules/auth/auth.module';
 import { ApisModule } from './modules/apis/apis.module';
 import { ChangelogsModule } from './modules/changelogs/changelogs.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { SchedulesModule } from './modules/schedules/schedules.module';
 import { UserModule } from './modules/user/user.module';
-
-// Configuration
 import configuration from './config/configuration';
 import { HealthModule } from './modules/health/health.module';
 
 @Module({
   imports: [
-    // Configuration
     ConfigModule.forRoot({
       isGlobal: true,
       load: [configuration],
@@ -34,7 +26,6 @@ import { HealthModule } from './modules/health/health.module';
       },
     }),
 
-    // Rate limiting
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -49,10 +40,9 @@ import { HealthModule } from './modules/health/health.module';
       }),
     }),
 
-    // Scheduling
+    // for cron jobs and scheduled tasks
     ScheduleModule.forRoot(),
 
-    // Database
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -65,8 +55,6 @@ import { HealthModule } from './modules/health/health.module';
         };
       },
     }),
-
-    // Feature modules
     UserModule,
     AuthModule,
     ApisModule,

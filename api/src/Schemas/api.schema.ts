@@ -1,4 +1,3 @@
-// src/Schemas/api.schema.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
@@ -19,28 +18,28 @@ export class Api extends Document {
   @Prop({ type: Object })
   latestSpec: any;
 
-  @Prop()
+  @Prop({ index: true })
   lastChecked: Date;
 
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true, index: true })
   userId: Types.ObjectId;
 
   @Prop({ default: '1h' }) // 5m, 15m, 1h, 6h, 1d
   checkFrequency: string;
 
-  @Prop({ default: true })
+  @Prop({ default: true, index: true })
   isActive: boolean;
 
-  @Prop({ type: [String], default: [] })
+  @Prop({ type: [String], default: [], index: true })
   tags: string[];
 
-  @Prop({ default: 'unknown' }) // healthy, unhealthy, checking, error
+  @Prop({ default: 'unknown', index: true }) // healthy, unhealthy, checking, error
   healthStatus: string;
 
   @Prop()
   lastHealthCheck: Date;
 
-  @Prop()
+  @Prop({ index: true })
   lastError: string;
 
   @Prop({ default: 0 })

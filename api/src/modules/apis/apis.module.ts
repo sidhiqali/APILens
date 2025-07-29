@@ -28,7 +28,7 @@ import { EmailService } from '../notifications/email.service';
       { name: ApiSnapshot.name, schema: ApiSnapshotSchema },
       { name: ApiChange.name, schema: ApiChangeSchema },
       { name: Notification.name, schema: NotificationSchema },
-      { name: User.name, schema: UserSchema }, // Assuming NotificationSchema is defined
+      { name: User.name, schema: UserSchema },
     ]),
   ],
   controllers: [ApisController],

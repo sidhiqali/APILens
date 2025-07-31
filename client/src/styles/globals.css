@@ -1,0 +1,196 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100;200;300;400;500;600;700;800&display=swap');
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+/* Ensure input text is always visible */
+input[type='email'],
+input[type='password'],
+input[type='text'] {
+  color: #000 !important;
+  background-color: #fff !important;
+}
+
+input[type='email']::placeholder,
+input[type='password']::placeholder,
+input[type='text']::placeholder {
+  color: #6b7280 !important;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  font-family: 'Inter', sans-serif;
+  scroll-behavior: smooth;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  html {
+    color-scheme: dark;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Dark mode scrollbar */
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-track {
+    background: #1e293b;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #475569;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+  }
+}
+
+/* Focus styles */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+}
+
+/* Animation utilities */
+.animate-in {
+  animation: animateIn 0.3s ease-out forwards;
+}
+
+.animate-out {
+  animation: animateOut 0.2s ease-in forwards;
+}
+
+@keyframes animateIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes animateOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+/* Loading spinner */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Code block styling */
+.code-block {
+  @apply bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Toast customizations */
+.Toastify__toast-container {
+  @apply font-sans;
+}
+
+/* React Diff Viewer customizations */
+.diff-viewer {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 13px !important;
+}
+
+.diff-viewer .line-number {
+  @apply text-gray-500;
+}
+
+.diff-viewer .added {
+  @apply bg-green-50 border-l-4 border-green-400;
+}
+
+.diff-viewer .removed {
+  @apply bg-red-50 border-l-4 border-red-400;
+}
+
+/* Chart customizations */
+.recharts-tooltip-wrapper {
+  @apply shadow-lg rounded-lg border border-gray-200;
+}
+
+.recharts-tooltip-content {
+  @apply bg-white p-3 rounded-lg;
+}

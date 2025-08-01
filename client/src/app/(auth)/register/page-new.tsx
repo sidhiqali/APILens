@@ -14,13 +14,15 @@ import {
   AlertCircle,
 } from 'lucide-react';
 
-const LoginPage = () => {
+const RegisterPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const { login, isLoginPending } = useAuthHooks();
+  const { register, isRegisterPending } = useAuthHooks();
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -37,6 +39,12 @@ const LoginPage = () => {
       newErrors.password = 'Password must be at least 6 characters';
     }
 
+    if (!confirmPassword.trim()) {
+      newErrors.confirmPassword = 'Please confirm your password';
+    } else if (password !== confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -48,12 +56,13 @@ const LoginPage = () => {
       return;
     }
 
-    login({ email, password });
+    register({ email, password, role: 'user' });
   };
 
   const handleInputChange = (field: string, value: string) => {
     if (field === 'email') setEmail(value);
     if (field === 'password') setPassword(value);
+    if (field === 'confirmPassword') setConfirmPassword(value);
 
     // Clear error when user starts typing
     if (errors[field]) {
@@ -70,11 +79,13 @@ const LoginPage = () => {
             <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl mx-auto mb-4 flex items-center justify-center shadow-lg">
               <Activity className="text-white w-8 h-8" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">APILens</h1>
-            <p className="text-gray-600">Monitor your APIs and track changes</p>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              Create Account
+            </h1>
+            <p className="text-gray-600">Start monitoring your APIs today</p>
           </div>
 
-          {/* Login Form */}
+          {/* Register Form */}
           <div className="px-8 pb-8">
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Email Input */}
@@ -94,7 +105,7 @@ const LoginPage = () => {
                     className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
                       errors.email ? 'border-red-500' : 'border-gray-300'
                     }`}
-                    disabled={isLoginPending}
+                    disabled={isRegisterPending}
                   />
                 </div>
                 {errors.email && (
@@ -120,17 +131,17 @@ const LoginPage = () => {
                     onChange={(e) =>
                       handleInputChange('password', e.target.value)
                     }
-                    placeholder="Enter your password"
+                    placeholder="Create a password"
                     className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
                       errors.password ? 'border-red-500' : 'border-gray-300'
                     }`}
-                    disabled={isLoginPending}
+                    disabled={isRegisterPending}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                    disabled={isLoginPending}
+                    disabled={isRegisterPending}
                   >
                     {showPassword ? (
                       <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
@@ -147,43 +158,93 @@ const LoginPage = () => {
                 )}
               </div>
 
-              {/* Remember Me & Forgot Password */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
+              {/* Confirm Password Input */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Lock className="h-5 w-5 text-gray-400" />
+                  </div>
                   <input
-                    id="remember-me"
-                    name="remember-me"
-                    type="checkbox"
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={confirmPassword}
+                    onChange={(e) =>
+                      handleInputChange('confirmPassword', e.target.value)
+                    }
+                    placeholder="Confirm your password"
+                    className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                      errors.confirmPassword
+                        ? 'border-red-500'
+                        : 'border-gray-300'
+                    }`}
+                    disabled={isRegisterPending}
                   />
-                  <label
-                    htmlFor="remember-me"
-                    className="ml-2 block text-sm text-gray-700"
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    disabled={isRegisterPending}
                   >
-                    Remember me
-                  </label>
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    ) : (
+                      <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    )}
+                  </button>
                 </div>
-                <Link
-                  href="/forgot-password"
-                  className="text-sm text-blue-600 hover:text-blue-500"
+                {errors.confirmPassword && (
+                  <div className="mt-1 flex items-center text-sm text-red-600">
+                    <AlertCircle className="w-4 h-4 mr-1" />
+                    {errors.confirmPassword}
+                  </div>
+                )}
+              </div>
+
+              {/* Terms and Conditions */}
+              <div className="flex items-start">
+                <input
+                  id="agree-terms"
+                  name="agree-terms"
+                  type="checkbox"
+                  required
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1"
+                />
+                <label
+                  htmlFor="agree-terms"
+                  className="ml-2 block text-sm text-gray-700"
                 >
-                  Forgot password?
-                </Link>
+                  I agree to the{' '}
+                  <Link
+                    href="/terms"
+                    className="text-blue-600 hover:text-blue-500"
+                  >
+                    Terms of Service
+                  </Link>{' '}
+                  and{' '}
+                  <Link
+                    href="/privacy"
+                    className="text-blue-600 hover:text-blue-500"
+                  >
+                    Privacy Policy
+                  </Link>
+                </label>
               </div>
 
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={isLoginPending}
+                disabled={isRegisterPending}
                 className="w-full flex items-center justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
               >
-                {isLoginPending ? (
+                {isRegisterPending ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Signing in...
+                    Creating account...
                   </>
                 ) : (
-                  'Sign in'
+                  'Create account'
                 )}
               </button>
 
@@ -194,18 +255,18 @@ const LoginPage = () => {
                 </div>
                 <div className="relative flex justify-center text-sm">
                   <span className="px-2 bg-white text-gray-500">
-                    Don't have an account?
+                    Already have an account?
                   </span>
                 </div>
               </div>
 
-              {/* Register Link */}
+              {/* Login Link */}
               <div className="text-center">
                 <Link
-                  href="/register"
+                  href="/login"
                   className="text-blue-600 hover:text-blue-500 font-medium"
                 >
-                  Create a new account
+                  Sign in to your account
                 </Link>
               </div>
             </form>
@@ -216,4 +277,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
+export default RegisterPage;

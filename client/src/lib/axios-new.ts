@@ -28,28 +28,33 @@ api.interceptors.response.use(
       _retry?: boolean;
     };
 
-    // Handle 401 unauthorized errors - but only for authenticated routes
+    // Handle 401 unauthorized errors
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
-      // Import auth store dynamically to avoid circular dependency
-      const { useAuth } = await import('@/store/auth');
-      
-      // Clear auth state
-      useAuth.getState().logout();
+      try {
+        // Try to refresh token using the refresh endpoint
+        await api.post('/auth/refresh-token', {}, { withCredentials: true });
 
-      // Only redirect if not already on auth pages
-      if (
-        typeof window !== 'undefined' &&
-        !window.location.pathname.includes('/login') &&
-        !window.location.pathname.includes('/register') &&
-        !window.location.pathname.includes('/')
-      ) {
-        console.log('Session expired, redirecting to login');
-        window.location.href = '/login';
+        // Retry original request (cookies will be automatically included)
+        return api(originalRequest);
+      } catch (refreshError) {
+        // Refresh failed, clear auth and redirect to login
+        // Import auth store dynamically to avoid circular dependency
+        const { useAuth } = await import('@/store/auth');
+        useAuth.getState().logout();
+
+        // Only redirect if not already on login page
+        if (
+          typeof window !== 'undefined' &&
+          !window.location.pathname.includes('/login')
+        ) {
+          window.location.href = '/login';
+        }
+
+        toast.error('Session expired. Please login again.');
+        return Promise.reject(refreshError);
       }
-
-      return Promise.reject(error);
     }
 
     // Handle different error types

@@ -27,20 +27,22 @@ export const useAuthHooks = () => {
     setError,
   } = useAuth();
 
-  // Session validation query - disabled to prevent refresh loops
+  // Session validation query - this runs automatically to check if user is logged in
   const sessionQuery = useQuery({
     queryKey: ['auth', 'session'],
     queryFn: () => authService.validateSession(),
-    enabled: false, // Disable automatic session validation
+    enabled: true, // Always check session on app load
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: false,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
-    refetchInterval: false, // Disable automatic refetch
   });
 
   // Update auth state based on session validation
   useEffect(() => {
+    const sessionData = sessionQuery.data;
+    const hasSessionError = sessionQuery.error;
+
     if (sessionQuery.isLoading) {
       setLoading(true);
       return;
@@ -48,16 +50,20 @@ export const useAuthHooks = () => {
 
     setLoading(false);
 
-    // Only update if session is successful and we have user data
-    if (sessionQuery.data?.success && sessionQuery.data.data && !isAuthenticated) {
-      setAuthData(sessionQuery.data.data);
+    if (sessionData?.success && sessionData.data && !isAuthenticated) {
+      // Session is valid but store doesn't know, update the store
+      setAuthData(sessionData.data);
+    } else if (hasSessionError && isAuthenticated) {
+      // Session is invalid but store thinks user is authenticated, clear it
+      clearAuthData();
     }
-    // Don't auto-logout on session error - let the axios interceptor handle it
   }, [
     sessionQuery.data,
+    sessionQuery.error,
     sessionQuery.isLoading,
     isAuthenticated,
     setAuthData,
+    clearAuthData,
     setLoading,
   ]);
 
@@ -225,7 +231,8 @@ export const useAuthHooks = () => {
 
   // Update profile mutation
   const updateProfileMutation = useMutation({
-    mutationFn: (userData: Partial<any>) => authService.updateProfile(userData),
+    mutationFn: (userData: Partial<User>) =>
+      authService.updateProfile(userData),
     onSuccess: (response) => {
       if (response.success && response.data) {
         updateUser(response.data);
@@ -255,6 +262,7 @@ export const useAuthHooks = () => {
     },
   });
 
+  // Action functions
   const login = (credentials: LoginRequest) => {
     loginMutation.mutate(credentials);
   };
@@ -287,7 +295,7 @@ export const useAuthHooks = () => {
     resendVerificationMutation.mutate();
   };
 
-  const updateProfile = (userData: Partial<any>) => {
+  const updateProfile = (userData: Partial<User>) => {
     updateProfileMutation.mutate(userData);
   };
 
@@ -299,8 +307,7 @@ export const useAuthHooks = () => {
     // State
     user,
     isAuthenticated,
-    isLoading:
-      isLoading || loginMutation.isPending || registerMutation.isPending,
+    isLoading: isLoading || sessionQuery.isLoading,
 
     // Actions
     login,

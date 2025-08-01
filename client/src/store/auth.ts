@@ -1,47 +1,59 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { User } from '@/types';
+
+export interface User {
+  _id: string;
+  email: string;
+  role: string;
+  isEmailVerified: boolean;
+  profilePicture?: string;
+  lastLoginAt?: string;
+  isActive: boolean;
+  notificationPreferences: {
+    email: boolean;
+    breakingChanges: boolean;
+    nonBreakingChanges: boolean;
+    apiErrors: boolean;
+  };
+  createdAt: string;
+  updatedAt: string;
+  api_key?: string;
+}
 
 interface AuthState {
-  // State
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  error: string | null;
+}
 
-  // Actions
-  setUser: (user: User) => void;
-  setLoading: (loading: boolean) => void;
+interface AuthActions {
   login: (user: User) => void;
   logout: () => void;
   updateUser: (userData: Partial<User>) => void;
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
   clearError: () => void;
 }
 
-export const useAuthStore = create<AuthState>()(
+export type AuthStore = AuthState & AuthActions;
+
+export const useAuth = create<AuthStore>()(
   persist(
     (set, get) => ({
       // Initial state
       user: null,
       isAuthenticated: false,
       isLoading: false,
+      error: null,
 
       // Actions
-      setUser: (user: User) => {
-        set({
-          user,
-          isAuthenticated: true,
-        });
-      },
-
-      setLoading: (isLoading: boolean) => {
-        set({ isLoading });
-      },
-
       login: (user: User) => {
         set({
           user,
           isAuthenticated: true,
           isLoading: false,
+          error: null,
         });
       },
 
@@ -50,6 +62,7 @@ export const useAuthStore = create<AuthState>()(
           user: null,
           isAuthenticated: false,
           isLoading: false,
+          error: null,
         });
       },
 
@@ -62,14 +75,22 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
+      setLoading: (loading: boolean) => {
+        set({ isLoading: loading });
+      },
+
+      setError: (error: string | null) => {
+        set({ error, isLoading: false });
+      },
+
       clearError: () => {
-        // This can be used for error handling if needed
-        set({ isLoading: false });
+        set({ error: null });
       },
     }),
     {
       name: 'auth-storage',
       storage: createJSONStorage(() => localStorage),
+      // Only persist user and isAuthenticated
       partialize: (state) => ({
         user: state.user,
         isAuthenticated: state.isAuthenticated,
@@ -78,49 +99,9 @@ export const useAuthStore = create<AuthState>()(
   )
 );
 
-// Selectors for convenient access
-export const useAuth = () => {
-  const {
-    user,
-    isAuthenticated,
-    isLoading,
-    login,
-    logout,
-    setUser,
-    setLoading,
-    updateUser,
-    clearError,
-  } = useAuthStore();
-
-  return {
-    user,
-    isAuthenticated,
-    isLoading,
-    login,
-    logout,
-    setUser,
-    setLoading,
-    updateUser,
-    clearError,
-  };
-};
-
-// Helper functions for cookie-based auth
-export const getAuthHeaders = () => {
-  // No need for headers since cookies are automatically sent
-  return {};
-};
-
-// Note: These functions are not applicable for httpOnly cookies
-// since JavaScript cannot access them directly
-export const isTokenExpired = (): boolean => {
-  // Cannot check token expiry with httpOnly cookies
-  // The server will handle token validation
-  return false;
-};
-
-export const shouldRefreshToken = (): boolean => {
-  // Cannot check token expiry with httpOnly cookies
-  // The axios interceptor will handle refresh on 401 responses
-  return false;
-};
+// Selectors for better performance
+export const useAuthUser = () => useAuth((state) => state.user);
+export const useIsAuthenticated = () =>
+  useAuth((state) => state.isAuthenticated);
+export const useAuthLoading = () => useAuth((state) => state.isLoading);
+export const useAuthError = () => useAuth((state) => state.error);

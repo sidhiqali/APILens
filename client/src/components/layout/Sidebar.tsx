@@ -4,13 +4,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { GitBranch, Home, Settings, LogOut } from 'lucide-react';
-import authService from '@/services/auth.service';
+import { Eye, Home, Settings, LogOut, Plus, BarChart3, Bell } from 'lucide-react';
+import { useAuth } from '@/store/auth';
 import { useRouter } from 'next/navigation';
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }: { sidebarOpen: boolean, setSidebarOpen: (arg: boolean) => void }) => {
     const pathname = usePathname();
     const router = useRouter();
+    const { logout } = useAuth();
 
     const trigger = useRef<any>(null);
     const sidebar = useRef<any>(null);
@@ -21,7 +22,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: { sidebarOpen: boolean, setSid
     );
 
     const handleLogout = () => {
-        authService.logout();
+        logout();
         router.push('/');
     };
 
@@ -58,19 +59,42 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: { sidebarOpen: boolean, setSid
         }
     }, [sidebarExpanded]);
 
+    const menuItems = [
+        {
+            title: 'Dashboard',
+            href: '/dashboard',
+            icon: Home,
+        },
+        {
+            title: 'Add API',
+            href: '/add-api',
+            icon: Plus,
+        },
+        {
+            title: 'APIs',
+            href: '/apis',
+            icon: BarChart3,
+        },
+        {
+            title: 'Settings',
+            href: '/settings',
+            icon: Settings,
+        },
+    ];
+
     return (
         <aside
             ref={sidebar}
-            className={`absolute left-0 top-0 z-9999 flex h-screen w-72.5 flex-col overflow-y-hidden bg-black duration-300 ease-linear dark:bg-boxdark lg:static lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+            className={`absolute left-0 top-0 z-50 flex h-screen w-72 flex-col overflow-y-hidden bg-white border-r border-gray-200 duration-300 ease-linear lg:static lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                 }`}
         >
-            <div className="flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5">
+            <div className="flex items-center justify-between gap-2 px-6 py-6 border-b border-gray-200">
                 <Link href="/dashboard">
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-3">
                         <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                            <GitBranch className="text-white" size={16} />
+                            <Eye className="text-white" size={16} />
                         </div>
-                        <h1 className="text-xl font-semibold text-white">API Monitor</h1>
+                        <h1 className="text-xl font-bold text-gray-900">APILens</h1>
                     </div>
                 </Link>
 
@@ -79,10 +103,10 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: { sidebarOpen: boolean, setSid
                     onClick={() => setSidebarOpen(!sidebarOpen)}
                     aria-controls="sidebar"
                     aria-expanded={sidebarOpen}
-                    className="block lg:hidden"
+                    className="block lg:hidden p-1.5 rounded-lg hover:bg-gray-100"
                 >
                     <svg
-                        className="fill-current"
+                        className="fill-gray-600"
                         width="20"
                         height="18"
                         viewBox="0 0 20 18"
@@ -96,43 +120,42 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: { sidebarOpen: boolean, setSid
                     </svg>
                 </button>
             </div>
-            <div className="no-scrollbar flex flex-col overflow-y-auto duration-300 ease-linear">
-                <nav className="mt-5 py-4 px-4 lg:mt-9 lg:px-6">
-                    <div>
-                        <h3 className="mb-4 ml-4 text-sm font-semibold text-bodydark2">MENU</h3>
-                        <ul className="mb-6 flex flex-col gap-1.5">
-                            <li>
-                                <Link
-                                    href="/dashboard"
-                                    className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${pathname.includes('dashboard') && 'bg-graydark dark:bg-meta-4'
+
+            <div className="flex flex-col overflow-y-auto h-full">
+                <nav className="flex-1 py-6 px-4">
+                    <ul className="space-y-2">
+                        {menuItems.map((item) => {
+                            const Icon = item.icon;
+                            const isActive = pathname === item.href;
+                            
+                            return (
+                                <li key={item.href}>
+                                    <Link
+                                        href={item.href}
+                                        className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+                                            isActive
+                                                ? 'bg-blue-50 text-blue-600 border-r-2 border-blue-600'
+                                                : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                                         }`}
-                                >
-                                    <Home />
-                                    Dashboard
-                                </Link>
-                            </li>
-                            <li>
-                                <Link
-                                    href="/settings"
-                                    className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${pathname.includes('settings') && 'bg-graydark dark:bg-meta-4'
-                                        }`}
-                                >
-                                    <Settings />
-                                    Settings
-                                </Link>
-                            </li>
-                            <li>
-                                <button
-                                    onClick={handleLogout}
-                                    className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 w-full`}
-                                >
-                                    <LogOut />
-                                    Logout
-                                </button>
-                            </li>
-                        </ul>
-                    </div>
+                                    >
+                                        <Icon className="mr-3 h-5 w-5" />
+                                        {item.title}
+                                    </Link>
+                                </li>
+                            );
+                        })}
+                    </ul>
                 </nav>
+
+                <div className="border-t border-gray-200 p-4">
+                    <button
+                        onClick={handleLogout}
+                        className="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                    >
+                        <LogOut className="mr-3 h-5 w-5" />
+                        Sign Out
+                    </button>
+                </div>
             </div>
         </aside>
     );

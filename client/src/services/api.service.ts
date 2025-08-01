@@ -1,21 +1,51 @@
 import { apiClient } from '@/lib/axios';
 import {
   Api,
-  ApiSnapshot,
-  ApiChange,
   CreateApiRequest,
   UpdateApiRequest,
   ApiResponse,
   PaginatedResponse,
-  FilterState,
-  SortState,
-  TimeSeriesData,
 } from '@/types';
 
 class ApiService {
   private baseUrl = '/apis';
 
-  // API Management
+  // Get all APIs for the authenticated user
+  async getApis(params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    tags?: string[];
+    status?: 'all' | 'active' | 'inactive';
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+  }): Promise<PaginatedResponse<Api>> {
+    const queryParams = new URLSearchParams();
+
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.search) queryParams.append('search', params.search);
+    if (params?.tags?.length) queryParams.append('tags', params.tags.join(','));
+    if (params?.status && params.status !== 'all')
+      queryParams.append('status', params.status);
+    if (params?.sortBy) queryParams.append('sortBy', params.sortBy);
+    if (params?.sortOrder) queryParams.append('sortOrder', params.sortOrder);
+
+    const response = await apiClient.get<PaginatedResponse<Api>>(
+      `${this.baseUrl}?${queryParams.toString()}`
+    );
+    return response;
+  }
+
+  // Get a single API by ID
+  async getApiById(id: string): Promise<ApiResponse<Api>> {
+    const response = await apiClient.get<ApiResponse<Api>>(
+      `${this.baseUrl}/${id}`
+    );
+    return response;
+  }
+
+  // Create a new API
   async createApi(apiData: CreateApiRequest): Promise<ApiResponse<Api>> {
     const response = await apiClient.post<ApiResponse<Api>>(
       this.baseUrl,
@@ -24,58 +54,19 @@ class ApiService {
     return response;
   }
 
-  async getApis(
-    page = 1,
-    limit = 10,
-    filters?: FilterState,
-    sort?: SortState
-  ): Promise<PaginatedResponse<Api>> {
-    const params = new URLSearchParams({
-      page: page.toString(),
-      limit: limit.toString(),
-    });
-
-    if (filters?.tags && filters.tags.length > 0) {
-      params.append('tags', filters.tags.join(','));
-    }
-
-    if (filters?.status && filters.status !== 'all') {
-      params.append('status', filters.status);
-    }
-
-    if (filters?.search) {
-      params.append('search', filters.search);
-    }
-
-    if (sort?.field) {
-      params.append('sortBy', sort.field);
-      params.append('sortOrder', sort.direction);
-    }
-
-    const response = await apiClient.get<PaginatedResponse<Api>>(
-      `${this.baseUrl}?${params.toString()}`
-    );
-    return response;
-  }
-
-  async getApiById(id: string): Promise<ApiResponse<Api>> {
-    const response = await apiClient.get<ApiResponse<Api>>(
-      `${this.baseUrl}/${id}`
-    );
-    return response;
-  }
-
+  // Update an existing API
   async updateApi(
     id: string,
-    updateData: UpdateApiRequest
+    apiData: UpdateApiRequest
   ): Promise<ApiResponse<Api>> {
-    const response = await apiClient.patch<ApiResponse<Api>>(
+    const response = await apiClient.put<ApiResponse<Api>>(
       `${this.baseUrl}/${id}`,
-      updateData
+      apiData
     );
     return response;
   }
 
+  // Delete an API
   async deleteApi(id: string): Promise<ApiResponse<void>> {
     const response = await apiClient.delete<ApiResponse<void>>(
       `${this.baseUrl}/${id}`
@@ -83,6 +74,7 @@ class ApiService {
     return response;
   }
 
+  // Toggle API active status
   async toggleApiStatus(id: string): Promise<ApiResponse<Api>> {
     const response = await apiClient.patch<ApiResponse<Api>>(
       `${this.baseUrl}/${id}/toggle-status`
@@ -90,230 +82,158 @@ class ApiService {
     return response;
   }
 
-  // API Testing
-  async testApi(id: string): Promise<
-    ApiResponse<{
-      statusCode: number;
-      responseTime: number;
-      size: number;
-      success: boolean;
-      error?: string;
-    }>
-  > {
+  // Manually trigger API check
+  async checkApi(id: string): Promise<ApiResponse<any>> {
+    const response = await apiClient.post<ApiResponse<any>>(
+      `${this.baseUrl}/${id}/check`
+    );
+    return response;
+  }
+
+  // Get API health status
+  async getApiHealth(id: string): Promise<ApiResponse<any>> {
+    const response = await apiClient.get<ApiResponse<any>>(
+      `${this.baseUrl}/${id}/health`
+    );
+    return response;
+  }
+
+  // Get API statistics
+  async getApiStats(id: string, timeRange?: string): Promise<ApiResponse<any>> {
+    const params = timeRange ? `?timeRange=${timeRange}` : '';
+    const response = await apiClient.get<ApiResponse<any>>(
+      `${this.baseUrl}/${id}/stats${params}`
+    );
+    return response;
+  }
+
+  // Get API changes/changelog
+  async getApiChanges(
+    id: string,
+    params?: {
+      page?: number;
+      limit?: number;
+      severity?: string;
+      changeType?: string;
+    }
+  ): Promise<PaginatedResponse<any>> {
+    const queryParams = new URLSearchParams();
+
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.severity) queryParams.append('severity', params.severity);
+    if (params?.changeType) queryParams.append('changeType', params.changeType);
+
+    const response = await apiClient.get<PaginatedResponse<any>>(
+      `${this.baseUrl}/${id}/changes?${queryParams.toString()}`
+    );
+    return response;
+  }
+
+  // Export API data
+  async exportApi(
+    id: string,
+    format: 'json' | 'csv' | 'yaml' = 'json'
+  ): Promise<Blob> {
+    const response = await apiClient.get(
+      `${this.baseUrl}/${id}/export?format=${format}`,
+      {
+        responseType: 'blob',
+      }
+    );
+    return response;
+  }
+
+  // Test API endpoint
+  async testApi(id: string): Promise<ApiResponse<any>> {
     const response = await apiClient.post<ApiResponse<any>>(
       `${this.baseUrl}/${id}/test`
     );
     return response;
   }
 
-  async testApiEndpoint(
-    url: string,
-    config?: {
-      method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
-      headers?: Record<string, string>;
-      body?: any;
-    }
-  ): Promise<ApiResponse<any>> {
-    const response = await apiClient.post<ApiResponse<any>>(
-      `${this.baseUrl}/test-endpoint`,
-      { url, ...config }
-    );
-    return response;
-  }
-
-  // API Snapshots
-  async getApiSnapshots(
-    apiId: string,
-    page = 1,
-    limit = 10
-  ): Promise<PaginatedResponse<ApiSnapshot>> {
-    const response = await apiClient.get<PaginatedResponse<ApiSnapshot>>(
-      `${this.baseUrl}/${apiId}/snapshots?page=${page}&limit=${limit}`
-    );
-    return response;
-  }
-
-  async getSnapshotById(
-    apiId: string,
-    snapshotId: string
-  ): Promise<ApiResponse<ApiSnapshot>> {
-    const response = await apiClient.get<ApiResponse<ApiSnapshot>>(
-      `${this.baseUrl}/${apiId}/snapshots/${snapshotId}`
-    );
-    return response;
-  }
-
-  async createSnapshot(apiId: string): Promise<ApiResponse<ApiSnapshot>> {
-    const response = await apiClient.post<ApiResponse<ApiSnapshot>>(
-      `${this.baseUrl}/${apiId}/snapshots`
-    );
-    return response;
-  }
-
-  async compareSnapshots(
-    apiId: string,
-    fromSnapshotId: string,
-    toSnapshotId: string
-  ): Promise<
+  // Get dashboard stats
+  async getDashboardStats(): Promise<
     ApiResponse<{
-      changes: ApiChange[];
-      summary: {
-        added: number;
-        modified: number;
-        removed: number;
-      };
+      totalApis: number;
+      activeApis: number;
+      totalChanges: number;
+      criticalIssues: number;
+      healthyApis: number;
+      unhealthyApis: number;
+      recentChanges: any[];
+      apisByTag: Record<string, number>;
+      changesTrend: any[];
     }>
   > {
     const response = await apiClient.get<ApiResponse<any>>(
-      `${this.baseUrl}/${apiId}/snapshots/compare?from=${fromSnapshotId}&to=${toSnapshotId}`
+      `${this.baseUrl}/dashboard/stats`
     );
     return response;
   }
 
-  // API Changes
-  async getApiChanges(
-    apiId: string,
-    page = 1,
-    limit = 10,
-    severity?: string,
-    changeType?: string
-  ): Promise<PaginatedResponse<ApiChange>> {
-    const params = new URLSearchParams({
-      page: page.toString(),
-      limit: limit.toString(),
-    });
-
-    if (severity) params.append('severity', severity);
-    if (changeType) params.append('changeType', changeType);
-
-    const response = await apiClient.get<PaginatedResponse<ApiChange>>(
-      `${this.baseUrl}/${apiId}/changes?${params.toString()}`
-    );
-    return response;
-  }
-
-  async getChangeById(
-    apiId: string,
-    changeId: string
-  ): Promise<ApiResponse<ApiChange>> {
-    const response = await apiClient.get<ApiResponse<ApiChange>>(
-      `${this.baseUrl}/${apiId}/changes/${changeId}`
-    );
-    return response;
-  }
-
-  // API Analytics
-  async getApiAnalytics(
-    apiId: string,
-    timeRange: '1h' | '24h' | '7d' | '30d' = '24h'
-  ): Promise<ApiResponse<TimeSeriesData>> {
-    const response = await apiClient.get<ApiResponse<TimeSeriesData>>(
-      `${this.baseUrl}/${apiId}/analytics?timeRange=${timeRange}`
-    );
-    return response;
-  }
-
-  async getApiUptime(
-    apiId: string,
-    days = 30
-  ): Promise<
-    ApiResponse<{
-      uptime: number;
-      downtime: number;
-      totalChecks: number;
-      successfulChecks: number;
-    }>
-  > {
-    const response = await apiClient.get<ApiResponse<any>>(
-      `${this.baseUrl}/${apiId}/uptime?days=${days}`
-    );
-    return response;
-  }
-
-  async getApiPerformance(
-    apiId: string,
-    days = 7
-  ): Promise<
-    ApiResponse<{
-      averageResponseTime: number;
-      p95ResponseTime: number;
-      p99ResponseTime: number;
-      totalRequests: number;
-    }>
-  > {
-    const response = await apiClient.get<ApiResponse<any>>(
-      `${this.baseUrl}/${apiId}/performance?days=${days}`
-    );
-    return response;
-  }
-
-  // Bulk Operations
-  async bulkUpdateApis(
-    apiIds: string[],
-    updateData: Partial<UpdateApiRequest>
-  ): Promise<ApiResponse<{ updated: number; failed: number }>> {
-    const response = await apiClient.patch<ApiResponse<any>>(
-      `${this.baseUrl}/bulk-update`,
-      { apiIds, updateData }
-    );
-    return response;
-  }
-
-  async bulkDeleteApis(
-    apiIds: string[]
-  ): Promise<ApiResponse<{ deleted: number; failed: number }>> {
-    const response = await apiClient.post<ApiResponse<any>>(
-      `${this.baseUrl}/bulk-delete`,
-      { apiIds }
-    );
-    return response;
-  }
-
-  // Export/Import
-  async exportApis(apiIds?: string[]): Promise<Blob> {
-    const response = await apiClient.post(
-      `${this.baseUrl}/export`,
-      { apiIds },
-      { responseType: 'blob' }
-    );
-    return response;
-  }
-
-  async importApis(
-    file: File
-  ): Promise<ApiResponse<{ imported: number; failed: number }>> {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    const response = await apiClient.post<ApiResponse<any>>(
-      `${this.baseUrl}/import`,
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
-    );
-    return response;
-  }
-
-  // Tags Management
-  async getAllTags(): Promise<ApiResponse<string[]>> {
+  // Get all tags
+  async getTags(): Promise<ApiResponse<string[]>> {
     const response = await apiClient.get<ApiResponse<string[]>>(
       `${this.baseUrl}/tags`
     );
     return response;
   }
 
-  async getPopularTags(
-    limit = 10
-  ): Promise<ApiResponse<Array<{ tag: string; count: number }>>> {
+  // Get API snapshot history
+  async getApiSnapshots(
+    id: string,
+    params?: {
+      page?: number;
+      limit?: number;
+      fromDate?: string;
+      toDate?: string;
+    }
+  ): Promise<PaginatedResponse<any>> {
+    const queryParams = new URLSearchParams();
+
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.fromDate) queryParams.append('fromDate', params.fromDate);
+    if (params?.toDate) queryParams.append('toDate', params.toDate);
+
+    const response = await apiClient.get<PaginatedResponse<any>>(
+      `${this.baseUrl}/${id}/snapshots?${queryParams.toString()}`
+    );
+    return response;
+  }
+
+  // Compare API versions
+  async compareApiVersions(
+    id: string,
+    fromVersion: string,
+    toVersion: string
+  ): Promise<ApiResponse<any>> {
     const response = await apiClient.get<ApiResponse<any>>(
-      `${this.baseUrl}/tags/popular?limit=${limit}`
+      `${this.baseUrl}/${id}/compare?from=${fromVersion}&to=${toVersion}`
+    );
+    return response;
+  }
+
+  // Get API documentation
+  async getApiDocumentation(id: string): Promise<ApiResponse<any>> {
+    const response = await apiClient.get<ApiResponse<any>>(
+      `${this.baseUrl}/${id}/documentation`
+    );
+    return response;
+  }
+
+  // Update check frequency
+  async updateCheckFrequency(
+    id: string,
+    frequency: string
+  ): Promise<ApiResponse<Api>> {
+    const response = await apiClient.patch<ApiResponse<Api>>(
+      `${this.baseUrl}/${id}/check-frequency`,
+      { checkFrequency: frequency }
     );
     return response;
   }
 }
 
 export const apiService = new ApiService();
-export default apiService;

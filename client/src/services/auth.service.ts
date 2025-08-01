@@ -6,36 +6,31 @@ import {
   ForgotPasswordRequest,
   ResetPasswordRequest,
   ChangePasswordRequest,
-  RefreshTokenRequest,
   ApiResponse,
-  AuthUser,
 } from '@/types';
 
 class AuthService {
   private baseUrl = '/auth';
 
   // Authentication methods
-  async login(credentials: LoginRequest): Promise<ApiResponse<AuthUser>> {
+  async login(credentials: LoginRequest): Promise<ApiResponse<User>> {
     const response = await apiClient.post<any>(
       `${this.baseUrl}/login`,
       credentials
     );
+    
     // Backend returns { message, user, token, refreshToken } directly
-    // Transform to match ApiResponse format
+    // Transform to match our expected format
     return {
       success: true,
-      data: {
-        ...response.user,
-        accessToken: response.token,
-        refreshToken: response.refreshToken,
-      },
+      data: response.user, // User data without tokens (tokens are in httpOnly cookies)
       message: response.message,
       statusCode: 200,
     };
   }
 
-  async register(userData: RegisterRequest): Promise<ApiResponse<User>> {
-    const response = await apiClient.post<ApiResponse<User>>(
+  async register(userData: RegisterRequest): Promise<ApiResponse<any>> {
+    const response = await apiClient.post<any>(
       `${this.baseUrl}/register`,
       userData
     );
@@ -43,18 +38,24 @@ class AuthService {
   }
 
   async logout(): Promise<ApiResponse<void>> {
-    const response = await apiClient.post<ApiResponse<void>>(
+    const response = await apiClient.post<any>(
       `${this.baseUrl}/logout`
     );
     return response;
   }
 
-  async refreshToken(
-    request: RefreshTokenRequest
-  ): Promise<ApiResponse<{ accessToken: string }>> {
-    const response = await apiClient.post<ApiResponse<{ accessToken: string }>>(
-      `${this.baseUrl}/refresh`,
-      request
+  // Validate session using cookies
+  async validateSession(): Promise<ApiResponse<User>> {
+    const response = await apiClient.get<any>(
+      `${this.baseUrl}/profile`
+    );
+    return response;
+  }
+
+  // Get user profile
+  async getProfile(): Promise<ApiResponse<User>> {
+    const response = await apiClient.get<any>(
+      `${this.baseUrl}/profile`
     );
     return response;
   }
@@ -63,7 +64,7 @@ class AuthService {
   async forgotPassword(
     request: ForgotPasswordRequest
   ): Promise<ApiResponse<void>> {
-    const response = await apiClient.post<ApiResponse<void>>(
+    const response = await apiClient.post<any>(
       `${this.baseUrl}/forgot-password`,
       request
     );
@@ -73,7 +74,7 @@ class AuthService {
   async resetPassword(
     request: ResetPasswordRequest
   ): Promise<ApiResponse<void>> {
-    const response = await apiClient.post<ApiResponse<void>>(
+    const response = await apiClient.post<any>(
       `${this.baseUrl}/reset-password`,
       request
     );
@@ -83,7 +84,7 @@ class AuthService {
   async changePassword(
     request: ChangePasswordRequest
   ): Promise<ApiResponse<void>> {
-    const response = await apiClient.patch<ApiResponse<void>>(
+    const response = await apiClient.put<any>(
       `${this.baseUrl}/change-password`,
       request
     );
@@ -92,7 +93,7 @@ class AuthService {
 
   // Email verification
   async verifyEmail(token: string): Promise<ApiResponse<void>> {
-    const response = await apiClient.post<ApiResponse<void>>(
+    const response = await apiClient.post<any>(
       `${this.baseUrl}/verify-email`,
       { token }
     );
@@ -100,74 +101,44 @@ class AuthService {
   }
 
   async resendVerificationEmail(): Promise<ApiResponse<void>> {
-    const response = await apiClient.post<ApiResponse<void>>(
+    const response = await apiClient.post<any>(
       `${this.baseUrl}/resend-verification`
     );
     return response;
   }
 
   // Profile management
-  async getProfile(): Promise<ApiResponse<User>> {
-    const response = await apiClient.get<ApiResponse<User>>(
-      `${this.baseUrl}/profile`
-    );
-    return response;
-  }
-
   async updateProfile(userData: Partial<User>): Promise<ApiResponse<User>> {
-    const response = await apiClient.patch<ApiResponse<User>>(
+    const response = await apiClient.put<any>(
       `${this.baseUrl}/profile`,
       userData
     );
     return response;
   }
 
-  async uploadProfilePicture(
-    file: File
-  ): Promise<ApiResponse<{ profilePicture: string }>> {
+  async uploadProfilePicture(file: File): Promise<ApiResponse<{ profilePicture: string }>> {
     const formData = new FormData();
     formData.append('profilePicture', file);
-
-    const response = await apiClient.post<
-      ApiResponse<{ profilePicture: string }>
-    >(`${this.baseUrl}/upload-profile-picture`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response;
-  }
-
-  async deleteAccount(): Promise<ApiResponse<void>> {
-    const response = await apiClient.delete<ApiResponse<void>>(
-      `${this.baseUrl}/account`
+    
+    const response = await apiClient.post<any>(
+      `${this.baseUrl}/upload-profile-picture`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
     );
     return response;
   }
 
-  // Session management
-  async validateSession(): Promise<ApiResponse<User>> {
-    try {
-      const response = await apiClient.get<any>(`${this.baseUrl}/profile`);
-      // Transform profile response to match ApiResponse format
-      return {
-        success: true,
-        data: response.data,
-        message: response.message,
-        statusCode: 200,
-      };
-    } catch (error: any) {
-      return {
-        success: false,
-        error: error.response?.data?.message || 'Session validation failed',
-        statusCode: error.response?.status || 500,
-      };
-    }
-  }
-
-  async terminateAllSessions(): Promise<ApiResponse<void>> {
-    const response = await apiClient.post<ApiResponse<void>>(
-      `${this.baseUrl}/terminate-sessions`
+  // Notification preferences
+  async updateNotificationPreferences(
+    preferences: User['notificationPreferences']
+  ): Promise<ApiResponse<User>> {
+    const response = await apiClient.put<any>(
+      `${this.baseUrl}/notification-preferences`,
+      preferences
     );
     return response;
   }

@@ -74,7 +74,7 @@ const DashboardPage = () => {
   };
 
   // Get stats with fallback to default values
-  const stats = statsData?.success
+  const stats = statsData?.success && statsData.data
     ? statsData.data
     : {
         totalApis: 0,
@@ -150,7 +150,7 @@ const DashboardPage = () => {
                     Total APIs
                   </p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {statsLoading ? '...' : stats?.totalApis}
+                    {statsLoading ? '...' : stats.totalApis}
                   </p>
                 </div>
                 <Activity className="w-8 h-8 text-blue-600" />
@@ -164,7 +164,7 @@ const DashboardPage = () => {
                     Active APIs
                   </p>
                   <p className="text-2xl font-bold text-green-600">
-                    {statsLoading ? '...' : stats?.activeApis}
+                    {statsLoading ? '...' : stats.activeApis}
                   </p>
                 </div>
                 <CheckCircle className="w-8 h-8 text-green-600" />
@@ -178,7 +178,7 @@ const DashboardPage = () => {
                     Total Changes
                   </p>
                   <p className="text-2xl font-bold text-orange-600">
-                    {statsLoading ? '...' : stats?.totalChanges}
+                    {statsLoading ? '...' : stats.totalChanges}
                   </p>
                 </div>
                 <Clock className="w-8 h-8 text-orange-600" />
@@ -192,7 +192,7 @@ const DashboardPage = () => {
                     Critical Issues
                   </p>
                   <p className="text-2xl font-bold text-red-600">
-                    {statsLoading ? '...' : stats?.criticalIssues}
+                    {statsLoading ? '...' : stats.criticalIssues}
                   </p>
                 </div>
                 <AlertTriangle className="w-8 h-8 text-red-600" />
@@ -256,7 +256,7 @@ const DashboardPage = () => {
             )}
 
             {/* Empty State */}
-            {!apisLoading && !apisError && apis?.length === 0 && (
+            {!apisLoading && !apisError && apis && apis.length === 0 && (
               <div className="p-6 text-center">
                 <Activity className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -276,7 +276,7 @@ const DashboardPage = () => {
             )}
 
             {/* APIs Table */}
-            {!apisLoading && !apisError && apis.length > 0 && (
+            {!apisLoading && !apisError && apis && apis.length > 0 && (
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-gray-50">
@@ -299,7 +299,7 @@ const DashboardPage = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {apis?.map((api: any) => (
+                    {apis.map((api: any) => (
                       <tr key={api._id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>
@@ -399,6 +399,7 @@ const DashboardPage = () => {
             {/* Pagination */}
             {!apisLoading &&
               !apisError &&
+              apis &&
               apis.length > 0 &&
               pagination.totalPages > 1 && (
                 <div className="px-6 py-4 border-t border-gray-200">

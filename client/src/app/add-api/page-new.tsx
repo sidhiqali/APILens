@@ -6,14 +6,7 @@ import Layout from '@/components/layout/Layout';
 import RouteGuard from '@/components/RouteGuard';
 import { useCreateApi } from '@/hooks/useApis';
 import { CreateApiRequest } from '@/types';
-import {
-  ArrowLeft,
-  Globe,
-  Tag,
-  Clock,
-  FileText,
-  Loader2,
-} from 'lucide-react';
+import { ArrowLeft, Globe, Tag, Clock, FileText, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 const AddAPIPage = () => {
@@ -34,14 +27,14 @@ const AddAPIPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Basic validation
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.apiName.trim()) {
       newErrors.apiName = 'API name is required';
     }
-    
+
     if (!formData.openApiUrl.trim()) {
       newErrors.openApiUrl = 'OpenAPI URL is required';
     } else if (!isValidUrl(formData.openApiUrl)) {
@@ -54,36 +47,36 @@ const AddAPIPage = () => {
     }
 
     setErrors({});
-    
+
     createApiMutation.mutate(formData, {
       onSuccess: () => {
         router.push('/dashboard');
-      }
+      },
     });
   };
 
   const handleInputChange = (field: keyof CreateApiRequest, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
+      setErrors((prev) => ({ ...prev, [field]: '' }));
     }
   };
 
   const handleAddTag = () => {
     if (tagInput.trim() && !formData.tags?.includes(tagInput.trim())) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        tags: [...(prev.tags || []), tagInput.trim()]
+        tags: [...(prev.tags || []), tagInput.trim()],
       }));
       setTagInput('');
     }
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      tags: prev.tags?.filter(tag => tag !== tagToRemove) || []
+      tags: prev.tags?.filter((tag) => tag !== tagToRemove) || [],
     }));
   };
 
@@ -119,8 +112,10 @@ const AddAPIPage = () => {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-6">Basic Information</h2>
-              
+              <h2 className="text-lg font-semibold text-gray-900 mb-6">
+                Basic Information
+              </h2>
+
               {/* API Name */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -150,14 +145,18 @@ const AddAPIPage = () => {
                 <input
                   type="url"
                   value={formData.openApiUrl}
-                  onChange={(e) => handleInputChange('openApiUrl', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange('openApiUrl', e.target.value)
+                  }
                   placeholder="https://api.example.com/v1/docs/swagger.json"
                   className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                     errors.openApiUrl ? 'border-red-500' : 'border-gray-300'
                   }`}
                 />
                 {errors.openApiUrl && (
-                  <p className="mt-1 text-sm text-red-600">{errors.openApiUrl}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.openApiUrl}
+                  </p>
                 )}
                 <p className="mt-1 text-sm text-gray-500">
                   URL to your API's OpenAPI/Swagger specification file
@@ -189,7 +188,9 @@ const AddAPIPage = () => {
                 </label>
                 <textarea
                   value={formData.description}
-                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange('description', e.target.value)
+                  }
                   placeholder="Brief description of your API..."
                   rows={3}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -199,8 +200,10 @@ const AddAPIPage = () => {
 
             {/* Monitoring Configuration */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-6">Monitoring Configuration</h2>
-              
+              <h2 className="text-lg font-semibold text-gray-900 mb-6">
+                Monitoring Configuration
+              </h2>
+
               {/* Check Frequency */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -209,7 +212,9 @@ const AddAPIPage = () => {
                 </label>
                 <select
                   value={formData.checkFrequency}
-                  onChange={(e) => handleInputChange('checkFrequency', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange('checkFrequency', e.target.value)
+                  }
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="5m">Every 5 minutes</option>
@@ -234,7 +239,9 @@ const AddAPIPage = () => {
                     type="text"
                     value={tagInput}
                     onChange={(e) => setTagInput(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
+                    onKeyPress={(e) =>
+                      e.key === 'Enter' && (e.preventDefault(), handleAddTag())
+                    }
                     placeholder="Add a tag..."
                     className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />

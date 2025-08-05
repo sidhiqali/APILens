@@ -19,3 +19,13 @@ export { default as RecentActivity } from './dashboard/RecentActivity';
 export { default as CriticalAlerts } from './dashboard/CriticalAlerts';
 export { default as HealthMonitor } from './dashboard/HealthMonitor';
 export { default as QuickActions } from './dashboard/QuickActions';
+
+// Analytics Components (from Phase 5)
+export {
+  APIPerformanceChart,
+  TimeSeriesChart,
+  TrendAnalysis,
+  ComparisonView,
+  HealthScoreCard,
+  MetricsHeatmap,
+} from './analytics';

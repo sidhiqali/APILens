@@ -34,7 +34,7 @@ api.interceptors.response.use(
 
       // Import auth store dynamically to avoid circular dependency
       const { useAuth } = await import('@/store/auth');
-      
+
       // Clear auth state
       useAuth.getState().logout();
 

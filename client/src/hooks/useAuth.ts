@@ -49,7 +49,11 @@ export const useAuthHooks = () => {
     setLoading(false);
 
     // Only update if session is successful and we have user data
-    if (sessionQuery.data?.success && sessionQuery.data.data && !isAuthenticated) {
+    if (
+      sessionQuery.data?.success &&
+      sessionQuery.data.data &&
+      !isAuthenticated
+    ) {
       setAuthData(sessionQuery.data.data);
     }
     // Don't auto-logout on session error - let the axios interceptor handle it

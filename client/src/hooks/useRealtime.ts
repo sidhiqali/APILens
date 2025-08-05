@@ -215,3 +215,29 @@ export const useConnectionStatus = () => {
     status: isConnected ? 'connected' : 'disconnected',
   };
 };
+
+// Hook for real-time dashboard updates
+export const useRealTimeDashboard = () => {
+  const { user } = useAuth();
+  
+  useEffect(() => {
+    if (!user) return;
+
+    // Connect to real-time dashboard updates
+    socketService.connect();
+
+    // Set up event listeners for dashboard-specific events
+    const handleApiChange = () => {
+      // Invalidate dashboard queries when API changes occur
+      // This will be implemented when we integrate with React Query
+    };
+
+    socketService.on('api-change', handleApiChange);
+
+    return () => {
+      socketService.off('api-change', handleApiChange);
+    };
+  }, [user]);
+
+  return undefined;
+};

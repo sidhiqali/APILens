@@ -1,8 +1,14 @@
 // src/modules/apis/change-detector.service.ts
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { ApiChange, ChangeDetail } from 'src/Schemas/api-change.schema';
+import { Api } from 'src/Schemas/api.schema';
 import { OpenAPISpec } from 'src/types/api.type';
 
 interface ChangeResult {
@@ -19,6 +25,7 @@ export class ChangeDetectorService {
 
   constructor(
     @InjectModel(ApiChange.name) private apiChangeModel: Model<ApiChange>,
+    @InjectModel(Api.name) private apiModel: Model<Api>,
   ) {}
 
   async detectChanges(
@@ -450,7 +457,15 @@ export class ChangeDetectorService {
     userId: string,
     limit: number = 20,
   ): Promise<any[]> {
-    // You might want to verify user ownership here too
+    // Verify user ownership
+    const api = await this.apiModel.findById(apiId);
+    if (!api) {
+      throw new NotFoundException('API not found');
+    }
+    if (api.userId.toString() !== userId) {
+      throw new ForbiddenException('Access denied');
+    }
+
     return await this.apiChangeModel
       .find({ apiId: new Types.ObjectId(apiId) })
       .sort({ detectedAt: -1 })

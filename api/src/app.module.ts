@@ -11,6 +11,7 @@ import { ChangelogsModule } from './modules/changelogs/changelogs.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { SchedulesModule } from './modules/schedules/schedules.module';
 import { UserModule } from './modules/user/user.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 import configuration from './config/configuration';
 import { HealthModule } from './modules/health/health.module';
 
@@ -61,6 +62,7 @@ import { HealthModule } from './modules/health/health.module';
     ChangelogsModule,
     NotificationsModule,
     SchedulesModule,
+    DashboardModule,
     HealthModule,
   ],
   controllers: [AppController],

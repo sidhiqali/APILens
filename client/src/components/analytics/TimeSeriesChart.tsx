@@ -42,7 +42,13 @@ interface TimeSeriesDataPoint {
 interface TimeSeriesData {
   apiId: string;
   apiName: string;
-  metric: 'responseTime' | 'uptime' | 'errorRate' | 'requestCount' | 'cpuUsage' | 'memoryUsage';
+  metric:
+    | 'responseTime'
+    | 'uptime'
+    | 'errorRate'
+    | 'requestCount'
+    | 'cpuUsage'
+    | 'memoryUsage';
   data: TimeSeriesDataPoint[];
   color: string;
   unit: string;
@@ -88,21 +94,27 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
 
   // Filter and combine data from selected APIs
   const chartData = useMemo(() => {
-    const filteredData = data.filter(apiData => selectedApis.includes(apiData.apiId));
-    
+    const filteredData = data.filter((apiData) =>
+      selectedApis.includes(apiData.apiId)
+    );
+
     if (filteredData.length === 0) return [];
 
     // Get all unique timestamps
     const allTimestamps = Array.from(
-      new Set(filteredData.flatMap(apiData => apiData.data.map(point => point.timestamp)))
+      new Set(
+        filteredData.flatMap((apiData) =>
+          apiData.data.map((point) => point.timestamp)
+        )
+      )
     ).sort();
 
     // Combine data by timestamp
-    return allTimestamps.map(timestamp => {
+    return allTimestamps.map((timestamp) => {
       const dataPoint: any = { timestamp };
-      
-      filteredData.forEach(apiData => {
-        const point = apiData.data.find(p => p.timestamp === timestamp);
+
+      filteredData.forEach((apiData) => {
+        const point = apiData.data.find((p) => p.timestamp === timestamp);
         if (point) {
           dataPoint[apiData.apiId] = point.value;
           dataPoint[`${apiData.apiId}_anomaly`] = point.anomaly;
@@ -112,25 +124,27 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
           dataPoint.date = point.date;
         }
       });
-      
+
       return dataPoint;
     });
   }, [data, selectedApis]);
 
   // Get filtered data for selected APIs
   const selectedApiData = useMemo(() => {
-    return data.filter(apiData => selectedApis.includes(apiData.apiId));
+    return data.filter((apiData) => selectedApis.includes(apiData.apiId));
   }, [data, selectedApis]);
 
   // Calculate statistics
   const statistics = useMemo(() => {
     const stats: Record<string, any> = {};
-    
-    selectedApiData.forEach(apiData => {
-      const values = apiData.data.map(point => point.value);
-      const anomalies = apiData.data.filter(point => point.anomaly).length;
-      const predictions = apiData.data.filter(point => point.prediction).length;
-      
+
+    selectedApiData.forEach((apiData) => {
+      const values = apiData.data.map((point) => point.value);
+      const anomalies = apiData.data.filter((point) => point.anomaly).length;
+      const predictions = apiData.data.filter(
+        (point) => point.prediction
+      ).length;
+
       stats[apiData.apiId] = {
         min: Math.min(...values),
         max: Math.max(...values),
@@ -138,10 +152,13 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
         current: values[values.length - 1] || 0,
         anomalies,
         predictions,
-        trend: values.length > 1 ? (values[values.length - 1] - values[0]) / values[0] * 100 : 0,
+        trend:
+          values.length > 1
+            ? ((values[values.length - 1] - values[0]) / values[0]) * 100
+            : 0,
       };
     });
-    
+
     return stats;
   }, [selectedApiData]);
 
@@ -159,7 +176,7 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
     if (!active || !payload || !payload.length) return null;
 
     const dataPoint = payload[0].payload;
-    
+
     return (
       <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-4 max-w-sm">
         <div className="font-semibold text-gray-900 mb-2">
@@ -167,27 +184,36 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
         </div>
         <div className="space-y-2">
           {payload.map((entry: any, index: number) => {
-            const apiData = selectedApiData.find(api => api.apiId === entry.dataKey);
+            const apiData = selectedApiData.find(
+              (api) => api.apiId === entry.dataKey
+            );
             if (!apiData) return null;
-            
+
             const isAnomaly = dataPoint[`${entry.dataKey}_anomaly`];
             const isPrediction = dataPoint[`${entry.dataKey}_prediction`];
             const confidence = dataPoint[`${entry.dataKey}_confidence`];
-            
+
             return (
               <div key={index} className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <div 
-                    className="w-3 h-3 rounded-full" 
+                  <div
+                    className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: entry.color }}
                   />
-                  <span className="text-sm text-gray-700">{apiData.apiName}:</span>
-                  {isAnomaly && <AlertTriangle className="w-3 h-3 text-red-500" />}
+                  <span className="text-sm text-gray-700">
+                    {apiData.apiName}:
+                  </span>
+                  {isAnomaly && (
+                    <AlertTriangle className="w-3 h-3 text-red-500" />
+                  )}
                   {isPrediction && <Target className="w-3 h-3 text-blue-500" />}
                 </div>
                 <div className="text-right">
                   <span className="font-medium text-gray-900">
-                    {typeof entry.value === 'number' ? entry.value.toFixed(2) : entry.value}{apiData.unit}
+                    {typeof entry.value === 'number'
+                      ? entry.value.toFixed(2)
+                      : entry.value}
+                    {apiData.unit}
                   </span>
                   {confidence && (
                     <div className="text-xs text-gray-500">
@@ -226,7 +252,7 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
   // Format value for display
   const formatValue = (value: number, unit: string) => {
     if (typeof value !== 'number') return '—';
-    
+
     if (unit === 'ms') {
       return `${value.toFixed(0)}ms`;
     } else if (unit === '%') {
@@ -249,53 +275,51 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
           onMouseDown={enableZoom ? handleZoom : undefined}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-          <XAxis 
+          <XAxis
             dataKey="formattedTime"
             fontSize={12}
             tick={{ fill: '#6b7280' }}
             domain={zoomDomain ? zoomDomain : ['dataMin', 'dataMax']}
           />
-          <YAxis 
-            fontSize={12}
-            tick={{ fill: '#6b7280' }}
-          />
+          <YAxis fontSize={12} tick={{ fill: '#6b7280' }} />
           <Tooltip content={<CustomTooltip />} />
           <Legend />
-          
+
           {/* Threshold lines */}
-          {showThresholds && selectedApiData.map(apiData => {
-            if (!apiData.thresholds) return null;
-            
-            return (
-              <g key={`thresholds-${apiData.apiId}`}>
-                {apiData.thresholds.warning && (
-                  <ReferenceLine
-                    y={apiData.thresholds.warning}
-                    stroke="#f59e0b"
-                    strokeDasharray="5 5"
-                    label="Warning"
-                  />
-                )}
-                {apiData.thresholds.critical && (
-                  <ReferenceLine
-                    y={apiData.thresholds.critical}
-                    stroke="#ef4444"
-                    strokeDasharray="5 5"
-                    label="Critical"
-                  />
-                )}
-                {apiData.thresholds.target && (
-                  <ReferenceLine
-                    y={apiData.thresholds.target}
-                    stroke="#10b981"
-                    strokeDasharray="5 5"
-                    label="Target"
-                  />
-                )}
-              </g>
-            );
-          })}
-          
+          {showThresholds &&
+            selectedApiData.map((apiData) => {
+              if (!apiData.thresholds) return null;
+
+              return (
+                <g key={`thresholds-${apiData.apiId}`}>
+                  {apiData.thresholds.warning && (
+                    <ReferenceLine
+                      y={apiData.thresholds.warning}
+                      stroke="#f59e0b"
+                      strokeDasharray="5 5"
+                      label="Warning"
+                    />
+                  )}
+                  {apiData.thresholds.critical && (
+                    <ReferenceLine
+                      y={apiData.thresholds.critical}
+                      stroke="#ef4444"
+                      strokeDasharray="5 5"
+                      label="Critical"
+                    />
+                  )}
+                  {apiData.thresholds.target && (
+                    <ReferenceLine
+                      y={apiData.thresholds.target}
+                      stroke="#10b981"
+                      strokeDasharray="5 5"
+                      label="Target"
+                    />
+                  )}
+                </g>
+              );
+            })}
+
           {/* Data lines/areas */}
           {selectedApiData.map((apiData) => {
             if (chartType === 'area') {
@@ -328,7 +352,7 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
               );
             }
           })}
-          
+
           {/* Brush for zooming */}
           {enableBrush && (
             <Brush
@@ -344,14 +368,23 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
   };
 
   return (
-    <div className={clsx('bg-white rounded-lg border border-gray-200 p-6', className)}>
+    <div
+      className={clsx(
+        'bg-white rounded-lg border border-gray-200 p-6',
+        className
+      )}
+    >
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
           <TrendingUp className="w-6 h-6 text-blue-600" />
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">Time Series Analysis</h3>
-            <p className="text-sm text-gray-600">Monitor performance trends over time</p>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Time Series Analysis
+            </h3>
+            <p className="text-sm text-gray-600">
+              Monitor performance trends over time
+            </p>
           </div>
         </div>
 
@@ -432,27 +465,33 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
             <input
               type="checkbox"
               checked={showAnomalies}
-              onChange={() => {/* Handle anomaly toggle */}}
+              onChange={() => {
+                /* Handle anomaly toggle */
+              }}
               className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
             />
             <span className="text-sm text-gray-700">Anomalies</span>
           </label>
-          
+
           <label className="flex items-center space-x-2 cursor-pointer">
             <input
               type="checkbox"
               checked={showPredictions}
-              onChange={() => {/* Handle prediction toggle */}}
+              onChange={() => {
+                /* Handle prediction toggle */
+              }}
               className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             />
             <span className="text-sm text-gray-700">Predictions</span>
           </label>
-          
+
           <label className="flex items-center space-x-2 cursor-pointer">
             <input
               type="checkbox"
               checked={showThresholds}
-              onChange={() => {/* Handle threshold toggle */}}
+              onChange={() => {
+                /* Handle threshold toggle */
+              }}
               className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
             />
             <span className="text-sm text-gray-700">Thresholds</span>
@@ -462,12 +501,14 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
 
       {/* API Selection */}
       <div className="mb-6">
-        <h4 className="text-sm font-semibold text-gray-900 mb-3">Select APIs:</h4>
+        <h4 className="text-sm font-semibold text-gray-900 mb-3">
+          Select APIs:
+        </h4>
         <div className="flex flex-wrap gap-2">
           {data.map((apiData) => {
             const isSelected = selectedApis.includes(apiData.apiId);
             const stats = statistics[apiData.apiId];
-            
+
             return (
               <button
                 key={apiData.apiId}
@@ -479,12 +520,16 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
                     : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                 )}
               >
-                <div 
-                  className="w-3 h-3 rounded-full" 
+                <div
+                  className="w-3 h-3 rounded-full"
                   style={{ backgroundColor: apiData.color }}
                 />
                 <span>{apiData.apiName}</span>
-                {isSelected ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                {isSelected ? (
+                  <Eye className="w-3 h-3" />
+                ) : (
+                  <EyeOff className="w-3 h-3" />
+                )}
                 {stats && (
                   <span className="text-xs text-gray-500">
                     {formatValue(stats.current, apiData.unit)}
@@ -498,14 +543,16 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
 
       {/* Chart */}
       {selectedApis.length > 0 ? (
-        <div className="mb-6">
-          {renderChart()}
-        </div>
+        <div className="mb-6">{renderChart()}</div>
       ) : (
         <div className="text-center py-12 bg-gray-50 rounded-lg mb-6">
           <Activity className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Select APIs to Visualize</h3>
-          <p className="text-gray-600">Choose one or more APIs above to view their time series data.</p>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            Select APIs to Visualize
+          </h3>
+          <p className="text-gray-600">
+            Choose one or more APIs above to view their time series data.
+          </p>
         </div>
       )}
 
@@ -515,46 +562,65 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
           {selectedApiData.map((apiData) => {
             const stats = statistics[apiData.apiId];
             if (!stats) return null;
-            
+
             return (
               <div key={apiData.apiId} className="bg-gray-50 rounded-lg p-4">
                 <div className="flex items-center space-x-2 mb-3">
-                  <div 
-                    className="w-3 h-3 rounded-full" 
+                  <div
+                    className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: apiData.color }}
                   />
-                  <h4 className="font-semibold text-gray-900">{apiData.apiName}</h4>
+                  <h4 className="font-semibold text-gray-900">
+                    {apiData.apiName}
+                  </h4>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
                     <span className="text-gray-600">Current:</span>
-                    <span className="font-medium ml-1">{formatValue(stats.current, apiData.unit)}</span>
+                    <span className="font-medium ml-1">
+                      {formatValue(stats.current, apiData.unit)}
+                    </span>
                   </div>
                   <div>
                     <span className="text-gray-600">Average:</span>
-                    <span className="font-medium ml-1">{formatValue(stats.avg, apiData.unit)}</span>
+                    <span className="font-medium ml-1">
+                      {formatValue(stats.avg, apiData.unit)}
+                    </span>
                   </div>
                   <div>
                     <span className="text-gray-600">Min:</span>
-                    <span className="font-medium ml-1">{formatValue(stats.min, apiData.unit)}</span>
+                    <span className="font-medium ml-1">
+                      {formatValue(stats.min, apiData.unit)}
+                    </span>
                   </div>
                   <div>
                     <span className="text-gray-600">Max:</span>
-                    <span className="font-medium ml-1">{formatValue(stats.max, apiData.unit)}</span>
+                    <span className="font-medium ml-1">
+                      {formatValue(stats.max, apiData.unit)}
+                    </span>
                   </div>
                   <div>
                     <span className="text-gray-600">Trend:</span>
-                    <span className={clsx(
-                      'font-medium ml-1',
-                      stats.trend > 0 ? 'text-red-600' : stats.trend < 0 ? 'text-green-600' : 'text-gray-600'
-                    )}>
-                      {stats.trend > 0 ? '+' : ''}{stats.trend.toFixed(1)}%
+                    <span
+                      className={clsx(
+                        'font-medium ml-1',
+                        stats.trend > 0
+                          ? 'text-red-600'
+                          : stats.trend < 0
+                            ? 'text-green-600'
+                            : 'text-gray-600'
+                      )}
+                    >
+                      {stats.trend > 0 ? '+' : ''}
+                      {stats.trend.toFixed(1)}%
                     </span>
                   </div>
                   <div>
                     <span className="text-gray-600">Anomalies:</span>
-                    <span className="font-medium ml-1 text-red-600">{stats.anomalies}</span>
+                    <span className="font-medium ml-1 text-red-600">
+                      {stats.anomalies}
+                    </span>
                   </div>
                 </div>
               </div>

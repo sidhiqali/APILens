@@ -9,7 +9,7 @@ export interface SocketEvents {
     severity: string;
     timestamp: string;
   }) => void;
-  
+
   'api-health-update': (data: {
     apiId: string;
     apiName: string;
@@ -17,8 +17,8 @@ export interface SocketEvents {
     previousStatus: string;
     timestamp: string;
   }) => void;
-  
-  'notification': (data: {
+
+  notification: (data: {
     id: string;
     type: string;
     title: string;
@@ -26,7 +26,7 @@ export interface SocketEvents {
     severity: string;
     timestamp: string;
   }) => void;
-  
+
   'api-check-complete': (data: {
     apiId: string;
     hasChanges: boolean;
@@ -44,11 +44,14 @@ class SocketService {
       return;
     }
 
-    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-    
+    const socketUrl =
+      process.env.NEXT_PUBLIC_SOCKET_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      'http://localhost:3000';
+
     this.socket = io(socketUrl, {
       auth: {
-        userId
+        userId,
       },
       withCredentials: true,
       transports: ['websocket', 'polling'],
@@ -117,7 +120,10 @@ class SocketService {
   }
 
   // Emit events to listeners
-  private emit<K extends keyof SocketEvents>(event: K, data: Parameters<SocketEvents[K]>[0]): void {
+  private emit<K extends keyof SocketEvents>(
+    event: K,
+    data: Parameters<SocketEvents[K]>[0]
+  ): void {
     const eventListeners = this.listeners.get(event);
     if (eventListeners) {
       eventListeners.forEach((callback) => {

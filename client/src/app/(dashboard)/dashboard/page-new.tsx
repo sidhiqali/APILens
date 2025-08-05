@@ -35,10 +35,7 @@ const DashboardPage = () => {
   const itemsPerPage = 10;
 
   // Fetch dashboard stats
-  const {
-    data: statsData,
-    isLoading: statsLoading,
-  } = useDashboardStats();
+  const { data: statsData, isLoading: statsLoading } = useDashboardStats();
 
   // Fetch APIs list
   const {
@@ -73,8 +70,8 @@ const DashboardPage = () => {
   };
 
   // Get stats with fallback to default values
-  const stats = statsData?.success && statsData.data
-    ? statsData.data
+  const stats = statsData
+    ? statsData
     : {
         totalApis: 0,
         activeApis: 0,
@@ -82,6 +79,11 @@ const DashboardPage = () => {
         criticalIssues: 0,
         healthyApis: 0,
         unhealthyApis: 0,
+        totalNotifications: 0,
+        unreadNotifications: 0,
+        recentNotifications: 0,
+        avgResponseTime: 0,
+        uptimePercentage: 0,
       };
 
   // Get APIs list with fallback

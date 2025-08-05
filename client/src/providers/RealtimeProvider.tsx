@@ -1,6 +1,12 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+} from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useWebSocket, useWebSocketEvent } from './WebSocketProvider';
 import { toast } from 'react-hot-toast';
@@ -20,7 +26,12 @@ export interface RealtimeNotification {
   id: string;
   userId: string;
   apiId?: string;
-  type: 'api_change' | 'api_error' | 'api_recovered' | 'system' | 'breaking_change';
+  type:
+    | 'api_change'
+    | 'api_error'
+    | 'api_recovered'
+    | 'system'
+    | 'breaking_change';
   title: string;
   message: string;
   severity: 'low' | 'medium' | 'high' | 'critical';
@@ -55,18 +66,20 @@ interface RealtimeContextType {
   isEnabled: boolean;
   enable: () => void;
   disable: () => void;
-  
+
   // Event handlers
   onAPIUpdate: (callback: (update: RealtimeAPIUpdate) => void) => () => void;
-  onNotification: (callback: (notification: RealtimeNotification) => void) => () => void;
+  onNotification: (
+    callback: (notification: RealtimeNotification) => void
+  ) => () => void;
   onAPIChange: (callback: (change: RealtimeAPIChange) => void) => () => void;
   onMetricsUpdate: (callback: (metrics: RealtimeMetrics) => void) => () => void;
-  
+
   // Subscription management
   subscribeToAPI: (apiId: string) => void;
   unsubscribeFromAPI: (apiId: string) => void;
   subscribedAPIs: string[];
-  
+
   // Statistics
   stats: {
     eventsReceived: number;
@@ -98,14 +111,22 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({
   const queryClient = useQueryClient();
 
   // Event callbacks
-  const [apiUpdateCallbacks] = useState<Set<(update: RealtimeAPIUpdate) => void>>(new Set());
-  const [notificationCallbacks] = useState<Set<(notification: RealtimeNotification) => void>>(new Set());
-  const [apiChangeCallbacks] = useState<Set<(change: RealtimeAPIChange) => void>>(new Set());
-  const [metricsCallbacks] = useState<Set<(metrics: RealtimeMetrics) => void>>(new Set());
+  const [apiUpdateCallbacks] = useState<
+    Set<(update: RealtimeAPIUpdate) => void>
+  >(new Set());
+  const [notificationCallbacks] = useState<
+    Set<(notification: RealtimeNotification) => void>
+  >(new Set());
+  const [apiChangeCallbacks] = useState<
+    Set<(change: RealtimeAPIChange) => void>
+  >(new Set());
+  const [metricsCallbacks] = useState<Set<(metrics: RealtimeMetrics) => void>>(
+    new Set()
+  );
 
   // Update stats when events are received
   const updateStats = useCallback(() => {
-    setStats(prev => ({
+    setStats((prev) => ({
       eventsReceived: prev.eventsReceived + 1,
       lastEventTime: new Date().toISOString(),
     }));
@@ -114,60 +135,63 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({
   // Handle API updates
   useWebSocketEvent('api:update', (update: RealtimeAPIUpdate) => {
     if (!isEnabled) return;
-    
+
     updateStats();
-    apiUpdateCallbacks.forEach(callback => callback(update));
-    
+    apiUpdateCallbacks.forEach((callback) => callback(update));
+
     // Invalidate related queries
     queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     queryClient.invalidateQueries({ queryKey: ['apis'] });
-    
+
     console.log('Real-time API update:', update);
   });
 
   // Handle notifications
-  useWebSocketEvent('notification:new', (notification: RealtimeNotification) => {
-    if (!isEnabled) return;
-    
-    updateStats();
-    notificationCallbacks.forEach(callback => callback(notification));
-    
-    // Show toast notification if enabled
-    if (enableToastNotifications) {
-      const toastOptions = {
-        duration: notification.severity === 'critical' ? 0 : 5000,
-        position: 'top-right' as const,
-      };
+  useWebSocketEvent(
+    'notification:new',
+    (notification: RealtimeNotification) => {
+      if (!isEnabled) return;
 
-      switch (notification.severity) {
-        case 'critical':
-          toast.error(notification.title, toastOptions);
-          break;
-        case 'high':
-          toast.error(notification.title, toastOptions);
-          break;
-        case 'medium':
-          toast(notification.title, toastOptions);
-          break;
-        case 'low':
-          toast.success(notification.title, toastOptions);
-          break;
+      updateStats();
+      notificationCallbacks.forEach((callback) => callback(notification));
+
+      // Show toast notification if enabled
+      if (enableToastNotifications) {
+        const toastOptions = {
+          duration: notification.severity === 'critical' ? 0 : 5000,
+          position: 'top-right' as const,
+        };
+
+        switch (notification.severity) {
+          case 'critical':
+            toast.error(notification.title, toastOptions);
+            break;
+          case 'high':
+            toast.error(notification.title, toastOptions);
+            break;
+          case 'medium':
+            toast(notification.title, toastOptions);
+            break;
+          case 'low':
+            toast.success(notification.title, toastOptions);
+            break;
+        }
       }
+
+      // Invalidate notifications queries
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+
+      console.log('Real-time notification:', notification);
     }
-    
-    // Invalidate notifications queries
-    queryClient.invalidateQueries({ queryKey: ['notifications'] });
-    
-    console.log('Real-time notification:', notification);
-  });
+  );
 
   // Handle API changes
   useWebSocketEvent('api:change', (change: RealtimeAPIChange) => {
     if (!isEnabled) return;
-    
+
     updateStats();
-    apiChangeCallbacks.forEach(callback => callback(change));
-    
+    apiChangeCallbacks.forEach((callback) => callback(change));
+
     // Show toast for breaking changes
     if (enableToastNotifications && change.changeType === 'breaking') {
       toast.error(`Breaking change detected in ${change.apiName}`, {
@@ -175,78 +199,99 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({
         position: 'top-right',
       });
     }
-    
+
     // Invalidate related queries
     queryClient.invalidateQueries({ queryKey: ['changelogs'] });
     queryClient.invalidateQueries({ queryKey: ['apis', change.apiId] });
-    
+
     console.log('Real-time API change:', change);
   });
 
   // Handle metrics updates
   useWebSocketEvent('metrics:update', (metrics: RealtimeMetrics) => {
     if (!isEnabled) return;
-    
+
     updateStats();
-    metricsCallbacks.forEach(callback => callback(metrics));
-    
+    metricsCallbacks.forEach((callback) => callback(metrics));
+
     // Update specific API metrics in cache
-    queryClient.setQueryData(['api', metrics.apiId, 'metrics'], (oldData: any) => ({
-      ...oldData,
-      ...metrics.metrics,
-    }));
-    
+    queryClient.setQueryData(
+      ['api', metrics.apiId, 'metrics'],
+      (oldData: any) => ({
+        ...oldData,
+        ...metrics.metrics,
+      })
+    );
+
     console.log('Real-time metrics update:', metrics);
   });
 
   // Subscribe to specific API
-  const subscribeToAPI = useCallback((apiId: string) => {
-    if (!subscribedAPIs.includes(apiId)) {
-      setSubscribedAPIs(prev => [...prev, apiId]);
-      
-      if (isConnected) {
-        emit('subscribe:api', { apiId });
+  const subscribeToAPI = useCallback(
+    (apiId: string) => {
+      if (!subscribedAPIs.includes(apiId)) {
+        setSubscribedAPIs((prev) => [...prev, apiId]);
+
+        if (isConnected) {
+          emit('subscribe:api', { apiId });
+        }
       }
-    }
-  }, [subscribedAPIs, isConnected, emit]);
+    },
+    [subscribedAPIs, isConnected, emit]
+  );
 
   // Unsubscribe from specific API
-  const unsubscribeFromAPI = useCallback((apiId: string) => {
-    setSubscribedAPIs(prev => prev.filter(id => id !== apiId));
-    
-    if (isConnected) {
-      emit('unsubscribe:api', { apiId });
-    }
-  }, [isConnected, emit]);
+  const unsubscribeFromAPI = useCallback(
+    (apiId: string) => {
+      setSubscribedAPIs((prev) => prev.filter((id) => id !== apiId));
+
+      if (isConnected) {
+        emit('unsubscribe:api', { apiId });
+      }
+    },
+    [isConnected, emit]
+  );
 
   // Event handler registration
-  const onAPIUpdate = useCallback((callback: (update: RealtimeAPIUpdate) => void) => {
-    apiUpdateCallbacks.add(callback);
-    return () => apiUpdateCallbacks.delete(callback);
-  }, [apiUpdateCallbacks]);
+  const onAPIUpdate = useCallback(
+    (callback: (update: RealtimeAPIUpdate) => void) => {
+      apiUpdateCallbacks.add(callback);
+      return () => apiUpdateCallbacks.delete(callback);
+    },
+    [apiUpdateCallbacks]
+  );
 
-  const onNotification = useCallback((callback: (notification: RealtimeNotification) => void) => {
-    notificationCallbacks.add(callback);
-    return () => notificationCallbacks.delete(callback);
-  }, [notificationCallbacks]);
+  const onNotification = useCallback(
+    (callback: (notification: RealtimeNotification) => void) => {
+      notificationCallbacks.add(callback);
+      return () => notificationCallbacks.delete(callback);
+    },
+    [notificationCallbacks]
+  );
 
-  const onAPIChange = useCallback((callback: (change: RealtimeAPIChange) => void) => {
-    apiChangeCallbacks.add(callback);
-    return () => apiChangeCallbacks.delete(callback);
-  }, [apiChangeCallbacks]);
+  const onAPIChange = useCallback(
+    (callback: (change: RealtimeAPIChange) => void) => {
+      apiChangeCallbacks.add(callback);
+      return () => apiChangeCallbacks.delete(callback);
+    },
+    [apiChangeCallbacks]
+  );
 
-  const onMetricsUpdate = useCallback((callback: (metrics: RealtimeMetrics) => void) => {
-    metricsCallbacks.add(callback);
-    return () => metricsCallbacks.delete(callback);
-  }, [metricsCallbacks]);
+  const onMetricsUpdate = useCallback(
+    (callback: (metrics: RealtimeMetrics) => void) => {
+      metricsCallbacks.add(callback);
+      return () => metricsCallbacks.delete(callback);
+    },
+    [metricsCallbacks]
+  );
 
   // Enable/disable real-time updates
   const enable = useCallback(() => {
     setIsEnabled(true);
-    
+
     // Re-subscribe to all APIs
     if (isConnected) {
-      subscribedAPIs.forEach(apiId => {
+      subscribedAPIs.forEach((apiId) => {
         emit('subscribe:api', { apiId });
       });
     }
@@ -254,10 +299,10 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({
 
   const disable = useCallback(() => {
     setIsEnabled(false);
-    
+
     // Unsubscribe from all APIs
     if (isConnected) {
-      subscribedAPIs.forEach(apiId => {
+      subscribedAPIs.forEach((apiId) => {
         emit('unsubscribe:api', { apiId });
       });
     }
@@ -266,7 +311,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({
   // Re-subscribe when connection is restored
   useEffect(() => {
     if (isConnected && isEnabled) {
-      subscribedAPIs.forEach(apiId => {
+      subscribedAPIs.forEach((apiId) => {
         emit('subscribe:api', { apiId });
       });
     }
@@ -312,33 +357,41 @@ export const useRealtime = (): RealtimeContextType => {
 };
 
 // Specialized hooks for specific real-time features
-export const useRealtimeAPIUpdates = (callback: (update: RealtimeAPIUpdate) => void) => {
+export const useRealtimeAPIUpdates = (
+  callback: (update: RealtimeAPIUpdate) => void
+) => {
   const { onAPIUpdate } = useRealtime();
-  
+
   useEffect(() => {
     return onAPIUpdate(callback);
   }, [onAPIUpdate, callback]);
 };
 
-export const useRealtimeNotifications = (callback: (notification: RealtimeNotification) => void) => {
+export const useRealtimeNotifications = (
+  callback: (notification: RealtimeNotification) => void
+) => {
   const { onNotification } = useRealtime();
-  
+
   useEffect(() => {
     return onNotification(callback);
   }, [onNotification, callback]);
 };
 
-export const useRealtimeAPIChanges = (callback: (change: RealtimeAPIChange) => void) => {
+export const useRealtimeAPIChanges = (
+  callback: (change: RealtimeAPIChange) => void
+) => {
   const { onAPIChange } = useRealtime();
-  
+
   useEffect(() => {
     return onAPIChange(callback);
   }, [onAPIChange, callback]);
 };
 
-export const useRealtimeMetrics = (callback: (metrics: RealtimeMetrics) => void) => {
+export const useRealtimeMetrics = (
+  callback: (metrics: RealtimeMetrics) => void
+) => {
   const { onMetricsUpdate } = useRealtime();
-  
+
   useEffect(() => {
     return onMetricsUpdate(callback);
   }, [onMetricsUpdate, callback]);
@@ -347,7 +400,7 @@ export const useRealtimeMetrics = (callback: (metrics: RealtimeMetrics) => void)
 // Hook for API-specific subscriptions
 export const useAPISubscription = (apiId: string | undefined) => {
   const { subscribeToAPI, unsubscribeFromAPI } = useRealtime();
-  
+
   useEffect(() => {
     if (apiId) {
       subscribeToAPI(apiId);

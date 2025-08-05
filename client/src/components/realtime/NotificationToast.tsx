@@ -1,15 +1,15 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { 
-  AlertTriangle, 
-  CheckCircle, 
-  Info, 
-  X, 
+import {
+  AlertTriangle,
+  CheckCircle,
+  Info,
+  X,
   Bell,
   Activity,
   TrendingUp,
-  Zap
+  Zap,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import type { RealtimeNotification } from '@/providers/RealtimeProvider';
@@ -62,7 +62,7 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
 
   const getIcon = () => {
     const iconProps = { className: 'w-5 h-5 flex-shrink-0' };
-    
+
     switch (notification.type) {
       case 'api_change':
         return <Activity {...iconProps} />;
@@ -151,38 +151,44 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
           : 'opacity-0 transform translate-x-2 scale-95'
       )}
     >
-      <div className={clsx(
-        'relative bg-white rounded-lg shadow-lg border-l-4 border',
-        styles.background,
-        'overflow-hidden'
-      )}>
+      <div
+        className={clsx(
+          'relative bg-white rounded-lg shadow-lg border-l-4 border',
+          styles.background,
+          'overflow-hidden'
+        )}
+      >
         {/* Accent bar */}
-        <div className={clsx('absolute left-0 top-0 bottom-0 w-1', styles.accent)} />
-        
+        <div
+          className={clsx('absolute left-0 top-0 bottom-0 w-1', styles.accent)}
+        />
+
         {/* Content */}
         <div className="p-4 pl-6">
           <div className="flex items-start space-x-3">
             {/* Icon */}
-            <div className={clsx('mt-0.5', styles.icon)}>
-              {getIcon()}
-            </div>
-            
+            <div className={clsx('mt-0.5', styles.icon)}>{getIcon()}</div>
+
             {/* Content */}
             <div className="flex-1 min-w-0">
-              <h4 className={clsx('text-sm font-semibold truncate', styles.title)}>
+              <h4
+                className={clsx('text-sm font-semibold truncate', styles.title)}
+              >
                 {notification.title}
               </h4>
               <p className={clsx('text-sm mt-1', styles.message)}>
                 {notification.message}
               </p>
-              
+
               {/* Metadata */}
               {notification.metadata && (
                 <div className="mt-2 space-y-1">
                   {notification.metadata.changesCount && (
                     <div className="flex items-center space-x-1 text-xs text-gray-600">
                       <TrendingUp className="w-3 h-3" />
-                      <span>{notification.metadata.changesCount} changes detected</span>
+                      <span>
+                        {notification.metadata.changesCount} changes detected
+                      </span>
                     </div>
                   )}
                   {notification.metadata.apiName && (
@@ -193,7 +199,7 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
                   )}
                 </div>
               )}
-              
+
               {/* Actions */}
               {showActions && (
                 <div className="flex items-center space-x-3 mt-3">
@@ -202,7 +208,8 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
                       onClick={onAction}
                       className={clsx(
                         'text-xs font-medium px-3 py-1 rounded-md transition-colors',
-                        notification.severity === 'critical' || notification.severity === 'high'
+                        notification.severity === 'critical' ||
+                          notification.severity === 'high'
                           ? 'bg-red-600 text-white hover:bg-red-700'
                           : 'bg-blue-600 text-white hover:bg-blue-700'
                       )}
@@ -219,7 +226,7 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
                 </div>
               )}
             </div>
-            
+
             {/* Close button */}
             <button
               onClick={handleDismiss}
@@ -229,12 +236,15 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
             </button>
           </div>
         </div>
-        
+
         {/* Progress bar for auto-hide */}
         {notification.severity !== 'critical' && autoHideDuration > 0 && (
           <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-200">
             <div
-              className={clsx('h-full transition-all ease-linear', styles.accent)}
+              className={clsx(
+                'h-full transition-all ease-linear',
+                styles.accent
+              )}
               style={{
                 width: '100%',
                 animation: `shrink ${autoHideDuration}ms linear`,
@@ -243,11 +253,15 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
           </div>
         )}
       </div>
-      
+
       <style jsx>{`
         @keyframes shrink {
-          from { width: 100%; }
-          to { width: 0%; }
+          from {
+            width: 100%;
+          }
+          to {
+            width: 0%;
+          }
         }
       `}</style>
     </div>
@@ -263,7 +277,9 @@ interface NotificationToastContainerProps {
   position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
 }
 
-export const NotificationToastContainer: React.FC<NotificationToastContainerProps> = ({
+export const NotificationToastContainer: React.FC<
+  NotificationToastContainerProps
+> = ({
   notifications,
   onDismiss,
   onAction,
@@ -272,12 +288,14 @@ export const NotificationToastContainer: React.FC<NotificationToastContainerProp
 }) => {
   // Show only the most recent notifications
   const visibleNotifications = notifications.slice(0, maxVisible);
-  
+
   // Calculate stacking offset
   const getStackOffset = (index: number) => {
     const baseOffset = index * 4;
     const scaleOffset = index * 2;
-    return { transform: `translateY(${baseOffset}px) scale(${1 - scaleOffset * 0.02})` };
+    return {
+      transform: `translateY(${baseOffset}px) scale(${1 - scaleOffset * 0.02})`,
+    };
   };
 
   return (
@@ -297,21 +315,30 @@ export const NotificationToastContainer: React.FC<NotificationToastContainerProp
           />
         </div>
       ))}
-      
+
       {/* Show count if there are more notifications */}
       {notifications.length > maxVisible && (
-        <div className={clsx(
-          'fixed z-40 pointer-events-auto',
-          position === 'top-right' ? 'top-4 right-4' :
-          position === 'top-left' ? 'top-4 left-4' :
-          position === 'bottom-right' ? 'bottom-4 right-4' :
-          'bottom-4 left-4'
-        )}>
+        <div
+          className={clsx(
+            'fixed z-40 pointer-events-auto',
+            position === 'top-right'
+              ? 'top-4 right-4'
+              : position === 'top-left'
+                ? 'top-4 left-4'
+                : position === 'bottom-right'
+                  ? 'bottom-4 right-4'
+                  : 'bottom-4 left-4'
+          )}
+        >
           <div
             className="bg-gray-800 text-white px-3 py-2 rounded-lg shadow-lg text-sm"
-            style={{ 
-              marginTop: position.includes('top') ? `${maxVisible * 4 + 80}px` : undefined,
-              marginBottom: position.includes('bottom') ? `${maxVisible * 4 + 80}px` : undefined,
+            style={{
+              marginTop: position.includes('top')
+                ? `${maxVisible * 4 + 80}px`
+                : undefined,
+              marginBottom: position.includes('bottom')
+                ? `${maxVisible * 4 + 80}px`
+                : undefined,
             }}
           >
             +{notifications.length - maxVisible} more notifications
@@ -327,11 +354,11 @@ export const useNotificationToasts = () => {
   const [toasts, setToasts] = useState<RealtimeNotification[]>([]);
 
   const addToast = (notification: RealtimeNotification) => {
-    setToasts(prev => [notification, ...prev]);
+    setToasts((prev) => [notification, ...prev]);
   };
 
   const removeToast = (id: string) => {
-    setToasts(prev => prev.filter(toast => toast.id !== id));
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
   };
 
   const clearAllToasts = () => {

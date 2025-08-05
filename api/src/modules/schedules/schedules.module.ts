@@ -4,9 +4,10 @@ import { SchedulesController } from './schedules.controller';
 import { SmartSchedulerService } from './smart-scheduler.service';
 import { ApisModule } from '../apis/apis.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { WebSocketModule } from '../websocket/websocket.module';
 
 @Module({
-  imports: [ApisModule, NotificationsModule],
+  imports: [ApisModule, NotificationsModule, WebSocketModule],
   controllers: [SchedulesController],
   providers: [SchedulesService, SmartSchedulerService],
   exports: [SmartSchedulerService],

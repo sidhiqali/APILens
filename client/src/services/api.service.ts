@@ -19,7 +19,7 @@ class ApiService {
     status?: 'all' | 'active' | 'inactive';
     sortBy?: string;
     sortOrder?: 'asc' | 'desc';
-  }): Promise<PaginatedResponse<Api>> {
+  }): Promise<Api[]> {
     const queryParams = new URLSearchParams();
 
     if (params?.page) queryParams.append('page', params.page.toString());
@@ -31,18 +31,14 @@ class ApiService {
     if (params?.sortBy) queryParams.append('sortBy', params.sortBy);
     if (params?.sortOrder) queryParams.append('sortOrder', params.sortOrder);
 
-    const response = await apiClient.get<PaginatedResponse<Api>>(
+    return await apiClient.get<Api[]>(
       `${this.baseUrl}?${queryParams.toString()}`
     );
-    return response;
   }
 
   // Get a single API by ID
-  async getApiById(id: string): Promise<ApiResponse<Api>> {
-    const response = await apiClient.get<ApiResponse<Api>>(
-      `${this.baseUrl}/${id}`
-    );
-    return response;
+  async getApiById(id: string): Promise<Api> {
+    return await apiClient.get<Api>(`${this.baseUrl}/${id}`);
   }
 
   // Create a new API
@@ -148,26 +144,6 @@ class ApiService {
   async testApi(id: string): Promise<ApiResponse<any>> {
     const response = await apiClient.post<ApiResponse<any>>(
       `${this.baseUrl}/${id}/test`
-    );
-    return response;
-  }
-
-  // Get dashboard stats
-  async getDashboardStats(): Promise<
-    ApiResponse<{
-      totalApis: number;
-      activeApis: number;
-      totalChanges: number;
-      criticalIssues: number;
-      healthyApis: number;
-      unhealthyApis: number;
-      recentChanges: any[];
-      apisByTag: Record<string, number>;
-      changesTrend: any[];
-    }>
-  > {
-    const response = await apiClient.get<ApiResponse<any>>(
-      `${this.baseUrl}/dashboard/stats`
     );
     return response;
   }
@@ -298,23 +274,32 @@ class ApiService {
     return await apiClient.post(`${this.baseUrl}/bulk/delete`, { ids });
   }
 
-  async bulkUpdateTags(ids: string[], tags: string[]): Promise<{
+  async bulkUpdateTags(
+    ids: string[],
+    tags: string[]
+  ): Promise<{
     updated: number;
     errors: string[];
   }> {
-    return await apiClient.post(`${this.baseUrl}/bulk/update-tags`, { ids, tags });
+    return await apiClient.post(`${this.baseUrl}/bulk/update-tags`, {
+      ids,
+      tags,
+    });
   }
 
   // Advanced search
-  async searchApis(query: string, filters?: {
-    tags?: string[];
-    status?: string;
-    healthStatus?: string;
-    lastChecked?: string;
-  }): Promise<PaginatedResponse<Api>> {
+  async searchApis(
+    query: string,
+    filters?: {
+      tags?: string[];
+      status?: string;
+      healthStatus?: string;
+      lastChecked?: string;
+    }
+  ): Promise<PaginatedResponse<Api>> {
     const params = new URLSearchParams();
     params.append('q', query);
-    
+
     if (filters?.tags?.length) {
       params.append('tags', filters.tags.join(','));
     }

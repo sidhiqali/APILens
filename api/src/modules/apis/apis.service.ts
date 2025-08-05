@@ -452,4 +452,162 @@ export class ApisService {
 
   //   return diff;
   // }
+
+  async bulkToggleStatus(ids: string[], userId: string): Promise<void> {
+    // Find APIs belonging to the user and toggle their status
+    const apis = await this.apiModel.find({
+      _id: { $in: ids },
+      userId: userId,
+    });
+
+    const bulkOps = apis.map((api) => ({
+      updateOne: {
+        filter: { _id: api._id },
+        update: { isActive: !api.isActive },
+      },
+    }));
+
+    if (bulkOps.length > 0) {
+      await this.apiModel.bulkWrite(bulkOps);
+    }
+  }
+
+  async bulkDelete(ids: string[], userId: string): Promise<void> {
+    // Delete APIs belonging to the user and their related data
+    await this.apiModel.deleteMany({
+      _id: { $in: ids },
+      userId: userId,
+    });
+
+    // Also clean up related changelogs
+    await this.changelogModel.deleteMany({ apiId: { $in: ids } });
+  }
+
+  async getApiDocumentation(id: string, userId: string): Promise<any> {
+    const api = await this.apiModel.findOne({
+      _id: id,
+      userId: userId,
+    });
+
+    if (!api) {
+      throw new NotFoundException('API not found');
+    }
+
+    // Return the latest OpenAPI specification
+    return api.latestSpec || {};
+  }
+
+  // Helper methods for SmartSchedulerService
+  async cleanupOldSnapshots(): Promise<number> {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const result = await this.snapshotModel.deleteMany({
+      detectedAt: { $lt: thirtyDaysAgo },
+    });
+
+    return result.deletedCount;
+  }
+
+  // Internal method to get API details without userId check (for scheduler)
+  async getApiByIdInternal(apiId: string): Promise<any> {
+    return this.apiModel.findById(apiId);
+  }
+
+  async updateApiHealth(
+    apiId: string,
+    healthData: {
+      status: string;
+      lastChecked: Date;
+      responseTime?: number;
+    },
+  ): Promise<void> {
+    await this.apiModel.findByIdAndUpdate(apiId, {
+      $set: {
+        healthStatus: healthData.status,
+        lastChecked: healthData.lastChecked,
+        ...(healthData.responseTime && {
+          responseTime: healthData.responseTime,
+        }),
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  async updateApiHealthScores(): Promise<void> {
+    const apis = await this.apiModel.find({ isActive: true });
+
+    for (const api of apis) {
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+      // Get recent snapshots (last 7 days) which indicates successful checks
+      const recentSnapshots = await this.snapshotModel
+        .find({
+          apiId: api._id,
+          detectedAt: { $gte: sevenDaysAgo },
+        })
+        .sort({ detectedAt: -1 });
+
+      if (recentSnapshots.length > 0) {
+        // Calculate health score based on successful snapshot creation
+        // More recent snapshots = healthier API (being checked successfully)
+        const totalDays = 7;
+        const daysWithSnapshots = new Set(
+          recentSnapshots.map(
+            (snapshot) => snapshot.detectedAt.toISOString().split('T')[0],
+          ),
+        ).size;
+
+        const healthScore = (daysWithSnapshots / totalDays) * 100;
+
+        // Boost score if current status is healthy
+        let finalScore = Math.round(healthScore);
+        if (api.healthStatus === 'healthy') {
+          finalScore = Math.min(100, finalScore + 20);
+        } else if (api.healthStatus === 'error') {
+          finalScore = Math.max(0, finalScore - 30);
+        }
+
+        await this.apiModel.findByIdAndUpdate(api._id, {
+          healthScore: finalScore,
+          lastHealthUpdate: new Date(),
+        });
+      }
+    }
+  }
+
+  // Add missing validateApiUrl method
+  async validateApiUrl(url: string): Promise<{
+    valid: boolean;
+    accessible: boolean;
+    responseTime?: number;
+    error?: string;
+  }> {
+    try {
+      // Basic URL validation
+      new URL(url);
+
+      // Test accessibility
+      const startTime = Date.now();
+      const response = await fetch(url, {
+        method: 'HEAD',
+        // @ts-ignore - timeout is valid but types may not be updated
+        timeout: 10000,
+      });
+      const responseTime = Date.now() - startTime;
+
+      return {
+        valid: true,
+        accessible: response.ok,
+        responseTime,
+      };
+    } catch (error) {
+      return {
+        valid: false,
+        accessible: false,
+        error: error.message,
+      };
+    }
+  }
 }

@@ -23,6 +23,5 @@ export { default as MetricsHeatmap } from './MetricsHeatmap';
 // export { default as ErrorAnalysis } from './ErrorAnalysis';
 // export { default as CapacityPlanning } from './CapacityPlanning';
 
-export type {
-  // Add type exports here as needed
-} from './types';
+export type {} from // Add type exports here as needed
+'./types';

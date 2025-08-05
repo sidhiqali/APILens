@@ -13,7 +13,10 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { clsx } from 'clsx';
-import { useRealtimeAPIUpdates, useAPISubscription } from '@/providers/RealtimeProvider';
+import {
+  useRealtimeAPIUpdates,
+  useAPISubscription,
+} from '@/providers/RealtimeProvider';
 import type { RealtimeAPIUpdate } from '@/providers/RealtimeProvider';
 
 interface APIStatus {
@@ -49,14 +52,14 @@ const LiveAPIStatus: React.FC<LiveAPIStatusProps> = ({
   const [lastUpdate, setLastUpdate] = useState<string | null>(null);
 
   // Subscribe to real-time updates for all APIs
-  initialAPIs.forEach(api => {
+  initialAPIs.forEach((api) => {
     useAPISubscription(api.id);
   });
 
   // Handle real-time API updates
   useRealtimeAPIUpdates((update: RealtimeAPIUpdate) => {
-    setApis(prevApis => 
-      prevApis.map(api => 
+    setApis((prevApis) =>
+      prevApis.map((api) =>
         api.id === update.apiId
           ? {
               ...api,
@@ -73,7 +76,10 @@ const LiveAPIStatus: React.FC<LiveAPIStatusProps> = ({
     setLastUpdate(new Date().toISOString());
   });
 
-  const calculateTrend = (oldValue?: number, newValue?: number): 'up' | 'down' | 'stable' => {
+  const calculateTrend = (
+    oldValue?: number,
+    newValue?: number
+  ): 'up' | 'down' | 'stable' => {
     if (!oldValue || !newValue) return 'stable';
     const percentageChange = ((newValue - oldValue) / oldValue) * 100;
     if (percentageChange > 10) return 'down'; // Worse performance
@@ -83,14 +89,23 @@ const LiveAPIStatus: React.FC<LiveAPIStatusProps> = ({
 
   const getStatusIcon = (status: APIStatus['status']) => {
     const iconProps = { className: 'w-4 h-4' };
-    
+
     switch (status) {
       case 'healthy':
-        return <CheckCircle {...iconProps} className="w-4 h-4 text-green-600" />;
+        return (
+          <CheckCircle {...iconProps} className="w-4 h-4 text-green-600" />
+        );
       case 'unhealthy':
-        return <AlertTriangle {...iconProps} className="w-4 h-4 text-red-600" />;
+        return (
+          <AlertTriangle {...iconProps} className="w-4 h-4 text-red-600" />
+        );
       case 'checking':
-        return <Clock {...iconProps} className="w-4 h-4 text-yellow-600 animate-pulse" />;
+        return (
+          <Clock
+            {...iconProps}
+            className="w-4 h-4 text-yellow-600 animate-pulse"
+          />
+        );
       default:
         return <Activity {...iconProps} className="w-4 h-4 text-gray-400" />;
     }
@@ -111,7 +126,7 @@ const LiveAPIStatus: React.FC<LiveAPIStatusProps> = ({
 
   const getTrendIcon = (trend?: 'up' | 'down' | 'stable') => {
     const iconProps = { className: 'w-3 h-3' };
-    
+
     switch (trend) {
       case 'up':
         return <TrendingUp {...iconProps} className="w-3 h-3 text-green-600" />;
@@ -139,7 +154,7 @@ const LiveAPIStatus: React.FC<LiveAPIStatusProps> = ({
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
-    
+
     if (diffMins < 1) return 'Just now';
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`;
@@ -161,7 +176,9 @@ const LiveAPIStatus: React.FC<LiveAPIStatusProps> = ({
           >
             <div className="flex items-center space-x-3">
               {getStatusIcon(api.status)}
-              <span className="font-medium text-gray-900 truncate">{api.name}</span>
+              <span className="font-medium text-gray-900 truncate">
+                {api.name}
+              </span>
             </div>
             <div className="flex items-center space-x-2">
               {showTrends && api.trend && getTrendIcon(api.trend)}
@@ -202,14 +219,18 @@ const LiveAPIStatus: React.FC<LiveAPIStatusProps> = ({
             className={clsx(
               'p-4 border rounded-lg transition-all',
               getStatusColor(api.status),
-              onAPIClick ? 'cursor-pointer hover:shadow-md hover:scale-105' : 'cursor-default'
+              onAPIClick
+                ? 'cursor-pointer hover:shadow-md hover:scale-105'
+                : 'cursor-default'
             )}
           >
             {/* Header */}
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-2">
                 {getStatusIcon(api.status)}
-                <h4 className="font-medium text-gray-900 truncate">{api.name}</h4>
+                <h4 className="font-medium text-gray-900 truncate">
+                  {api.name}
+                </h4>
               </div>
               {showTrends && api.trend && (
                 <div className="flex items-center space-x-1">
@@ -242,13 +263,17 @@ const LiveAPIStatus: React.FC<LiveAPIStatusProps> = ({
                 {api.errorCount && api.errorCount > 0 && (
                   <div className="flex items-center space-x-1">
                     <AlertTriangle className="w-3 h-3 text-red-600" />
-                    <span className="text-xs text-red-600">{api.errorCount} errors</span>
+                    <span className="text-xs text-red-600">
+                      {api.errorCount} errors
+                    </span>
                   </div>
                 )}
                 {api.alertsCount && api.alertsCount > 0 && (
                   <div className="flex items-center space-x-1">
                     <Zap className="w-3 h-3 text-orange-600" />
-                    <span className="text-xs text-orange-600">{api.alertsCount} alerts</span>
+                    <span className="text-xs text-orange-600">
+                      {api.alertsCount} alerts
+                    </span>
                   </div>
                 )}
               </div>
@@ -266,8 +291,12 @@ const LiveAPIStatus: React.FC<LiveAPIStatusProps> = ({
       {apis.length === 0 && (
         <div className="text-center py-8">
           <Activity className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No APIs Monitoring</h3>
-          <p className="text-gray-600">Add APIs to start monitoring their real-time status.</p>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No APIs Monitoring
+          </h3>
+          <p className="text-gray-600">
+            Add APIs to start monitoring their real-time status.
+          </p>
         </div>
       )}
     </div>
@@ -284,51 +313,70 @@ export const LiveAPIStatusSummary: React.FC<LiveAPIStatusSummaryProps> = ({
   apis,
   className = '',
 }) => {
-  const healthyCount = apis.filter(api => api.status === 'healthy').length;
-  const unhealthyCount = apis.filter(api => api.status === 'unhealthy').length;
-  const checkingCount = apis.filter(api => api.status === 'checking').length;
-  
-  const avgResponseTime = apis.reduce((sum, api) => sum + (api.responseTime || 0), 0) / apis.length;
-  const avgUptime = apis.reduce((sum, api) => sum + (api.uptime || 0), 0) / apis.length;
+  const healthyCount = apis.filter((api) => api.status === 'healthy').length;
+  const unhealthyCount = apis.filter(
+    (api) => api.status === 'unhealthy'
+  ).length;
+  const checkingCount = apis.filter((api) => api.status === 'checking').length;
+
+  const avgResponseTime =
+    apis.reduce((sum, api) => sum + (api.responseTime || 0), 0) / apis.length;
+  const avgUptime =
+    apis.reduce((sum, api) => sum + (api.uptime || 0), 0) / apis.length;
 
   return (
-    <div className={clsx('bg-white rounded-lg border border-gray-200 p-4', className)}>
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">API Health Summary</h3>
-      
+    <div
+      className={clsx(
+        'bg-white rounded-lg border border-gray-200 p-4',
+        className
+      )}
+    >
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        API Health Summary
+      </h3>
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="text-center">
           <div className="flex items-center justify-center space-x-1 mb-1">
             <CheckCircle className="w-4 h-4 text-green-600" />
-            <span className="text-2xl font-bold text-green-600">{healthyCount}</span>
+            <span className="text-2xl font-bold text-green-600">
+              {healthyCount}
+            </span>
           </div>
           <p className="text-xs text-gray-600">Healthy</p>
         </div>
-        
+
         <div className="text-center">
           <div className="flex items-center justify-center space-x-1 mb-1">
             <AlertTriangle className="w-4 h-4 text-red-600" />
-            <span className="text-2xl font-bold text-red-600">{unhealthyCount}</span>
+            <span className="text-2xl font-bold text-red-600">
+              {unhealthyCount}
+            </span>
           </div>
           <p className="text-xs text-gray-600">Unhealthy</p>
         </div>
-        
+
         <div className="text-center">
           <div className="flex items-center justify-center space-x-1 mb-1">
             <Clock className="w-4 h-4 text-yellow-600" />
-            <span className="text-2xl font-bold text-yellow-600">{checkingCount}</span>
+            <span className="text-2xl font-bold text-yellow-600">
+              {checkingCount}
+            </span>
           </div>
           <p className="text-xs text-gray-600">Checking</p>
         </div>
-        
+
         <div className="text-center">
           <div className="flex items-center justify-center space-x-1 mb-1">
             <Activity className="w-4 h-4 text-blue-600" />
-            <span className="text-2xl font-bold text-blue-600">{apis.length}</span>
+            <span className="text-2xl font-bold text-blue-600">
+              {apis.length}
+            </span>
           </div>
           <p className="text-xs text-gray-600">Total</p>
         </div>
       </div>
-      
+
       {apis.length > 0 && (
         <div className="mt-4 pt-4 border-t border-gray-200">
           <div className="grid grid-cols-2 gap-4">

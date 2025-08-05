@@ -52,7 +52,9 @@ interface APIPerformanceChartProps {
   timeRange: '1h' | '6h' | '24h' | '7d' | '30d';
   onTimeRangeChange: (range: '1h' | '6h' | '24h' | '7d' | '30d') => void;
   metric: 'responseTime' | 'uptime' | 'errorRate' | 'requestCount';
-  onMetricChange: (metric: 'responseTime' | 'uptime' | 'errorRate' | 'requestCount') => void;
+  onMetricChange: (
+    metric: 'responseTime' | 'uptime' | 'errorRate' | 'requestCount'
+  ) => void;
   chartType?: 'line' | 'area' | 'bar';
   className?: string;
   showSLA?: boolean;
@@ -90,8 +92,8 @@ const APIPerformanceChart: React.FC<APIPerformanceChartProps> = ({
 
   // Filter and process data based on selections
   const chartData = useMemo(() => {
-    const apisToShow = compareMode 
-      ? apis.filter(api => selectedAPIs.includes(api.apiId))
+    const apisToShow = compareMode
+      ? apis.filter((api) => selectedAPIs.includes(api.apiId))
       : apis.slice(0, 1); // Show only first API in single mode
 
     if (apisToShow.length === 0) return [];
@@ -101,27 +103,29 @@ const APIPerformanceChart: React.FC<APIPerformanceChartProps> = ({
     const timePoints = new Set<string>();
 
     // Collect all unique timestamps
-    apisToShow.forEach(api => {
-      api.data.forEach(point => timePoints.add(point.timestamp));
+    apisToShow.forEach((api) => {
+      api.data.forEach((point) => timePoints.add(point.timestamp));
     });
 
     // Create merged data points
-    Array.from(timePoints).sort().forEach(timestamp => {
-      const dataPoint: any = { timestamp };
-      
-      apisToShow.forEach((api) => {
-        const point = api.data.find(p => p.timestamp === timestamp);
-        if (point) {
-          dataPoint[`${api.apiName}_${metric}`] = point[metric];
-          dataPoint[`${api.apiName}_date`] = point.date;
-          dataPoint[`${api.apiName}_hour`] = point.hour;
-        } else {
-          dataPoint[`${api.apiName}_${metric}`] = null;
-        }
-      });
+    Array.from(timePoints)
+      .sort()
+      .forEach((timestamp) => {
+        const dataPoint: any = { timestamp };
 
-      mergedData.push(dataPoint);
-    });
+        apisToShow.forEach((api) => {
+          const point = api.data.find((p) => p.timestamp === timestamp);
+          if (point) {
+            dataPoint[`${api.apiName}_${metric}`] = point[metric];
+            dataPoint[`${api.apiName}_date`] = point.date;
+            dataPoint[`${api.apiName}_hour`] = point.hour;
+          } else {
+            dataPoint[`${api.apiName}_${metric}`] = null;
+          }
+        });
+
+        mergedData.push(dataPoint);
+      });
 
     return mergedData;
   }, [apis, compareMode, selectedAPIs, metric]);
@@ -162,7 +166,8 @@ const APIPerformanceChart: React.FC<APIPerformanceChartProps> = ({
           unit: '',
           color: '#8B5CF6',
           icon: BarChart3,
-          format: (value: number) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value.toString(),
+          format: (value: number) =>
+            value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value.toString(),
           threshold: undefined,
         };
       default:
@@ -226,20 +231,23 @@ const APIPerformanceChart: React.FC<APIPerformanceChartProps> = ({
   // Calculate trend
   const calculateTrend = (data: PerformanceDataPoint[]) => {
     if (data.length < 2) return { direction: 'stable', percentage: 0 };
-    
-    const recent = data.slice(-5).reduce((sum, point) => sum + point[metric], 0) / 5;
-    const previous = data.slice(-10, -5).reduce((sum, point) => sum + point[metric], 0) / 5;
-    
+
+    const recent =
+      data.slice(-5).reduce((sum, point) => sum + point[metric], 0) / 5;
+    const previous =
+      data.slice(-10, -5).reduce((sum, point) => sum + point[metric], 0) / 5;
+
     const change = ((recent - previous) / previous) * 100;
-    const direction = Math.abs(change) < 1 ? 'stable' : change > 0 ? 'up' : 'down';
-    
+    const direction =
+      Math.abs(change) < 1 ? 'stable' : change > 0 ? 'up' : 'down';
+
     return { direction, percentage: Math.abs(change) };
   };
 
   // Render chart based on type
   const renderChart = () => {
-    const apisToShow = compareMode 
-      ? apis.filter(api => selectedAPIs.includes(api.apiId))
+    const apisToShow = compareMode
+      ? apis.filter((api) => selectedAPIs.includes(api.apiId))
       : apis.slice(0, 1);
 
     switch (chartType) {
@@ -247,7 +255,7 @@ const APIPerformanceChart: React.FC<APIPerformanceChartProps> = ({
         return (
           <AreaChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis 
+            <XAxis
               dataKey="timestamp"
               tickFormatter={(value) => new Date(value).toLocaleTimeString()}
             />
@@ -267,11 +275,11 @@ const APIPerformanceChart: React.FC<APIPerformanceChartProps> = ({
               />
             ))}
             {showSLA && config.threshold && (
-              <ReferenceLine 
-                y={config.threshold} 
-                stroke="#EF4444" 
+              <ReferenceLine
+                y={config.threshold}
+                stroke="#EF4444"
                 strokeDasharray="5 5"
-                label={{ value: "SLA Target", position: "top" }}
+                label={{ value: 'SLA Target', position: 'top' }}
               />
             )}
           </AreaChart>
@@ -281,7 +289,7 @@ const APIPerformanceChart: React.FC<APIPerformanceChartProps> = ({
         return (
           <BarChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis 
+            <XAxis
               dataKey="timestamp"
               tickFormatter={(value) => new Date(value).toLocaleTimeString()}
             />
@@ -296,11 +304,11 @@ const APIPerformanceChart: React.FC<APIPerformanceChartProps> = ({
               />
             ))}
             {showSLA && config.threshold && (
-              <ReferenceLine 
-                y={config.threshold} 
-                stroke="#EF4444" 
+              <ReferenceLine
+                y={config.threshold}
+                stroke="#EF4444"
                 strokeDasharray="5 5"
-                label={{ value: "SLA Target", position: "top" }}
+                label={{ value: 'SLA Target', position: 'top' }}
               />
             )}
           </BarChart>
@@ -310,7 +318,7 @@ const APIPerformanceChart: React.FC<APIPerformanceChartProps> = ({
         return (
           <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis 
+            <XAxis
               dataKey="timestamp"
               tickFormatter={(value) => new Date(value).toLocaleTimeString()}
             />
@@ -329,11 +337,11 @@ const APIPerformanceChart: React.FC<APIPerformanceChartProps> = ({
               />
             ))}
             {showSLA && config.threshold && (
-              <ReferenceLine 
-                y={config.threshold} 
-                stroke="#EF4444" 
+              <ReferenceLine
+                y={config.threshold}
+                stroke="#EF4444"
                 strokeDasharray="5 5"
-                label={{ value: "SLA Target", position: "top" }}
+                label={{ value: 'SLA Target', position: 'top' }}
               />
             )}
           </LineChart>
@@ -342,7 +350,12 @@ const APIPerformanceChart: React.FC<APIPerformanceChartProps> = ({
   };
 
   return (
-    <div className={clsx('bg-white rounded-lg border border-gray-200 p-6', className)}>
+    <div
+      className={clsx(
+        'bg-white rounded-lg border border-gray-200 p-6',
+        className
+      )}
+    >
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
@@ -352,7 +365,9 @@ const APIPerformanceChart: React.FC<APIPerformanceChartProps> = ({
               API Performance - {config.label}
             </h3>
             <p className="text-sm text-gray-600">
-              {compareMode ? `Comparing ${selectedAPIs.length} APIs` : apis[0]?.apiName}
+              {compareMode
+                ? `Comparing ${selectedAPIs.length} APIs`
+                : apis[0]?.apiName}
             </p>
           </div>
         </div>
@@ -365,7 +380,7 @@ const APIPerformanceChart: React.FC<APIPerformanceChartProps> = ({
               onClick={() => {
                 // Toggle compare mode logic would go here
                 if (onAPISelection && !compareMode) {
-                  onAPISelection(apis.slice(0, 2).map(api => api.apiId));
+                  onAPISelection(apis.slice(0, 2).map((api) => api.apiId));
                 }
               }}
               className={clsx(
@@ -413,7 +428,7 @@ const APIPerformanceChart: React.FC<APIPerformanceChartProps> = ({
           {apis.slice(0, 1).map((api) => {
             const trend = calculateTrend(api.data);
             const latest = api.data[api.data.length - 1];
-            
+
             return (
               <div key={api.apiId} className="text-center">
                 <div className="flex items-center justify-center space-x-1 mb-1">
@@ -427,10 +442,14 @@ const APIPerformanceChart: React.FC<APIPerformanceChartProps> = ({
                       ) : (
                         <TrendingDown className="w-4 h-4 text-red-600" />
                       )}
-                      <span className={clsx(
-                        'text-xs',
-                        trend.direction === 'up' ? 'text-green-600' : 'text-red-600'
-                      )}>
+                      <span
+                        className={clsx(
+                          'text-xs',
+                          trend.direction === 'up'
+                            ? 'text-green-600'
+                            : 'text-red-600'
+                        )}
+                      >
                         {trend.percentage.toFixed(1)}%
                       </span>
                     </div>
@@ -453,7 +472,9 @@ const APIPerformanceChart: React.FC<APIPerformanceChartProps> = ({
       {/* API Selection for Compare Mode */}
       {compareMode && (
         <div className="mt-6 pt-6 border-t border-gray-200">
-          <h4 className="text-sm font-medium text-gray-900 mb-3">Select APIs to Compare</h4>
+          <h4 className="text-sm font-medium text-gray-900 mb-3">
+            Select APIs to Compare
+          </h4>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
             {apis.map((api, index) => (
               <label
@@ -468,7 +489,9 @@ const APIPerformanceChart: React.FC<APIPerformanceChartProps> = ({
                       if (e.target.checked) {
                         onAPISelection([...selectedAPIs, api.apiId]);
                       } else {
-                        onAPISelection(selectedAPIs.filter(id => id !== api.apiId));
+                        onAPISelection(
+                          selectedAPIs.filter((id) => id !== api.apiId)
+                        );
                       }
                     }
                   }}
@@ -478,7 +501,9 @@ const APIPerformanceChart: React.FC<APIPerformanceChartProps> = ({
                   className="w-3 h-3 rounded-full"
                   style={{ backgroundColor: colors[index % colors.length] }}
                 />
-                <span className="text-sm text-gray-700 truncate">{api.apiName}</span>
+                <span className="text-sm text-gray-700 truncate">
+                  {api.apiName}
+                </span>
               </label>
             ))}
           </div>
@@ -489,12 +514,13 @@ const APIPerformanceChart: React.FC<APIPerformanceChartProps> = ({
       {chartData.length === 0 && (
         <div className="text-center py-12">
           <BarChart3 className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Data Available</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No Data Available
+          </h3>
           <p className="text-gray-600">
-            {compareMode 
+            {compareMode
               ? 'Select APIs to compare their performance metrics.'
-              : 'Performance data will appear here once monitoring begins.'
-            }
+              : 'Performance data will appear here once monitoring begins.'}
           </p>
         </div>
       )}

@@ -25,20 +25,20 @@ interface TopBarProps {
   className?: string;
 }
 
-const TopBar: React.FC<TopBarProps> = ({ 
-  onMenuToggle, 
+const TopBar: React.FC<TopBarProps> = ({
+  onMenuToggle,
   title,
   showSearch = true,
-  className = '' 
+  className = '',
 }) => {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const { data: notificationsData } = useNotifications({ unreadOnly: true });
-  
+
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   const notificationRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
@@ -47,30 +47,39 @@ const TopBar: React.FC<TopBarProps> = ({
   // Get dynamic title based on route
   const getPageTitle = () => {
     if (title) return title;
-    
+
     const pathSegments = pathname.split('/').filter(Boolean);
     if (pathSegments.length === 0) return 'Dashboard';
-    
+
     const titleMap: Record<string, string> = {
-      'dashboard': 'Dashboard',
-      'apis': 'API Management',
+      dashboard: 'Dashboard',
+      apis: 'API Management',
       'add-api': 'Add New API',
-      'notifications': 'Notifications',
-      'analytics': 'Analytics',
-      'team': 'Team Management',
-      'settings': 'Settings',
+      notifications: 'Notifications',
+      analytics: 'Analytics',
+      team: 'Team Management',
+      settings: 'Settings',
     };
-    
-    return titleMap[pathSegments[0]] || pathSegments[0].charAt(0).toUpperCase() + pathSegments[0].slice(1);
+
+    return (
+      titleMap[pathSegments[0]] ||
+      pathSegments[0].charAt(0).toUpperCase() + pathSegments[0].slice(1)
+    );
   };
 
   // Close dropdowns on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(event.target as Node)
+      ) {
         setShowNotifications(false);
       }
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+      if (
+        userMenuRef.current &&
+        !userMenuRef.current.contains(event.target as Node)
+      ) {
         setShowUserMenu(false);
       }
     };
@@ -103,10 +112,12 @@ const TopBar: React.FC<TopBarProps> = ({
   ];
 
   return (
-    <header className={clsx(
-      'bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between',
-      className
-    )}>
+    <header
+      className={clsx(
+        'bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between',
+        className
+      )}
+    >
       {/* Left Section */}
       <div className="flex items-center space-x-4">
         {/* Mobile Menu Button */}
@@ -192,7 +203,9 @@ const TopBar: React.FC<TopBarProps> = ({
             <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
               <div className="p-4 border-b border-gray-200">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-medium text-gray-900">Notifications</h3>
+                  <h3 className="text-lg font-medium text-gray-900">
+                    Notifications
+                  </h3>
                   {unreadCount > 0 && (
                     <span className="text-sm text-blue-600 font-medium">
                       {unreadCount} unread
@@ -200,44 +213,54 @@ const TopBar: React.FC<TopBarProps> = ({
                   )}
                 </div>
               </div>
-              
+
               <div className="max-h-96 overflow-y-auto">
-                {notificationsData?.notifications?.slice(0, 5).map((notification) => (
-                  <div
-                    key={notification._id}
-                    className="p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
-                  >
-                    <div className="flex items-start space-x-3">
-                      <div className={clsx(
-                        'w-2 h-2 rounded-full mt-2 flex-shrink-0',
-                        notification.severity === 'critical' ? 'bg-red-500' :
-                        notification.severity === 'high' ? 'bg-orange-500' :
-                        notification.severity === 'medium' ? 'bg-yellow-500' :
-                        'bg-blue-500'
-                      )} />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">
-                          {notification.title}
-                        </p>
-                        <p className="text-sm text-gray-600 mt-1">
-                          {notification.message}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-2">
-                          {new Date(notification.createdAt).toLocaleDateString()}
-                        </p>
+                {notificationsData?.notifications
+                  ?.slice(0, 5)
+                  .map((notification) => (
+                    <div
+                      key={notification._id}
+                      className="p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
+                    >
+                      <div className="flex items-start space-x-3">
+                        <div
+                          className={clsx(
+                            'w-2 h-2 rounded-full mt-2 flex-shrink-0',
+                            notification.severity === 'critical'
+                              ? 'bg-red-500'
+                              : notification.severity === 'high'
+                                ? 'bg-orange-500'
+                                : notification.severity === 'medium'
+                                  ? 'bg-yellow-500'
+                                  : 'bg-blue-500'
+                          )}
+                        />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900">
+                            {notification.title}
+                          </p>
+                          <p className="text-sm text-gray-600 mt-1">
+                            {notification.message}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-2">
+                            {new Date(
+                              notification.createdAt
+                            ).toLocaleDateString()}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-                
-                {(!notificationsData?.notifications || notificationsData.notifications.length === 0) && (
+                  ))}
+
+                {(!notificationsData?.notifications ||
+                  notificationsData.notifications.length === 0) && (
                   <div className="p-8 text-center text-gray-500">
                     <Bell className="w-8 h-8 mx-auto mb-2 text-gray-300" />
                     <p>No notifications</p>
                   </div>
                 )}
               </div>
-              
+
               <div className="p-3 border-t border-gray-200">
                 <Link
                   href="/notifications"
@@ -276,10 +299,12 @@ const TopBar: React.FC<TopBarProps> = ({
             {showUserMenu && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
                 <div className="p-3 border-b border-gray-200">
-                  <p className="text-sm font-medium text-gray-900">{user.email}</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {user.email}
+                  </p>
                   <p className="text-xs text-gray-500">{user.role || 'User'}</p>
                 </div>
-                
+
                 <div className="py-1">
                   <Link
                     href="/settings/profile"

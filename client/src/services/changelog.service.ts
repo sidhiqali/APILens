@@ -82,7 +82,7 @@ class ChangelogService {
     }
   ): Promise<ApiChange[]> {
     const queryParams = new URLSearchParams();
-    
+
     if (params?.limit) queryParams.append('limit', params.limit.toString());
     if (params?.severity) queryParams.append('severity', params.severity);
     if (params?.changeType) queryParams.append('changeType', params.changeType);
@@ -114,10 +114,7 @@ class ChangelogService {
   }
 
   // Get a specific changelog
-  async getChangelog(
-    apiId: string,
-    changelogId: string
-  ): Promise<Changelog> {
+  async getChangelog(apiId: string, changelogId: string): Promise<Changelog> {
     return await apiClient.get<Changelog>(
       `${this.baseUrl}/${apiId}/changelog/${changelogId}`
     );
@@ -157,10 +154,7 @@ class ChangelogService {
   }
 
   // Delete changelog
-  async deleteChangelog(
-    apiId: string,
-    changelogId: string
-  ): Promise<void> {
+  async deleteChangelog(apiId: string, changelogId: string): Promise<void> {
     await apiClient.delete(`${this.baseUrl}/${apiId}/changelog/${changelogId}`);
   }
 

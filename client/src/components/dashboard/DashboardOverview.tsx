@@ -8,11 +8,11 @@ import {
   useCriticalAlerts,
 } from '@/hooks/useDashboard';
 import { useRealTimeDashboard } from '@/hooks/useRealtime';
+import QuickActions from './QuickActions';
 import StatsCards from './StatsCards';
 import RecentActivity from './RecentActivity';
-import CriticalAlerts from './CriticalAlerts';
 import HealthMonitor from './HealthMonitor';
-import QuickActions from './QuickActions';
+import CriticalAlerts from './CriticalAlerts';
 
 interface DashboardOverviewProps {
   className?: string;

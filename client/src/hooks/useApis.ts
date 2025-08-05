@@ -1,16 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { apiService } from '@/services/api.service';
-import {
-  CreateApiRequest,
-  UpdateApiRequest,
-} from '@/types';
+import { dashboardService } from '@/services/dashboard.service';
+import { CreateApiRequest, UpdateApiRequest } from '@/types';
 
 // Query keys for React Query
 export const apiQueryKeys = {
   all: ['apis'] as const,
   lists: () => [...apiQueryKeys.all, 'list'] as const,
-  list: (filters: Record<string, any>) => [...apiQueryKeys.lists(), filters] as const,
+  list: (filters: Record<string, any>) =>
+    [...apiQueryKeys.lists(), filters] as const,
   details: () => [...apiQueryKeys.all, 'detail'] as const,
   detail: (id: string) => [...apiQueryKeys.details(), id] as const,
   stats: () => [...apiQueryKeys.all, 'stats'] as const,
@@ -53,7 +52,7 @@ export const useApi = (id: string) => {
 export const useDashboardStats = () => {
   return useQuery({
     queryKey: apiQueryKeys.dashboardStats(),
-    queryFn: () => apiService.getDashboardStats(),
+    queryFn: () => dashboardService.getDashboardStats(),
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchInterval: 5 * 60 * 1000, // Auto refresh every 5 minutes
   });
@@ -70,12 +69,15 @@ export const useApiStats = (id: string, timeRange?: string) => {
 };
 
 // Hook to get API changes
-export const useApiChanges = (id: string, params?: {
-  page?: number;
-  limit?: number;
-  severity?: string;
-  changeType?: string;
-}) => {
+export const useApiChanges = (
+  id: string,
+  params?: {
+    page?: number;
+    limit?: number;
+    severity?: string;
+    changeType?: string;
+  }
+) => {
   return useQuery({
     queryKey: apiQueryKeys.changes(id),
     queryFn: () => apiService.getApiChanges(id, params),
@@ -102,7 +104,9 @@ export const useCreateApi = () => {
     onSuccess: (response) => {
       if (response.success) {
         queryClient.invalidateQueries({ queryKey: apiQueryKeys.lists() });
-        queryClient.invalidateQueries({ queryKey: apiQueryKeys.dashboardStats() });
+        queryClient.invalidateQueries({
+          queryKey: apiQueryKeys.dashboardStats(),
+        });
         queryClient.invalidateQueries({ queryKey: apiQueryKeys.tags() });
         toast.success('API registered successfully!');
       }
@@ -123,8 +127,12 @@ export const useUpdateApi = () => {
     onSuccess: (response, variables) => {
       if (response.success) {
         queryClient.invalidateQueries({ queryKey: apiQueryKeys.lists() });
-        queryClient.invalidateQueries({ queryKey: apiQueryKeys.detail(variables.id) });
-        queryClient.invalidateQueries({ queryKey: apiQueryKeys.dashboardStats() });
+        queryClient.invalidateQueries({
+          queryKey: apiQueryKeys.detail(variables.id),
+        });
+        queryClient.invalidateQueries({
+          queryKey: apiQueryKeys.dashboardStats(),
+        });
         queryClient.invalidateQueries({ queryKey: apiQueryKeys.tags() });
         toast.success('API updated successfully!');
       }
@@ -145,7 +153,9 @@ export const useDeleteApi = () => {
       if (response.success) {
         queryClient.invalidateQueries({ queryKey: apiQueryKeys.lists() });
         queryClient.removeQueries({ queryKey: apiQueryKeys.detail(id) });
-        queryClient.invalidateQueries({ queryKey: apiQueryKeys.dashboardStats() });
+        queryClient.invalidateQueries({
+          queryKey: apiQueryKeys.dashboardStats(),
+        });
         toast.success('API deleted successfully!');
       }
     },
@@ -165,12 +175,16 @@ export const useToggleApiStatus = () => {
       if (response.success) {
         queryClient.invalidateQueries({ queryKey: apiQueryKeys.lists() });
         queryClient.invalidateQueries({ queryKey: apiQueryKeys.detail(id) });
-        queryClient.invalidateQueries({ queryKey: apiQueryKeys.dashboardStats() });
+        queryClient.invalidateQueries({
+          queryKey: apiQueryKeys.dashboardStats(),
+        });
         toast.success('API status updated successfully!');
       }
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to update API status');
+      toast.error(
+        error.response?.data?.message || 'Failed to update API status'
+      );
     },
   });
 };
@@ -199,7 +213,9 @@ export const useValidateApiUrl = () => {
   return useMutation({
     mutationFn: (url: string) => apiService.validateApiUrl(url),
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to validate API URL');
+      toast.error(
+        error.response?.data?.message || 'Failed to validate API URL'
+      );
     },
   });
 };

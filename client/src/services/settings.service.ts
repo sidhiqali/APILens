@@ -52,17 +52,27 @@ class SettingsService {
 
   // User Profile Management
   async getProfile(): Promise<UserProfile> {
-    const response = await apiClient.get<{ user: UserProfile }>(`${this.baseUrl}/profile`);
+    const response = await apiClient.get<{ user: UserProfile }>(
+      `${this.baseUrl}/profile`
+    );
     return response.user;
   }
 
   async updateProfile(data: UpdateProfileRequest): Promise<UserProfile> {
-    const response = await apiClient.put<{ user: UserProfile }>(`${this.baseUrl}/profile`, data);
+    const response = await apiClient.put<{ user: UserProfile }>(
+      `${this.baseUrl}/profile`,
+      data
+    );
     return response.user;
   }
 
-  async changePassword(data: ChangePasswordRequest): Promise<{ message: string }> {
-    return await apiClient.put<{ message: string }>(`${this.baseUrl}/change-password`, data);
+  async changePassword(
+    data: ChangePasswordRequest
+  ): Promise<{ message: string }> {
+    return await apiClient.put<{ message: string }>(
+      `${this.baseUrl}/change-password`,
+      data
+    );
   }
 
   // Notification Preferences
@@ -71,11 +81,12 @@ class SettingsService {
     return profile.notificationPreferences;
   }
 
-  async updateNotificationPreferences(preferences: NotificationPreferences): Promise<NotificationPreferences> {
-    const response = await apiClient.put<{ preferences: NotificationPreferences }>(
-      `${this.baseUrl}/notification-preferences`,
-      preferences
-    );
+  async updateNotificationPreferences(
+    preferences: NotificationPreferences
+  ): Promise<NotificationPreferences> {
+    const response = await apiClient.put<{
+      preferences: NotificationPreferences;
+    }>(`${this.baseUrl}/notification-preferences`, preferences);
     return response.preferences;
   }
 
@@ -84,8 +95,14 @@ class SettingsService {
     return await apiClient.get<ApiSettings>(`/apis/${apiId}/settings`);
   }
 
-  async updateApiSettings(apiId: string, settings: Partial<ApiSettings>): Promise<ApiSettings> {
-    return await apiClient.put<ApiSettings>(`/apis/${apiId}/settings`, settings);
+  async updateApiSettings(
+    apiId: string,
+    settings: Partial<ApiSettings>
+  ): Promise<ApiSettings> {
+    return await apiClient.put<ApiSettings>(
+      `/apis/${apiId}/settings`,
+      settings
+    );
   }
 
   // System Preferences
@@ -120,7 +137,9 @@ class SettingsService {
 
   // Account Management
   async deleteAccount(): Promise<{ message: string }> {
-    return await apiClient.delete<{ message: string }>(`${this.baseUrl}/account`);
+    return await apiClient.delete<{ message: string }>(
+      `${this.baseUrl}/account`
+    );
   }
 
   async exportUserData(): Promise<Blob> {
@@ -131,15 +150,21 @@ class SettingsService {
 
   // API Key Management
   async generateApiKey(): Promise<{ apiKey: string }> {
-    return await apiClient.post<{ apiKey: string }>(`${this.baseUrl}/api-key/generate`);
+    return await apiClient.post<{ apiKey: string }>(
+      `${this.baseUrl}/api-key/generate`
+    );
   }
 
   async revokeApiKey(): Promise<{ message: string }> {
-    return await apiClient.delete<{ message: string }>(`${this.baseUrl}/api-key`);
+    return await apiClient.delete<{ message: string }>(
+      `${this.baseUrl}/api-key`
+    );
   }
 
   async getApiKey(): Promise<{ apiKey: string | null }> {
-    return await apiClient.get<{ apiKey: string | null }>(`${this.baseUrl}/api-key`);
+    return await apiClient.get<{ apiKey: string | null }>(
+      `${this.baseUrl}/api-key`
+    );
   }
 }
 

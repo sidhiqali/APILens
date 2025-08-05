@@ -5,7 +5,12 @@ export interface Notification {
   _id: string;
   userId: string;
   apiId?: string;
-  type: 'api_change' | 'api_error' | 'api_recovered' | 'system' | 'breaking_change';
+  type:
+    | 'api_change'
+    | 'api_error'
+    | 'api_recovered'
+    | 'system'
+    | 'breaking_change';
   title: string;
   message: string;
   severity: 'low' | 'medium' | 'high' | 'critical';
@@ -61,7 +66,7 @@ class NotificationService {
     unreadOnly?: boolean;
   }): Promise<PaginatedNotifications> {
     const queryParams = new URLSearchParams();
-    
+
     if (params?.limit) queryParams.append('limit', params.limit.toString());
     if (params?.offset) queryParams.append('offset', params.offset.toString());
     if (params?.unreadOnly) queryParams.append('unreadOnly', 'true');
@@ -98,13 +103,20 @@ class NotificationService {
   }
 
   // Update notification preferences
-  async updatePreferences(preferences: NotificationPreferences): Promise<NotificationPreferences> {
-    return await apiClient.put<NotificationPreferences>('/auth/notification-preferences', preferences);
+  async updatePreferences(
+    preferences: NotificationPreferences
+  ): Promise<NotificationPreferences> {
+    return await apiClient.put<NotificationPreferences>(
+      '/auth/notification-preferences',
+      preferences
+    );
   }
 
   // Get notification preferences
   async getPreferences(): Promise<NotificationPreferences> {
-    const profile = await apiClient.get<{ user: { notificationPreferences: NotificationPreferences } }>('/auth/profile');
+    const profile = await apiClient.get<{
+      user: { notificationPreferences: NotificationPreferences };
+    }>('/auth/profile');
     return profile.user.notificationPreferences;
   }
 }

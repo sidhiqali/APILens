@@ -39,16 +39,11 @@ const RouteTransitions: React.FC<RouteTransitionsProps> = ({
 
   const getTransitionClasses = () => {
     const baseClasses = 'transition-all duration-300 ease-in-out';
-    
+
     switch (transitionType) {
       case 'fade':
-        return clsx(
-          baseClasses,
-          isTransitioning 
-            ? 'opacity-0' 
-            : 'opacity-100'
-        );
-      
+        return clsx(baseClasses, isTransitioning ? 'opacity-0' : 'opacity-100');
+
       case 'slide':
         return clsx(
           baseClasses,
@@ -56,7 +51,7 @@ const RouteTransitions: React.FC<RouteTransitionsProps> = ({
             ? 'opacity-0 transform translate-x-4'
             : 'opacity-100 transform translate-x-0'
         );
-      
+
       case 'scale':
         return clsx(
           baseClasses,
@@ -64,7 +59,7 @@ const RouteTransitions: React.FC<RouteTransitionsProps> = ({
             ? 'opacity-0 transform scale-95'
             : 'opacity-100 transform scale-100'
         );
-      
+
       default:
         return '';
     }
@@ -102,7 +97,7 @@ export const LoadingTransition: React.FC<LoadingTransitionProps> = ({
       setShowLoading(true);
       return;
     }
-    
+
     const timeout = setTimeout(() => setShowLoading(false), 150);
     return () => clearTimeout(timeout);
   }, [isLoading]);
@@ -116,18 +111,22 @@ export const LoadingTransition: React.FC<LoadingTransitionProps> = ({
   return (
     <div className={clsx('relative', className)}>
       {/* Loading overlay */}
-      <div className={clsx(
-        'absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center transition-opacity duration-300 z-10',
-        showLoading ? 'opacity-100' : 'opacity-0 pointer-events-none'
-      )}>
+      <div
+        className={clsx(
+          'absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center transition-opacity duration-300 z-10',
+          showLoading ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        )}
+      >
         {loadingComponent || defaultLoadingComponent}
       </div>
-      
+
       {/* Content */}
-      <div className={clsx(
-        'transition-opacity duration-300',
-        isLoading ? 'opacity-50' : 'opacity-100'
-      )}>
+      <div
+        className={clsx(
+          'transition-opacity duration-300',
+          isLoading ? 'opacity-50' : 'opacity-100'
+        )}
+      >
         {children}
       </div>
     </div>
@@ -145,10 +144,11 @@ export const PageTransition: React.FC<PageTransitionProps> = ({
   className = '',
 }) => {
   const pathname = usePathname();
-  
+
   // Different transition types for different routes
   const getTransitionType = (): 'fade' | 'slide' | 'scale' | 'none' => {
-    if (pathname.includes('/auth') || pathname.includes('/login')) return 'fade';
+    if (pathname.includes('/auth') || pathname.includes('/login'))
+      return 'fade';
     if (pathname.includes('/settings')) return 'slide';
     if (pathname.includes('/apis/')) return 'scale';
     return 'fade';
@@ -183,7 +183,7 @@ export const AnimatedList: React.FC<AnimatedListProps> = ({
   useEffect(() => {
     const showItems = () => {
       if (visibleItems < children.length) {
-        setVisibleItems(prev => prev + 1);
+        setVisibleItems((prev) => prev + 1);
       }
     };
 
@@ -239,7 +239,7 @@ export const ModalTransition: React.FC<ModalTransitionProps> = ({
       setIsVisible(true);
       return;
     }
-    
+
     const timeout = setTimeout(() => setIsVisible(false), 300);
     return () => clearTimeout(timeout);
   }, [isOpen]);
@@ -256,7 +256,7 @@ export const ModalTransition: React.FC<ModalTransitionProps> = ({
         )}
         onClick={onClose}
       />
-      
+
       {/* Modal content */}
       <div className="relative z-10 flex items-center justify-center min-h-full p-4">
         <div
@@ -297,7 +297,7 @@ export const TabTransition: React.FC<TabTransitionProps> = ({
       setShouldRender(true);
       return;
     }
-    
+
     const timeout = setTimeout(() => setShouldRender(false), 300);
     return () => clearTimeout(timeout);
   }, [isActive]);

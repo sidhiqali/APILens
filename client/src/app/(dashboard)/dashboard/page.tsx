@@ -35,10 +35,7 @@ const DashboardPage = () => {
   const itemsPerPage = 10;
 
   // Fetch dashboard stats
-  const {
-    data: statsData,
-    isLoading: statsLoading,
-  } = useDashboardStats();
+  const { data: statsData, isLoading: statsLoading } = useDashboardStats();
 
   // Fetch APIs list
   const {
@@ -73,24 +70,49 @@ const DashboardPage = () => {
   };
 
   // Get stats with fallback to default values
-  const stats = statsData?.success
-    ? statsData.data
-    : {
-        totalApis: 0,
-        activeApis: 0,
-        totalChanges: 0,
-        criticalIssues: 0,
-        healthyApis: 0,
-        unhealthyApis: 0,
-      };
+  const stats = (statsData as any)?.data ||
+    statsData || {
+      totalApis: 0,
+      activeApis: 0,
+      totalChanges: 0,
+      criticalIssues: 0,
+      healthyApis: 0,
+      unhealthyApis: 0,
+      totalNotifications: 0,
+      unreadNotifications: 0,
+      recentNotifications: 0,
+      avgResponseTime: 0,
+      uptimePercentage: 100,
+    };
 
   // Get APIs list with fallback
-  const apis = apisData?.success ? apisData.data : [];
-  const pagination = apisData?.pagination || {
-    page: 1,
+  const allApis = apisData || [];
+
+  // Apply client-side filtering and pagination
+  const filteredApis = allApis.filter((api: any) => {
+    const matchesSearch =
+      !searchTerm ||
+      api.apiName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      api.description?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesStatus =
+      filterStatus === 'all' ||
+      (filterStatus === 'active' && api.isActive) ||
+      (filterStatus === 'inactive' && !api.isActive);
+
+    return matchesSearch && matchesStatus;
+  });
+
+  const totalApis = filteredApis.length;
+  const totalPages = Math.ceil(totalApis / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const apis = filteredApis.slice(startIndex, startIndex + itemsPerPage);
+
+  const pagination = {
+    page: currentPage,
     limit: itemsPerPage,
-    total: 0,
-    totalPages: 1,
+    total: totalApis,
+    totalPages,
   };
 
   const getStatusColor = (healthStatus: string) => {

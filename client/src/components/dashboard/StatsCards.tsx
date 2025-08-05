@@ -1,7 +1,13 @@
 'use client';
 
 import React from 'react';
-import { Activity, AlertTriangle, TrendingUp, Clock, CheckCircle } from 'lucide-react';
+import {
+  Activity,
+  AlertTriangle,
+  TrendingUp,
+  Clock,
+  CheckCircle,
+} from 'lucide-react';
 
 interface StatsCardsProps {
   stats?: {
@@ -49,7 +55,9 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats, loading = false }) => {
       icon: CheckCircle,
       color: 'text-green-600',
       bgColor: 'bg-green-50',
-      change: stats?.activeApis ? `${((stats.activeApis / (stats.totalApis || 1)) * 100).toFixed(1)}%` : null,
+      change: stats?.activeApis
+        ? `${((stats.activeApis / (stats.totalApis || 1)) * 100).toFixed(1)}%`
+        : null,
     },
     {
       title: 'Total Changes',
@@ -118,13 +126,13 @@ interface StatCardProps {
   change?: string | null;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ 
-  title, 
-  value, 
-  icon: Icon, 
-  color, 
-  bgColor, 
-  change 
+const StatCard: React.FC<StatCardProps> = ({
+  title,
+  value,
+  icon: Icon,
+  color,
+  bgColor,
+  change,
 }) => {
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border hover:shadow-md transition-shadow">

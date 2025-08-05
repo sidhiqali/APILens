@@ -1,7 +1,14 @@
 'use client';
 
 import React from 'react';
-import { Activity, CheckCircle, AlertTriangle, Clock, TrendingUp, TrendingDown } from 'lucide-react';
+import {
+  Activity,
+  CheckCircle,
+  AlertTriangle,
+  Clock,
+  TrendingUp,
+  TrendingDown,
+} from 'lucide-react';
 
 interface ApiHealthInfo {
   id: string;
@@ -19,16 +26,18 @@ interface HealthMonitorProps {
   maxItems?: number;
 }
 
-const HealthMonitor: React.FC<HealthMonitorProps> = ({ 
-  apis = [], 
-  loading = false, 
-  maxItems = 8 
+const HealthMonitor: React.FC<HealthMonitorProps> = ({
+  apis = [],
+  loading = false,
+  maxItems = 8,
 }) => {
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow-sm border">
         <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Health Monitor</h3>
+          <h3 className="text-lg font-semibold text-gray-900">
+            Health Monitor
+          </h3>
         </div>
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -56,7 +65,9 @@ const HealthMonitor: React.FC<HealthMonitorProps> = ({
     return (
       <div className="bg-white rounded-lg shadow-sm border">
         <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Health Monitor</h3>
+          <h3 className="text-lg font-semibold text-gray-900">
+            Health Monitor
+          </h3>
         </div>
         <div className="p-6 text-center">
           <Activity className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -66,15 +77,23 @@ const HealthMonitor: React.FC<HealthMonitorProps> = ({
     );
   }
 
-  const healthyCount = displayApis.filter(api => api.status === 'healthy').length;
-  const unhealthyCount = displayApis.filter(api => api.status === 'unhealthy' || api.status === 'error').length;
-  const checkingCount = displayApis.filter(api => api.status === 'checking').length;
+  const healthyCount = displayApis.filter(
+    (api) => api.status === 'healthy'
+  ).length;
+  const unhealthyCount = displayApis.filter(
+    (api) => api.status === 'unhealthy' || api.status === 'error'
+  ).length;
+  const checkingCount = displayApis.filter(
+    (api) => api.status === 'checking'
+  ).length;
 
   return (
     <div className="bg-white rounded-lg shadow-sm border">
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Health Monitor</h3>
+          <h3 className="text-lg font-semibold text-gray-900">
+            Health Monitor
+          </h3>
           <div className="flex items-center space-x-4 text-sm">
             <div className="flex items-center space-x-1">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
@@ -163,9 +182,9 @@ const ApiHealthCard: React.FC<ApiHealthCardProps> = ({ api }) => {
   };
 
   return (
-    <div 
+    <div
       className={`p-4 rounded-lg border-2 transition-all hover:shadow-sm cursor-pointer ${getStatusColor()}`}
-      onClick={() => window.location.href = `/apis/${api.id}`}
+      onClick={() => (window.location.href = `/apis/${api.id}`)}
     >
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-2">
@@ -174,11 +193,9 @@ const ApiHealthCard: React.FC<ApiHealthCardProps> = ({ api }) => {
             {api.name}
           </h4>
         </div>
-        <div className="flex items-center space-x-1">
-          {getTrendIcon()}
-        </div>
+        <div className="flex items-center space-x-1">{getTrendIcon()}</div>
       </div>
-      
+
       <div className="grid grid-cols-2 gap-3 text-xs">
         <div>
           <p className="text-gray-500 mb-1">Response Time</p>
@@ -191,7 +208,7 @@ const ApiHealthCard: React.FC<ApiHealthCardProps> = ({ api }) => {
           <p className="font-medium text-gray-900">{api.uptime.toFixed(1)}%</p>
         </div>
       </div>
-      
+
       <div className="mt-3 pt-3 border-t border-gray-200">
         <p className="text-xs text-gray-500">
           Last checked: {new Date(api.lastChecked).toLocaleTimeString()}

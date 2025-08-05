@@ -1,7 +1,13 @@
 'use client';
 
 import React from 'react';
-import { AlertTriangle, X, ExternalLink, Clock, CheckCircle } from 'lucide-react';
+import {
+  AlertTriangle,
+  X,
+  ExternalLink,
+  Clock,
+  CheckCircle,
+} from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 interface CriticalAlert {
@@ -12,7 +18,12 @@ interface CriticalAlert {
   apiId: string;
   apiName: string;
   timestamp: string;
-  type: 'api_down' | 'high_response_time' | 'error_rate' | 'schema_change' | 'security';
+  type:
+    | 'api_down'
+    | 'high_response_time'
+    | 'error_rate'
+    | 'schema_change'
+    | 'security';
   acknowledged: boolean;
   autoResolve: boolean;
 }
@@ -36,7 +47,9 @@ const CriticalAlerts: React.FC<CriticalAlertsProps> = ({
     return (
       <div className="bg-white rounded-lg shadow-sm border">
         <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Critical Alerts</h3>
+          <h3 className="text-lg font-semibold text-gray-900">
+            Critical Alerts
+          </h3>
         </div>
         <div className="p-6">
           <div className="space-y-4">
@@ -62,7 +75,9 @@ const CriticalAlerts: React.FC<CriticalAlertsProps> = ({
     return (
       <div className="bg-white rounded-lg shadow-sm border">
         <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Critical Alerts</h3>
+          <h3 className="text-lg font-semibold text-gray-900">
+            Critical Alerts
+          </h3>
         </div>
         <div className="p-6 text-center">
           <AlertTriangle className="w-8 h-8 text-red-500 mx-auto mb-2" />
@@ -72,20 +87,26 @@ const CriticalAlerts: React.FC<CriticalAlertsProps> = ({
     );
   }
 
-  const criticalAlerts = alerts.filter(alert => 
-    (alert.severity === 'critical' || alert.severity === 'high') && !alert.acknowledged
+  const criticalAlerts = alerts.filter(
+    (alert) =>
+      (alert.severity === 'critical' || alert.severity === 'high') &&
+      !alert.acknowledged
   );
 
   if (criticalAlerts.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-sm border">
         <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Critical Alerts</h3>
+          <h3 className="text-lg font-semibold text-gray-900">
+            Critical Alerts
+          </h3>
         </div>
         <div className="p-6 text-center">
           <CheckCircle className="w-8 h-8 text-green-500 mx-auto mb-2" />
           <p className="text-sm text-gray-600">No critical alerts</p>
-          <p className="text-xs text-gray-500 mt-1">All systems are running smoothly</p>
+          <p className="text-xs text-gray-500 mt-1">
+            All systems are running smoothly
+          </p>
         </div>
       </div>
     );
@@ -95,7 +116,9 @@ const CriticalAlerts: React.FC<CriticalAlertsProps> = ({
     <div className="bg-white rounded-lg shadow-sm border">
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Critical Alerts</h3>
+          <h3 className="text-lg font-semibold text-gray-900">
+            Critical Alerts
+          </h3>
           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
             {criticalAlerts.length} Alert{criticalAlerts.length > 1 ? 's' : ''}
           </span>
@@ -126,7 +149,11 @@ interface AlertItemProps {
   onDismiss?: (alertId: string) => void;
 }
 
-const AlertItem: React.FC<AlertItemProps> = ({ alert, onAcknowledge, onDismiss }) => {
+const AlertItem: React.FC<AlertItemProps> = ({
+  alert,
+  onAcknowledge,
+  onDismiss,
+}) => {
   const getSeverityColor = () => {
     switch (alert.severity) {
       case 'critical':
@@ -187,7 +214,9 @@ const AlertItem: React.FC<AlertItemProps> = ({ alert, onAcknowledge, onDismiss }
             <h4 className="text-sm font-medium text-gray-900 truncate">
               {alert.title}
             </h4>
-            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getSeverityColor()}`}>
+            <span
+              className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getSeverityColor()}`}
+            >
               {alert.severity}
             </span>
           </div>
@@ -198,7 +227,11 @@ const AlertItem: React.FC<AlertItemProps> = ({ alert, onAcknowledge, onDismiss }
               <span>•</span>
               <span>{getTypeLabel()}</span>
               <span>•</span>
-              <span>{formatDistanceToNow(new Date(alert.timestamp), { addSuffix: true })}</span>
+              <span>
+                {formatDistanceToNow(new Date(alert.timestamp), {
+                  addSuffix: true,
+                })}
+              </span>
             </div>
           </div>
         </div>

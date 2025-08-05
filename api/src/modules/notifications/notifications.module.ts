@@ -9,6 +9,7 @@ import {
 } from 'src/Schemas/notification.schema';
 import { Api, ApiSchema } from 'src/Schemas/api.schema';
 import { User, UserSchema } from 'src/Schemas/user.schema';
+import { WebSocketModule } from '../websocket/websocket.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { User, UserSchema } from 'src/Schemas/user.schema';
       { name: Api.name, schema: ApiSchema },
       { name: User.name, schema: UserSchema },
     ]),
+    WebSocketModule,
   ],
   controllers: [NotificationsController],
   providers: [NotificationsService, EmailService],

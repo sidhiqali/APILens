@@ -11,12 +11,12 @@ export const dashboardQueryKeys = {
   all: ['dashboard'] as const,
   overview: () => [...dashboardQueryKeys.all, 'overview'] as const,
   stats: () => [...dashboardQueryKeys.all, 'stats'] as const,
-  recentActivity: (limit?: number) => 
+  recentActivity: (limit?: number) =>
     [...dashboardQueryKeys.all, 'recentActivity', { limit }] as const,
   apiHealth: () => [...dashboardQueryKeys.all, 'apiHealth'] as const,
-  criticalAlerts: (limit?: number) => 
+  criticalAlerts: (limit?: number) =>
     [...dashboardQueryKeys.all, 'criticalAlerts', { limit }] as const,
-  changesTrend: (days?: number) => 
+  changesTrend: (days?: number) =>
     [...dashboardQueryKeys.all, 'changesTrend', { days }] as const,
 };
 
@@ -96,7 +96,7 @@ export const useRefreshDashboard = () => {
       await queryClient.invalidateQueries({
         queryKey: dashboardQueryKeys.all,
       });
-      
+
       // Force refetch critical queries
       await Promise.all([
         queryClient.refetchQueries({

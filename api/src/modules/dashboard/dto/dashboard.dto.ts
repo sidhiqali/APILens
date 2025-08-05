@@ -16,6 +16,9 @@ export class DashboardStatsDto {
   @ApiProperty({ description: 'Total number of changes detected', example: 45 })
   totalChanges: number;
 
+  @ApiProperty({ description: 'Number of critical issues', example: 3 })
+  criticalIssues: number;
+
   @ApiProperty({ description: 'Number of changes in last 7 days', example: 8 })
   recentChanges: number;
 

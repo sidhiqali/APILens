@@ -405,4 +405,75 @@ export class ApisController {
     const result = await this.smartSchedulerService.triggerImmediateCheck();
     return result;
   }
+
+  @Post('bulk/toggle-status')
+  @ApiOperation({
+    summary: 'Bulk toggle API status',
+    description: 'Toggle active/inactive status for multiple APIs',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'APIs status toggled successfully',
+  })
+  async bulkToggleStatus(@Body() body: { ids: string[] }, @Request() req) {
+    return this.apisService.bulkToggleStatus(body.ids, req.user.userId);
+  }
+
+  @Delete('bulk')
+  @ApiOperation({
+    summary: 'Bulk delete APIs',
+    description: 'Delete multiple APIs at once',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'APIs deleted successfully',
+  })
+  async bulkDelete(@Body() body: { ids: string[] }, @Request() req) {
+    return this.apisService.bulkDelete(body.ids, req.user.userId);
+  }
+
+  @Get(':id/documentation')
+  @ApiOperation({
+    summary: 'Get API documentation',
+    description: 'Retrieve OpenAPI documentation for a specific API',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'API documentation retrieved successfully',
+  })
+  async getApiDocumentation(@Param('id') id: string, @Request() req) {
+    return this.apisService.getApiDocumentation(id, req.user.userId);
+  }
+
+  @Post('validate-url')
+  @ApiOperation({
+    summary: 'Validate API URL',
+    description:
+      'Validate if an API URL is accessible and returns a valid response.',
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        url: { type: 'string', format: 'uri' },
+      },
+      required: ['url'],
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'URL validation completed',
+    schema: {
+      type: 'object',
+      properties: {
+        valid: { type: 'boolean' },
+        accessible: { type: 'boolean' },
+        responseTime: { type: 'number' },
+        error: { type: 'string' },
+      },
+    },
+  })
+  validateApiUrl(@Body() body: { url: string }) {
+    return this.apisService.validateApiUrl(body.url);
+  }
 }

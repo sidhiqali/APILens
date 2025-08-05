@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { apiService } from '@/services/api.service';
+import { dashboardService } from '@/services/dashboard.service';
 import { CreateApiRequest, UpdateApiRequest } from '@/types';
 
 // Query keys for React Query
@@ -51,7 +52,7 @@ export const useApi = (id: string) => {
 export const useDashboardStats = () => {
   return useQuery({
     queryKey: apiQueryKeys.dashboardStats(),
-    queryFn: () => apiService.getDashboardStats(),
+    queryFn: () => dashboardService.getDashboardStats(),
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchInterval: 5 * 60 * 1000, // Auto refresh every 5 minutes
   });

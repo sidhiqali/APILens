@@ -1,22 +1,29 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { changelogService } from '@/services/changelog.service';
-import type {
-  ApiChange,
-  Changelog,
-} from '@/services/changelog.service';
+import type { ApiChange, Changelog } from '@/services/changelog.service';
 
 // Query keys for React Query
 export const changelogQueryKeys = {
   all: ['changelogs'] as const,
-  apiChanges: (apiId: string) => [...changelogQueryKeys.all, 'changes', apiId] as const,
-  apiSnapshots: (apiId: string) => [...changelogQueryKeys.all, 'snapshots', apiId] as const,
-  changelog: (apiId: string) => [...changelogQueryKeys.all, 'changelog', apiId] as const,
-  changelogDetail: (apiId: string, changelogId: string) => 
+  apiChanges: (apiId: string) =>
+    [...changelogQueryKeys.all, 'changes', apiId] as const,
+  apiSnapshots: (apiId: string) =>
+    [...changelogQueryKeys.all, 'snapshots', apiId] as const,
+  changelog: (apiId: string) =>
+    [...changelogQueryKeys.all, 'changelog', apiId] as const,
+  changelogDetail: (apiId: string, changelogId: string) =>
     [...changelogQueryKeys.changelog(apiId), changelogId] as const,
-  comparison: (apiId: string, fromVersion: string, toVersion: string) => 
-    [...changelogQueryKeys.all, 'compare', apiId, fromVersion, toVersion] as const,
-  stats: (apiId: string) => [...changelogQueryKeys.all, 'stats', apiId] as const,
+  comparison: (apiId: string, fromVersion: string, toVersion: string) =>
+    [
+      ...changelogQueryKeys.all,
+      'compare',
+      apiId,
+      fromVersion,
+      toVersion,
+    ] as const,
+  stats: (apiId: string) =>
+    [...changelogQueryKeys.all, 'stats', apiId] as const,
 };
 
 // Hook to get API changes
@@ -83,7 +90,8 @@ export const useVersionComparison = (
 ) => {
   return useQuery({
     queryKey: changelogQueryKeys.comparison(apiId, fromVersion, toVersion),
-    queryFn: () => changelogService.compareVersions(apiId, fromVersion, toVersion),
+    queryFn: () =>
+      changelogService.compareVersions(apiId, fromVersion, toVersion),
     enabled: !!apiId && !!fromVersion && !!toVersion,
     staleTime: 10 * 60 * 1000, // 10 minutes
     retry: 2,
@@ -163,7 +171,10 @@ export const useUpdateChangelog = () => {
     onSuccess: (data, variables) => {
       // Update the specific changelog in cache
       queryClient.setQueryData(
-        changelogQueryKeys.changelogDetail(variables.apiId, variables.changelogId),
+        changelogQueryKeys.changelogDetail(
+          variables.apiId,
+          variables.changelogId
+        ),
         data
       );
 
@@ -216,10 +227,13 @@ export const useDeleteChangelog = () => {
     },
     onSuccess: (_, variables) => {
       toast.success('Changelog deleted successfully');
-      
+
       // Remove from detailed cache
       queryClient.removeQueries({
-        queryKey: changelogQueryKeys.changelogDetail(variables.apiId, variables.changelogId),
+        queryKey: changelogQueryKeys.changelogDetail(
+          variables.apiId,
+          variables.changelogId
+        ),
       });
     },
   });
@@ -239,7 +253,7 @@ export const useExportChangelogs = () => {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-      
+
       toast.success('Changelogs exported successfully');
     },
     onError: (error: any) => {

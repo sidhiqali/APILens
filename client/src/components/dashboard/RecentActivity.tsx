@@ -1,7 +1,13 @@
 'use client';
 
 import React from 'react';
-import { Activity, Clock, AlertTriangle, ExternalLink, Eye } from 'lucide-react';
+import {
+  Activity,
+  Clock,
+  AlertTriangle,
+  ExternalLink,
+  Eye,
+} from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 interface RecentActivityItem {
@@ -21,16 +27,18 @@ interface RecentActivityProps {
   maxItems?: number;
 }
 
-const RecentActivity: React.FC<RecentActivityProps> = ({ 
-  data = [], 
-  loading = false, 
-  maxItems = 10 
+const RecentActivity: React.FC<RecentActivityProps> = ({
+  data = [],
+  loading = false,
+  maxItems = 10,
 }) => {
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow-sm border">
         <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
+          <h3 className="text-lg font-semibold text-gray-900">
+            Recent Activity
+          </h3>
         </div>
         <div className="p-6">
           <div className="space-y-4">
@@ -58,7 +66,9 @@ const RecentActivity: React.FC<RecentActivityProps> = ({
     return (
       <div className="bg-white rounded-lg shadow-sm border">
         <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
+          <h3 className="text-lg font-semibold text-gray-900">
+            Recent Activity
+          </h3>
         </div>
         <div className="p-6 text-center">
           <Activity className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -72,7 +82,9 @@ const RecentActivity: React.FC<RecentActivityProps> = ({
     <div className="bg-white rounded-lg shadow-sm border">
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
+          <h3 className="text-lg font-semibold text-gray-900">
+            Recent Activity
+          </h3>
           <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">
             View All
           </button>
@@ -142,9 +154,7 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ activity }) => {
     <div className="p-4 hover:bg-gray-50 transition-colors">
       <div className="flex items-start space-x-3">
         <div className="flex-shrink-0 mt-1">
-          <div className="p-1 rounded-full bg-gray-100">
-            {getIcon()}
-          </div>
+          <div className="p-1 rounded-full bg-gray-100">{getIcon()}</div>
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center space-x-2 mb-1">
@@ -155,17 +165,19 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ activity }) => {
               {getTypeLabel()}
             </span>
             {activity.severity && (
-              <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getSeverityColor()}`}>
+              <span
+                className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getSeverityColor()}`}
+              >
                 {activity.severity}
               </span>
             )}
           </div>
-          <p className="text-sm text-gray-600 mb-2">
-            {activity.description}
-          </p>
+          <p className="text-sm text-gray-600 mb-2">{activity.description}</p>
           <div className="flex items-center justify-between">
             <p className="text-xs text-gray-500">
-              {formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })}
+              {formatDistanceToNow(new Date(activity.timestamp), {
+                addSuffix: true,
+              })}
             </p>
             <div className="flex items-center space-x-2">
               <button

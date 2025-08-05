@@ -40,17 +40,18 @@ interface NavigationMenuProps {
   className?: string;
 }
 
-const NavigationMenu: React.FC<NavigationMenuProps> = ({ 
-  isOpen, 
-  onToggle, 
-  className = '' 
+const NavigationMenu: React.FC<NavigationMenuProps> = ({
+  isOpen,
+  onToggle,
+  className = '',
 }) => {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const { data: notificationsData } = useNotifications();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
-  const unreadCount = notificationsData?.notifications?.filter((n: any) => !n.read)?.length || 0;
+  const unreadCount =
+    notificationsData?.notifications?.filter((n: any) => !n.read)?.length || 0;
 
   const navigationItems: NavigationItem[] = [
     {
@@ -168,16 +169,16 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
     },
   ];
 
-  const filteredItems = navigationItems.filter(item => {
+  const filteredItems = navigationItems.filter((item) => {
     if (item.requiresAuth && !user) return false;
     if (item.adminOnly && user?.role !== 'admin') return false;
     return true;
   });
 
   const toggleExpanded = (itemId: string) => {
-    setExpandedItems(prev => 
-      prev.includes(itemId) 
-        ? prev.filter(id => id !== itemId)
+    setExpandedItems((prev) =>
+      prev.includes(itemId)
+        ? prev.filter((id) => id !== itemId)
         : [...prev, itemId]
     );
   };
@@ -191,14 +192,14 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
 
   const isParentActive = (item: NavigationItem) => {
     if (isActive(item.href)) return true;
-    return item.children?.some(child => isActive(child.href)) || false;
+    return item.children?.some((child) => isActive(child.href)) || false;
   };
 
   useEffect(() => {
     // Auto-expand active parent items
-    filteredItems.forEach(item => {
+    filteredItems.forEach((item) => {
       if (item.children && isParentActive(item)) {
-        setExpandedItems(prev => 
+        setExpandedItems((prev) =>
           prev.includes(item.id) ? prev : [...prev, item.id]
         );
       }
@@ -209,18 +210,20 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
     <>
       {/* Mobile Overlay */}
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
           onClick={onToggle}
         />
       )}
 
       {/* Sidebar */}
-      <aside className={clsx(
-        'fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0',
-        isOpen ? 'translate-x-0' : '-translate-x-full',
-        className
-      )}>
+      <aside
+        className={clsx(
+          'fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0',
+          isOpen ? 'translate-x-0' : '-translate-x-full',
+          className
+        )}
+      >
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200">
@@ -310,19 +313,25 @@ const NavigationItem: React.FC<NavigationItemProps> = ({
   const isParentItemActive = isParentActive(item);
 
   const ItemContent = () => (
-    <div className={clsx(
-      'flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors group',
-      depth > 0 && 'ml-4',
-      isItemActive 
-        ? 'bg-blue-50 text-blue-700' 
-        : isParentItemActive && hasChildren
-        ? 'bg-gray-50 text-gray-900'
-        : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-    )}>
-      <item.icon className={clsx(
-        'w-5 h-5 flex-shrink-0',
-        isItemActive ? 'text-blue-600' : 'text-gray-500 group-hover:text-gray-700'
-      )} />
+    <div
+      className={clsx(
+        'flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors group',
+        depth > 0 && 'ml-4',
+        isItemActive
+          ? 'bg-blue-50 text-blue-700'
+          : isParentItemActive && hasChildren
+            ? 'bg-gray-50 text-gray-900'
+            : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+      )}
+    >
+      <item.icon
+        className={clsx(
+          'w-5 h-5 flex-shrink-0',
+          isItemActive
+            ? 'text-blue-600'
+            : 'text-gray-500 group-hover:text-gray-700'
+        )}
+      />
       <span className="flex-1 font-medium">{item.label}</span>
       {item.badge && item.badge > 0 && (
         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">

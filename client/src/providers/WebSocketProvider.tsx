@@ -1,6 +1,13 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+} from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from '@/store/auth';
 import { toast } from 'react-hot-toast';
@@ -40,10 +47,12 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [connectionAttempts, setConnectionAttempts] = useState(0);
-  
+
   const { user } = useAuth();
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
-  const subscribersRef = useRef<Map<string, Set<(data: any) => void>>>(new Map());
+  const subscribersRef = useRef<Map<string, Set<(data: any) => void>>>(
+    new Map()
+  );
 
   // Connect to WebSocket
   const connect = useCallback(() => {
@@ -70,7 +79,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
         setIsConnecting(false);
         setConnectionError(null);
         setConnectionAttempts(0);
-        
+
         // Clear any pending reconnection
         if (reconnectTimeoutRef.current) {
           clearTimeout(reconnectTimeoutRef.current);
@@ -78,7 +87,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 
         // Re-subscribe to all events
         subscribersRef.current.forEach((callbacks, event) => {
-          callbacks.forEach(callback => {
+          callbacks.forEach((callback) => {
             newSocket.on(event, callback);
           });
         });
@@ -95,7 +104,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
         setIsConnected(false);
         setIsConnecting(false);
         setConnectionError(error.message || 'Connection failed');
-        
+
         // Attempt reconnection if under max attempts
         if (connectionAttempts < maxReconnectAttempts) {
           scheduleReconnect();
@@ -111,7 +120,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
       newSocket.on('disconnect', (reason) => {
         console.log('WebSocket disconnected:', reason);
         setIsConnected(false);
-        
+
         if (reason === 'io server disconnect') {
           // Server initiated disconnect, don't reconnect
           setConnectionError('Server disconnected');
@@ -127,7 +136,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
         setConnectionError('Authentication failed');
         setIsConnected(false);
         setIsConnecting(false);
-        
+
         toast.error('Authentication failed for real-time updates', {
           duration: 5000,
           position: 'bottom-right',
@@ -153,10 +162,12 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 
   // Schedule reconnection attempt
   const scheduleReconnect = useCallback(() => {
-    setConnectionAttempts(prev => prev + 1);
-    
+    setConnectionAttempts((prev) => prev + 1);
+
     reconnectTimeoutRef.current = setTimeout(() => {
-      console.log(`Attempting to reconnect... (${connectionAttempts + 1}/${maxReconnectAttempts})`);
+      console.log(
+        `Attempting to reconnect... (${connectionAttempts + 1}/${maxReconnectAttempts})`
+      );
       connect();
     }, reconnectInterval);
   }, [connect, connectionAttempts, maxReconnectAttempts, reconnectInterval]);
@@ -166,12 +177,12 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current);
     }
-    
+
     if (socket) {
       socket.disconnect();
       setSocket(null);
     }
-    
+
     setIsConnected(false);
     setIsConnecting(false);
     setConnectionError(null);
@@ -185,42 +196,48 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   }, [disconnect, connect]);
 
   // Emit event
-  const emit = useCallback((event: string, data?: any) => {
-    if (socket?.connected) {
-      socket.emit(event, data);
-    } else {
-      console.warn('Cannot emit event: WebSocket not connected');
-    }
-  }, [socket]);
+  const emit = useCallback(
+    (event: string, data?: any) => {
+      if (socket?.connected) {
+        socket.emit(event, data);
+      } else {
+        console.warn('Cannot emit event: WebSocket not connected');
+      }
+    },
+    [socket]
+  );
 
   // Subscribe to event
-  const subscribe = useCallback((event: string, callback: (data: any) => void) => {
-    // Add to subscribers map
-    if (!subscribersRef.current.has(event)) {
-      subscribersRef.current.set(event, new Set());
-    }
-    subscribersRef.current.get(event)!.add(callback);
-
-    // Subscribe to socket if connected
-    if (socket?.connected) {
-      socket.on(event, callback);
-    }
-
-    // Return unsubscribe function
-    return () => {
-      const subscribers = subscribersRef.current.get(event);
-      if (subscribers) {
-        subscribers.delete(callback);
-        if (subscribers.size === 0) {
-          subscribersRef.current.delete(event);
-        }
+  const subscribe = useCallback(
+    (event: string, callback: (data: any) => void) => {
+      // Add to subscribers map
+      if (!subscribersRef.current.has(event)) {
+        subscribersRef.current.set(event, new Set());
       }
-      
+      subscribersRef.current.get(event)!.add(callback);
+
+      // Subscribe to socket if connected
       if (socket?.connected) {
-        socket.off(event, callback);
+        socket.on(event, callback);
       }
-    };
-  }, [socket]);
+
+      // Return unsubscribe function
+      return () => {
+        const subscribers = subscribersRef.current.get(event);
+        if (subscribers) {
+          subscribers.delete(callback);
+          if (subscribers.size === 0) {
+            subscribersRef.current.delete(event);
+          }
+        }
+
+        if (socket?.connected) {
+          socket.off(event, callback);
+        }
+      };
+    },
+    [socket]
+  );
 
   // Auto-connect on mount and user change
   useEffect(() => {
@@ -299,7 +316,9 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
 
   return (
     <div className={`flex items-center space-x-2 ${className}`}>
-      <div className={`w-2 h-2 rounded-full ${getStatusColor()} ${isConnected ? 'animate-pulse' : ''}`} />
+      <div
+        className={`w-2 h-2 rounded-full ${getStatusColor()} ${isConnected ? 'animate-pulse' : ''}`}
+      />
       {showText && (
         <span className="text-sm text-gray-600">{getStatusText()}</span>
       )}
@@ -308,7 +327,11 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
 };
 
 // Hook for specific event subscriptions
-export const useWebSocketEvent = (event: string, callback: (data: any) => void, deps: any[] = []) => {
+export const useWebSocketEvent = (
+  event: string,
+  callback: (data: any) => void,
+  deps: any[] = []
+) => {
   const { subscribe } = useWebSocket();
 
   useEffect(() => {

@@ -34,7 +34,7 @@ export class DashboardController {
     type: DashboardOverviewDto,
   })
   async getDashboardOverview(@Request() req): Promise<DashboardOverviewDto> {
-    return this.dashboardService.getDashboardOverview(req.user.id);
+    return this.dashboardService.getDashboardOverview(req.user.userId);
   }
 
   @Get('stats')
@@ -49,7 +49,7 @@ export class DashboardController {
     type: DashboardStatsDto,
   })
   async getDashboardStats(@Request() req): Promise<DashboardStatsDto> {
-    return this.dashboardService.getDashboardStats(req.user.id);
+    return this.dashboardService.getDashboardStats(req.user.userId);
   }
 
   @Get('recent-activity')
@@ -74,7 +74,7 @@ export class DashboardController {
     @Query('limit') limit?: number,
   ): Promise<RecentActivityDto[]> {
     return this.dashboardService.getRecentActivity(
-      req.user.id,
+      req.user.userId,
       limit ? parseInt(limit.toString()) : 10,
     );
   }
@@ -90,7 +90,7 @@ export class DashboardController {
     type: [ApiHealthSummaryDto],
   })
   async getApiHealthSummary(@Request() req): Promise<ApiHealthSummaryDto[]> {
-    return this.dashboardService.getApiHealthSummary(req.user.id);
+    return this.dashboardService.getApiHealthSummary(req.user.userId);
   }
 
   @Get('critical-alerts')
@@ -115,7 +115,7 @@ export class DashboardController {
     @Query('limit') limit?: number,
   ): Promise<RecentActivityDto[]> {
     return this.dashboardService.getCriticalAlerts(
-      req.user.id,
+      req.user.userId,
       limit ? parseInt(limit.toString()) : 5,
     );
   }
@@ -150,7 +150,7 @@ export class DashboardController {
     @Query('days') days?: number,
   ): Promise<{ date: string; count: number }[]> {
     return this.dashboardService.getApiChangesTrend(
-      req.user.id,
+      req.user.userId,
       days ? parseInt(days.toString()) : 30,
     );
   }

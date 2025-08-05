@@ -1,11 +1,20 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/store/auth';
 import RouteGuard from '@/components/RouteGuard';
 
 const DebugPage = () => {
   const { user, isAuthenticated } = useAuth();
+  const [cookies, setCookies] = useState<string>('Loading...');
+  const [localStorageData, setLocalStorageData] =
+    useState<string>('Loading...');
+
+  useEffect(() => {
+    // Client-side only access
+    setCookies(document.cookie || 'None visible to JavaScript');
+    setLocalStorageData(window.localStorage.getItem('auth-storage') || 'Empty');
+  }, []);
 
   return (
     <RouteGuard requireAuth={true}>
@@ -37,15 +46,11 @@ const DebugPage = () => {
             </div>
             <div>
               <strong className="text-blue-600">Visible Cookies:</strong>{' '}
-              <span className="text-gray-600">
-                {document.cookie || 'None visible to JavaScript'}
-              </span>
+              <span className="text-gray-600">{cookies}</span>
             </div>
             <div>
               <strong className="text-blue-600">LocalStorage:</strong>{' '}
-              <span className="text-gray-600">
-                {localStorage.getItem('auth-storage') || 'Empty'}
-              </span>
+              <span className="text-gray-600">{localStorageData}</span>
             </div>
           </div>
         </div>

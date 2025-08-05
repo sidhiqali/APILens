@@ -74,7 +74,9 @@ class DashboardService {
 
   // Get API health summary
   async getApiHealthSummary(): Promise<ApiHealthSummary[]> {
-    return await apiClient.get<ApiHealthSummary[]>(`${this.baseUrl}/api-health`);
+    return await apiClient.get<ApiHealthSummary[]>(
+      `${this.baseUrl}/api-health`
+    );
   }
 
   // Get critical alerts

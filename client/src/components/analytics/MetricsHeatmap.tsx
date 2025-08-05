@@ -36,7 +36,13 @@ interface HeatmapCell {
 interface MetricsHeatmapData {
   apiId: string;
   apiName: string;
-  metric: 'responseTime' | 'uptime' | 'errorRate' | 'requestCount' | 'cpuUsage' | 'memoryUsage';
+  metric:
+    | 'responseTime'
+    | 'uptime'
+    | 'errorRate'
+    | 'requestCount'
+    | 'cpuUsage'
+    | 'memoryUsage';
   data: HeatmapDataPoint[];
   timeRange: '24h' | '7d' | '30d';
   aggregation: 'hourly' | 'daily' | 'weekly';
@@ -44,8 +50,22 @@ interface MetricsHeatmapData {
 
 interface MetricsHeatmapProps {
   data: MetricsHeatmapData[];
-  selectedMetric: 'responseTime' | 'uptime' | 'errorRate' | 'requestCount' | 'cpuUsage' | 'memoryUsage';
-  onMetricChange: (metric: 'responseTime' | 'uptime' | 'errorRate' | 'requestCount' | 'cpuUsage' | 'memoryUsage') => void;
+  selectedMetric:
+    | 'responseTime'
+    | 'uptime'
+    | 'errorRate'
+    | 'requestCount'
+    | 'cpuUsage'
+    | 'memoryUsage';
+  onMetricChange: (
+    metric:
+      | 'responseTime'
+      | 'uptime'
+      | 'errorRate'
+      | 'requestCount'
+      | 'cpuUsage'
+      | 'memoryUsage'
+  ) => void;
   timeRange: '24h' | '7d' | '30d';
   onTimeRangeChange: (range: '24h' | '7d' | '30d') => void;
   className?: string;
@@ -70,22 +90,27 @@ const MetricsHeatmap: React.FC<MetricsHeatmapProps> = ({
 
   // Filter data by selected API and metric
   const filteredData = useMemo(() => {
-    return data.filter(apiData => 
-      (selectedApi === 'all' || apiData.apiId === selectedApi) &&
-      apiData.metric === selectedMetric &&
-      apiData.timeRange === timeRange
+    return data.filter(
+      (apiData) =>
+        (selectedApi === 'all' || apiData.apiId === selectedApi) &&
+        apiData.metric === selectedMetric &&
+        apiData.timeRange === timeRange
     );
   }, [data, selectedApi, selectedMetric, timeRange]);
 
   // Prepare heatmap grid data
   const heatmapGrid = useMemo(() => {
-    if (filteredData.length === 0) return { grid: [], maxValue: 0, minValue: 0 };
+    if (filteredData.length === 0)
+      return { grid: [], maxValue: 0, minValue: 0 };
 
-    const allDataPoints = filteredData.flatMap(apiData => apiData.data);
-    
+    const allDataPoints = filteredData.flatMap((apiData) => apiData.data);
+
     // Determine grid dimensions based on time range
-    let rows: number, cols: number, getRowLabel: (index: number) => string, getColLabel: (index: number) => string;
-    
+    let rows: number,
+      cols: number,
+      getRowLabel: (index: number) => string,
+      getColLabel: (index: number) => string;
+
     if (timeRange === '24h') {
       rows = 24; // Hours
       cols = 1; // Single day
@@ -99,7 +124,8 @@ const MetricsHeatmap: React.FC<MetricsHeatmapProps> = ({
         const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         return dayNames[day];
       };
-    } else { // 30d
+    } else {
+      // 30d
       rows = 7; // Days of week
       cols = Math.ceil(30 / 7); // Weeks
       getRowLabel = (day) => {
@@ -110,54 +136,67 @@ const MetricsHeatmap: React.FC<MetricsHeatmapProps> = ({
     }
 
     // Create grid
-    const grid = Array(rows).fill(null).map((_, row) =>
-      Array(cols).fill(null).map((_, col) => {
-        const cellData = allDataPoints.filter(point => {
-          if (timeRange === '24h') {
-            return point.hour === row;
-          } else if (timeRange === '7d') {
-            return point.hour === row && point.day === col;
-          } else {
-            const weekDay = point.day % 7;
-            const week = Math.floor(point.day / 7);
-            return weekDay === row && week === col;
-          }
-        });
+    const grid = Array(rows)
+      .fill(null)
+      .map((_, row) =>
+        Array(cols)
+          .fill(null)
+          .map((_, col) => {
+            const cellData = allDataPoints.filter((point) => {
+              if (timeRange === '24h') {
+                return point.hour === row;
+              } else if (timeRange === '7d') {
+                return point.hour === row && point.day === col;
+              } else {
+                const weekDay = point.day % 7;
+                const week = Math.floor(point.day / 7);
+                return weekDay === row && week === col;
+              }
+            });
 
-        if (cellData.length === 0) {
-          return {
-            row,
-            col,
-            value: 0,
-            count: 0,
-            status: 'good' as const,
-            dataPoints: [],
-            rowLabel: getRowLabel(row),
-            colLabel: getColLabel(col),
-          };
-        }
+            if (cellData.length === 0) {
+              return {
+                row,
+                col,
+                value: 0,
+                count: 0,
+                status: 'good' as const,
+                dataPoints: [],
+                rowLabel: getRowLabel(row),
+                colLabel: getColLabel(col),
+              };
+            }
 
-        const avgValue = cellData.reduce((sum, point) => sum + point.value, 0) / cellData.length;
-        const statuses = cellData.map(point => point.status);
-        const worstStatus: 'excellent' | 'good' | 'warning' | 'critical' = 
-          statuses.includes('critical') ? 'critical' :
-          statuses.includes('warning') ? 'warning' :
-          statuses.includes('good') ? 'good' : 'excellent';
+            const avgValue =
+              cellData.reduce((sum, point) => sum + point.value, 0) /
+              cellData.length;
+            const statuses = cellData.map((point) => point.status);
+            const worstStatus: 'excellent' | 'good' | 'warning' | 'critical' =
+              statuses.includes('critical')
+                ? 'critical'
+                : statuses.includes('warning')
+                  ? 'warning'
+                  : statuses.includes('good')
+                    ? 'good'
+                    : 'excellent';
 
-        return {
-          row,
-          col,
-          value: avgValue,
-          count: cellData.length,
-          status: worstStatus,
-          dataPoints: cellData,
-          rowLabel: getRowLabel(row),
-          colLabel: getColLabel(col),
-        };
-      })
-    );
+            return {
+              row,
+              col,
+              value: avgValue,
+              count: cellData.length,
+              status: worstStatus,
+              dataPoints: cellData,
+              rowLabel: getRowLabel(row),
+              colLabel: getColLabel(col),
+            };
+          })
+      );
 
-    const values = grid.flat().map(cell => cell.value).filter(v => v > 0);
+    const values = grid
+      .flat()
+      .map((cell) => cell.value)
+      .filter((v) => v > 0);
     const maxValue = Math.max(...values, 1);
     const minValue = Math.min(...values, 0);
 
@@ -166,7 +205,9 @@ const MetricsHeatmap: React.FC<MetricsHeatmapProps> = ({
 
   // Get unique APIs for filter
   const availableApis = useMemo(() => {
-    const apis = Array.from(new Set(data.map(d => ({ id: d.apiId, name: d.apiName }))));
+    const apis = Array.from(
+      new Set(data.map((d) => ({ id: d.apiId, name: d.apiName })))
+    );
     return [{ id: 'all', name: 'All APIs' }, ...apis];
   }, [data]);
 
@@ -190,9 +231,9 @@ const MetricsHeatmap: React.FC<MetricsHeatmapProps> = ({
   // Get cell color based on value and metric
   const getCellColor = (value: number, status: string) => {
     if (value === 0) return 'bg-gray-100';
-    
+
     const intensity = Math.min(value / heatmapGrid.maxValue, 1);
-    
+
     // Different color schemes based on metric type
     if (selectedMetric === 'uptime') {
       // Green is good for uptime
@@ -212,9 +253,13 @@ const MetricsHeatmap: React.FC<MetricsHeatmapProps> = ({
       );
     } else if (selectedMetric === 'responseTime') {
       // Gradient from green (fast) to red (slow)
-      return status === 'critical' ? 'bg-red-500' :
-             status === 'warning' ? 'bg-orange-400' :
-             status === 'good' ? 'bg-yellow-400' : 'bg-green-500';
+      return status === 'critical'
+        ? 'bg-red-500'
+        : status === 'warning'
+          ? 'bg-orange-400'
+          : status === 'good'
+            ? 'bg-yellow-400'
+            : 'bg-green-500';
     } else {
       // Blue gradient for other metrics
       const opacity = Math.max(0.3, intensity);
@@ -242,7 +287,7 @@ const MetricsHeatmap: React.FC<MetricsHeatmapProps> = ({
   // Format value for display
   const formatValue = (value: number, metric: string) => {
     if (value === 0) return '—';
-    
+
     switch (metric) {
       case 'responseTime':
         return `${value.toFixed(0)}ms`;
@@ -252,7 +297,9 @@ const MetricsHeatmap: React.FC<MetricsHeatmapProps> = ({
       case 'memoryUsage':
         return `${value.toFixed(1)}%`;
       case 'requestCount':
-        return value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value.toFixed(0);
+        return value >= 1000
+          ? `${(value / 1000).toFixed(1)}k`
+          : value.toFixed(0);
       default:
         return value.toFixed(2);
     }
@@ -275,14 +322,23 @@ const MetricsHeatmap: React.FC<MetricsHeatmapProps> = ({
   };
 
   return (
-    <div className={clsx('bg-white rounded-lg border border-gray-200 p-6', className)}>
+    <div
+      className={clsx(
+        'bg-white rounded-lg border border-gray-200 p-6',
+        className
+      )}
+    >
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
           <Thermometer className="w-6 h-6 text-orange-600" />
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">Performance Heatmap</h3>
-            <p className="text-sm text-gray-600">Visualize performance patterns over time</p>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Performance Heatmap
+            </h3>
+            <p className="text-sm text-gray-600">
+              Visualize performance patterns over time
+            </p>
           </div>
         </div>
 
@@ -351,15 +407,21 @@ const MetricsHeatmap: React.FC<MetricsHeatmapProps> = ({
             <div className="inline-block min-w-full">
               {/* Column headers */}
               <div className="flex mb-2">
-                <div className="w-16 flex-shrink-0" /> {/* Space for row labels */}
-                {Array(heatmapGrid.cols).fill(null).map((_, col) => (
-                  <div
-                    key={col}
-                    className={clsx('text-center text-xs font-medium text-gray-600 mx-0.5', getCellSizeClasses())}
-                  >
-                    {heatmapGrid.grid[0][col].colLabel}
-                  </div>
-                ))}
+                <div className="w-16 flex-shrink-0" />{' '}
+                {/* Space for row labels */}
+                {Array(heatmapGrid.cols)
+                  .fill(null)
+                  .map((_, col) => (
+                    <div
+                      key={col}
+                      className={clsx(
+                        'text-center text-xs font-medium text-gray-600 mx-0.5',
+                        getCellSizeClasses()
+                      )}
+                    >
+                      {heatmapGrid.grid[0][col].colLabel}
+                    </div>
+                  ))}
               </div>
 
               {/* Heatmap grid */}
@@ -369,7 +431,7 @@ const MetricsHeatmap: React.FC<MetricsHeatmapProps> = ({
                   <div className="w-16 text-right text-xs font-medium text-gray-600 pr-2 flex-shrink-0">
                     {row[0].rowLabel}
                   </div>
-                  
+
                   {/* Cells */}
                   {row.map((cell, colIndex) => (
                     <div
@@ -399,7 +461,9 @@ const MetricsHeatmap: React.FC<MetricsHeatmapProps> = ({
                 </span>
               </div>
               <div className="text-sm text-gray-600 space-y-1">
-                <div>Value: {formatValue(hoveredCell.value, selectedMetric)}</div>
+                <div>
+                  Value: {formatValue(hoveredCell.value, selectedMetric)}
+                </div>
                 <div>Status: {hoveredCell.status}</div>
                 <div>Data Points: {hoveredCell.count}</div>
               </div>
@@ -409,8 +473,12 @@ const MetricsHeatmap: React.FC<MetricsHeatmapProps> = ({
       ) : (
         <div className="text-center py-12 bg-gray-50 rounded-lg">
           <Thermometer className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Data Available</h3>
-          <p className="text-gray-600">No heatmap data found for the selected metric and time range.</p>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No Data Available
+          </h3>
+          <p className="text-gray-600">
+            No heatmap data found for the selected metric and time range.
+          </p>
         </div>
       )}
 
@@ -443,11 +511,12 @@ const MetricsHeatmap: React.FC<MetricsHeatmapProps> = ({
                 </div>
               </div>
             </div>
-            
+
             <div className="text-right">
               <div className="text-xs text-gray-600">Range</div>
               <div className="text-sm font-medium text-gray-900">
-                {formatValue(heatmapGrid.minValue, selectedMetric)} - {formatValue(heatmapGrid.maxValue, selectedMetric)}
+                {formatValue(heatmapGrid.minValue, selectedMetric)} -{' '}
+                {formatValue(heatmapGrid.maxValue, selectedMetric)}
               </div>
             </div>
           </div>
@@ -466,13 +535,17 @@ const MetricsHeatmap: React.FC<MetricsHeatmapProps> = ({
           <div>
             <div className="text-xs text-gray-500">With Data</div>
             <div className="text-sm font-semibold text-gray-900">
-              {heatmapGrid.grid.flat().filter(cell => cell.count > 0).length}
+              {heatmapGrid.grid.flat().filter((cell) => cell.count > 0).length}
             </div>
           </div>
           <div>
             <div className="text-xs text-gray-500">Critical</div>
             <div className="text-sm font-semibold text-red-600">
-              {heatmapGrid.grid.flat().filter(cell => cell.status === 'critical').length}
+              {
+                heatmapGrid.grid
+                  .flat()
+                  .filter((cell) => cell.status === 'critical').length
+              }
             </div>
           </div>
           <div>

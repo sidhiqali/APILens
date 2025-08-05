@@ -7,6 +7,7 @@ import { Api } from 'src/Schemas/api.schema';
 import { User } from 'src/Schemas/user.schema';
 import { ChangeDetail } from 'src/Schemas/api-change.schema';
 import { EmailService } from './email.service';
+import { NotificationsGateway } from '../../gateways/notifications.gateway';
 
 interface NotificationCreateDto {
   userId: string;
@@ -30,6 +31,7 @@ export class NotificationsService {
     @InjectModel(Api.name) private apiModel: Model<Api>,
     @InjectModel(User.name) private userModel: Model<User>,
     private emailService: EmailService,
+    private notificationsGateway: NotificationsGateway,
   ) {}
 
   async notifyApiChanges(
@@ -158,6 +160,19 @@ export class NotificationsService {
           channel,
           status: 'pending',
         })),
+      });
+
+      // Send real-time notification via WebSocket
+      this.notificationsGateway.broadcastNotification(data.userId, {
+        id: (notification._id as any).toString(),
+        userId: data.userId,
+        apiId: data.apiId,
+        type: data.type,
+        title: data.title,
+        message: data.message,
+        severity: data.severity,
+        metadata: data.metadata,
+        createdAt: new Date().toISOString(),
       });
 
       // Send notifications through different channels

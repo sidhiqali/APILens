@@ -100,10 +100,12 @@ export interface Notification {
   _id: string;
   userId: string;
   apiId: string;
-  type: 'email' | 'webhook' | 'sms';
+  type: 'api_change' | 'api_error' | 'api_recovered' | 'system';
   title: string;
   message: string;
-  isRead: boolean;
+  read: boolean; // Changed from isRead to match backend
+  severity: 'low' | 'medium' | 'high' | 'critical'; // Added severity field
+  readAt?: string;
   metadata?: Record<string, any>;
   createdAt: string;
 }

@@ -149,6 +149,7 @@ export class DashboardService {
       healthyApis,
       unhealthyApis,
       totalChanges,
+      criticalIssues: breakingChanges, // Map breaking changes to critical issues
       recentChanges,
       breakingChanges,
       nonBreakingChanges,

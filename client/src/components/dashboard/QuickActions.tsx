@@ -1,7 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Plus, Play, Pause, RefreshCw, Settings, MoreHorizontal } from 'lucide-react';
+import {
+  Plus,
+  Play,
+  Pause,
+  RefreshCw,
+  Settings,
+  MoreHorizontal,
+} from 'lucide-react';
 
 interface QuickActionsProps {
   className?: string;
@@ -15,7 +22,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({ className = '' }) => {
       label: 'Add API',
       icon: Plus,
       color: 'bg-blue-600 hover:bg-blue-700 text-white',
-      action: () => window.location.href = '/add-api',
+      action: () => (window.location.href = '/add-api'),
     },
     {
       label: 'Refresh All',
@@ -48,7 +55,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({ className = '' }) => {
     {
       label: 'Dashboard Settings',
       icon: Settings,
-      action: () => window.location.href = '/settings',
+      action: () => (window.location.href = '/settings'),
     },
   ];
 
@@ -87,16 +94,18 @@ const QuickActions: React.FC<QuickActionsProps> = ({ className = '' }) => {
         {isDropdownOpen && (
           <>
             {/* Backdrop */}
-            <div 
-              className="fixed inset-0 z-10" 
+            <div
+              className="fixed inset-0 z-10"
               onClick={() => setIsDropdownOpen(false)}
             />
-            
+
             {/* Dropdown Menu */}
-            <div className="
+            <div
+              className="
               absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 
               py-1 z-20 animate-in fade-in duration-200
-            ">
+            "
+            >
               {dropdownActions.map((action, index) => (
                 <button
                   key={index}

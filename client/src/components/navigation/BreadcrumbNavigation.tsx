@@ -59,24 +59,28 @@ const BreadcrumbNavigation: React.FC<BreadcrumbNavigationProps> = ({
     return breadcrumbs;
   };
 
-  const getLabelForSegment = (segment: string, segments: string[], index: number): string => {
+  const getLabelForSegment = (
+    segment: string,
+    segments: string[],
+    index: number
+  ): string => {
     // Handle dynamic routes and common patterns
     const labelMap: Record<string, string> = {
-      'apis': 'APIs',
+      apis: 'APIs',
       'add-api': 'Add API',
-      'notifications': 'Notifications',
-      'analytics': 'Analytics',
-      'team': 'Team',
-      'settings': 'Settings',
-      'profile': 'Profile',
-      'security': 'Security',
-      'members': 'Members',
-      'permissions': 'Permissions',
-      'reports': 'Reports',
-      'trends': 'Trends',
-      'monitoring': 'Monitoring',
-      'changelogs': 'Change Logs',
-      'dashboard': 'Dashboard',
+      notifications: 'Notifications',
+      analytics: 'Analytics',
+      team: 'Team',
+      settings: 'Settings',
+      profile: 'Profile',
+      security: 'Security',
+      members: 'Members',
+      permissions: 'Permissions',
+      reports: 'Reports',
+      trends: 'Trends',
+      monitoring: 'Monitoring',
+      changelogs: 'Change Logs',
+      dashboard: 'Dashboard',
     };
 
     // Check if it's a UUID or ID (for dynamic routes)
@@ -90,11 +94,15 @@ const BreadcrumbNavigation: React.FC<BreadcrumbNavigationProps> = ({
     }
 
     // Return mapped label or capitalize the segment
-    return labelMap[segment] || segment.charAt(0).toUpperCase() + segment.slice(1).replace(/-/g, ' ');
+    return (
+      labelMap[segment] ||
+      segment.charAt(0).toUpperCase() + segment.slice(1).replace(/-/g, ' ')
+    );
   };
 
   const isUUID = (str: string): boolean => {
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     return uuidRegex.test(str);
   };
 
@@ -116,12 +124,12 @@ const BreadcrumbNavigation: React.FC<BreadcrumbNavigationProps> = ({
           {index > 0 && (
             <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
           )}
-          
+
           <div className="flex items-center">
             {index === 0 && showHome && (
               <Home className="w-4 h-4 text-gray-500 mr-1" />
             )}
-            
+
             {breadcrumb.isActive ? (
               <span className="text-gray-900 font-medium truncate max-w-32">
                 {breadcrumb.label}
@@ -165,19 +173,23 @@ export const EnhancedBreadcrumb: React.FC<EnhancedBreadcrumbProps> = ({
 
     const lastSegment = pathSegments[pathSegments.length - 1];
     const titleMap: Record<string, string> = {
-      'dashboard': 'Dashboard',
-      'apis': 'API Management',
+      dashboard: 'Dashboard',
+      apis: 'API Management',
       'add-api': 'Add New API',
-      'notifications': 'Notifications',
-      'analytics': 'Analytics',
-      'team': 'Team Management',
-      'settings': 'Settings',
-      'profile': 'Profile Settings',
-      'security': 'Security Settings',
-      'monitoring': 'API Monitoring',
+      notifications: 'Notifications',
+      analytics: 'Analytics',
+      team: 'Team Management',
+      settings: 'Settings',
+      profile: 'Profile Settings',
+      security: 'Security Settings',
+      monitoring: 'API Monitoring',
     };
 
-    return titleMap[lastSegment] || lastSegment.charAt(0).toUpperCase() + lastSegment.slice(1).replace(/-/g, ' ');
+    return (
+      titleMap[lastSegment] ||
+      lastSegment.charAt(0).toUpperCase() +
+        lastSegment.slice(1).replace(/-/g, ' ')
+    );
   };
 
   return (
@@ -186,7 +198,7 @@ export const EnhancedBreadcrumb: React.FC<EnhancedBreadcrumbProps> = ({
         <div className="min-w-0 flex-1">
           {/* Breadcrumb Navigation */}
           <BreadcrumbNavigation {...breadcrumbProps} />
-          
+
           {/* Page Title */}
           <div className="mt-2">
             <h1 className="text-2xl font-bold text-gray-900 truncate">
@@ -199,11 +211,7 @@ export const EnhancedBreadcrumb: React.FC<EnhancedBreadcrumbProps> = ({
         </div>
 
         {/* Actions */}
-        {actions && (
-          <div className="ml-4 flex-shrink-0">
-            {actions}
-          </div>
-        )}
+        {actions && <div className="ml-4 flex-shrink-0">{actions}</div>}
       </div>
     </div>
   );

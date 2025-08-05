@@ -56,7 +56,9 @@ const TrendAnalysis: React.FC<TrendAnalysisProps> = ({
   showPredictions = true,
   analysisDepth = 'advanced',
 }) => {
-  const [selectedMetric, setSelectedMetric] = useState<'responseTime' | 'uptime' | 'errorRate' | 'requestCount'>('responseTime');
+  const [selectedMetric, setSelectedMetric] = useState<
+    'responseTime' | 'uptime' | 'errorRate' | 'requestCount'
+  >('responseTime');
   const [expandedInsight, setExpandedInsight] = useState<string | null>(null);
 
   // Generate insights from data
@@ -66,13 +68,16 @@ const TrendAnalysis: React.FC<TrendAnalysisProps> = ({
     data.forEach((apiData) => {
       if (apiData.metric !== selectedMetric) return;
 
-      const values = apiData.data.map(d => d.value);
-      const timestamps = apiData.data.map(d => new Date(d.timestamp).getTime());
+      const values = apiData.data.map((d) => d.value);
+      const timestamps = apiData.data.map((d) =>
+        new Date(d.timestamp).getTime()
+      );
 
       // Calculate trend metrics
       const average = values.reduce((sum, val) => sum + val, 0) / values.length;
       const standardDeviation = Math.sqrt(
-        values.reduce((sum, val) => sum + Math.pow(val - average, 2), 0) / values.length
+        values.reduce((sum, val) => sum + Math.pow(val - average, 2), 0) /
+          values.length
       );
 
       // Linear regression for trend direction
@@ -87,13 +92,29 @@ const TrendAnalysis: React.FC<TrendAnalysisProps> = ({
       const correlation = calculateCorrelation(timestamps, values);
 
       // Detect anomalies (values beyond 2 standard deviations)
-      const anomalies = values.filter(val => Math.abs(val - average) > 2 * standardDeviation);
+      const anomalies = values.filter(
+        (val) => Math.abs(val - average) > 2 * standardDeviation
+      );
 
       // Generate insights based on analysis
-      generateTrendInsights(apiData, slope, correlation, anomalies, average, standardDeviation, allInsights);
-      
+      generateTrendInsights(
+        apiData,
+        slope,
+        correlation,
+        anomalies,
+        average,
+        standardDeviation,
+        allInsights
+      );
+
       if (showPredictions) {
-        generatePredictiveInsights(apiData, slope, intercept, timestamps, allInsights);
+        generatePredictiveInsights(
+          apiData,
+          slope,
+          intercept,
+          timestamps,
+          allInsights
+        );
       }
     });
 
@@ -116,7 +137,9 @@ const TrendAnalysis: React.FC<TrendAnalysisProps> = ({
     const sumYY = y.reduce((sum, val) => sum + val * val, 0);
 
     const numerator = n * sumXY - sumX * sumY;
-    const denominator = Math.sqrt((n * sumXX - sumX * sumX) * (n * sumYY - sumY * sumY));
+    const denominator = Math.sqrt(
+      (n * sumXX - sumX * sumX) * (n * sumYY - sumY * sumY)
+    );
 
     return denominator === 0 ? 0 : numerator / denominator;
   };
@@ -189,7 +212,8 @@ const TrendAnalysis: React.FC<TrendAnalysisProps> = ({
 
     // Baseline comparison
     if (apiData.baseline) {
-      const deviationPercentage = ((average - apiData.baseline) / apiData.baseline) * 100;
+      const deviationPercentage =
+        ((average - apiData.baseline) / apiData.baseline) * 100;
       if (Math.abs(deviationPercentage) > 10) {
         insights.push({
           type: deviationPercentage > 0 ? 'degradation' : 'improvement',
@@ -213,11 +237,12 @@ const TrendAnalysis: React.FC<TrendAnalysisProps> = ({
   ) => {
     // Predict next 7 days
     const lastTimestamp = timestamps[timestamps.length - 1];
-    const futureTimestamp = lastTimestamp + (7 * 24 * 60 * 60 * 1000); // 7 days ahead
+    const futureTimestamp = lastTimestamp + 7 * 24 * 60 * 60 * 1000; // 7 days ahead
     const predictedValue = slope * futureTimestamp + intercept;
-    
+
     const currentValue = apiData.data[apiData.data.length - 1].value;
-    const predictedChange = ((predictedValue - currentValue) / currentValue) * 100;
+    const predictedChange =
+      ((predictedValue - currentValue) / currentValue) * 100;
 
     if (Math.abs(predictedChange) > 5) {
       insights.push({
@@ -227,7 +252,10 @@ const TrendAnalysis: React.FC<TrendAnalysisProps> = ({
         description: `Based on current trends, ${apiData.apiName} ${getMetricLabel(apiData.metric).toLowerCase()} is predicted to ${predictedChange > 0 ? 'increase' : 'decrease'} by ${Math.abs(predictedChange).toFixed(1)}% in the next 7 days.`,
         confidence: 70,
         impact: `Projected ${getMetricLabel(apiData.metric).toLowerCase()}: ${formatValue(predictedValue, apiData.metric)}`,
-        recommendation: getPredictiveRecommendation(apiData.metric, predictedChange),
+        recommendation: getPredictiveRecommendation(
+          apiData.metric,
+          predictedChange
+        ),
         timeframe: '7d forecast',
       });
     }
@@ -245,15 +273,23 @@ const TrendAnalysis: React.FC<TrendAnalysisProps> = ({
 
   const getImpactDescription = (metric: string, isIncreasing: boolean) => {
     if (metric === 'uptime') {
-      return isIncreasing ? 'Improved reliability and user experience.' : 'Decreased reliability may affect user satisfaction.';
+      return isIncreasing
+        ? 'Improved reliability and user experience.'
+        : 'Decreased reliability may affect user satisfaction.';
     }
     if (metric === 'responseTime') {
-      return isIncreasing ? 'Slower response times may impact user experience.' : 'Faster response times improve user experience.';
+      return isIncreasing
+        ? 'Slower response times may impact user experience.'
+        : 'Faster response times improve user experience.';
     }
     if (metric === 'errorRate') {
-      return isIncreasing ? 'Higher error rates indicate potential system issues.' : 'Lower error rates suggest improved stability.';
+      return isIncreasing
+        ? 'Higher error rates indicate potential system issues.'
+        : 'Lower error rates suggest improved stability.';
     }
-    return isIncreasing ? 'Increased activity levels.' : 'Decreased activity levels.';
+    return isIncreasing
+      ? 'Increased activity levels.'
+      : 'Decreased activity levels.';
   };
 
   const getRecommendation = (metric: string, isIncreasing: boolean) => {
@@ -288,7 +324,9 @@ const TrendAnalysis: React.FC<TrendAnalysisProps> = ({
       case 'errorRate':
         return `${value.toFixed(2)}%`;
       case 'requestCount':
-        return value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value.toFixed(0);
+        return value >= 1000
+          ? `${(value / 1000).toFixed(1)}k`
+          : value.toFixed(0);
       default:
         return value.toFixed(2);
     }
@@ -340,14 +378,23 @@ const TrendAnalysis: React.FC<TrendAnalysisProps> = ({
   ];
 
   return (
-    <div className={clsx('bg-white rounded-lg border border-gray-200 p-6', className)}>
+    <div
+      className={clsx(
+        'bg-white rounded-lg border border-gray-200 p-6',
+        className
+      )}
+    >
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
           <Zap className="w-6 h-6 text-purple-600" />
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">Trend Analysis</h3>
-            <p className="text-sm text-gray-600">AI-powered insights and predictions</p>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Trend Analysis
+            </h3>
+            <p className="text-sm text-gray-600">
+              AI-powered insights and predictions
+            </p>
           </div>
         </div>
 
@@ -394,13 +441,17 @@ const TrendAnalysis: React.FC<TrendAnalysisProps> = ({
                   getSeverityColor(insight.severity),
                   isExpanded && 'ring-2 ring-purple-500'
                 )}
-                onClick={() => setExpandedInsight(isExpanded ? null : `${index}`)}
+                onClick={() =>
+                  setExpandedInsight(isExpanded ? null : `${index}`)
+                }
               >
                 <div className="flex items-start space-x-3">
                   <Icon className="w-5 h-5 flex-shrink-0 mt-0.5" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-semibold truncate">{insight.title}</h4>
+                      <h4 className="text-sm font-semibold truncate">
+                        {insight.title}
+                      </h4>
                       <div className="flex items-center space-x-2 ml-2">
                         <span className="text-xs bg-white bg-opacity-50 px-2 py-1 rounded">
                           {insight.confidence.toFixed(0)}% confidence
@@ -411,7 +462,7 @@ const TrendAnalysis: React.FC<TrendAnalysisProps> = ({
                       </div>
                     </div>
                     <p className="text-sm mt-1">{insight.description}</p>
-                    
+
                     {isExpanded && (
                       <div className="mt-3 space-y-2">
                         <div>
@@ -420,7 +471,9 @@ const TrendAnalysis: React.FC<TrendAnalysisProps> = ({
                         </div>
                         {insight.recommendation && (
                           <div>
-                            <span className="text-xs font-medium">Recommendation:</span>
+                            <span className="text-xs font-medium">
+                              Recommendation:
+                            </span>
                             <p className="text-sm">{insight.recommendation}</p>
                           </div>
                         )}
@@ -434,9 +487,12 @@ const TrendAnalysis: React.FC<TrendAnalysisProps> = ({
         ) : (
           <div className="text-center py-8">
             <BarChart3 className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No Insights Available</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No Insights Available
+            </h3>
             <p className="text-gray-600">
-              Insufficient data to generate meaningful insights. More data will improve analysis quality.
+              Insufficient data to generate meaningful insights. More data will
+              improve analysis quality.
             </p>
           </div>
         )}
@@ -444,7 +500,9 @@ const TrendAnalysis: React.FC<TrendAnalysisProps> = ({
 
       {/* Legend */}
       <div className="mt-6 pt-6 border-t border-gray-200">
-        <h4 className="text-sm font-medium text-gray-900 mb-3">Analysis Depth: {analysisDepth}</h4>
+        <h4 className="text-sm font-medium text-gray-900 mb-3">
+          Analysis Depth: {analysisDepth}
+        </h4>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="text-center">
             <TrendingUp className="w-6 h-6 mx-auto mb-1 text-green-600" />

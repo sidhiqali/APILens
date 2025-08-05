@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { ApisService } from '../apis/apis.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationsGateway } from '../../gateways/notifications.gateway';
 
 @Injectable()
 export class SmartSchedulerService {
@@ -10,6 +11,7 @@ export class SmartSchedulerService {
   constructor(
     private readonly apisService: ApisService,
     private readonly notificationsService: NotificationsService,
+    private readonly notificationsGateway: NotificationsGateway,
   ) {}
 
   // Run every 5 minutes to check for APIs that need monitoring
@@ -55,10 +57,70 @@ export class SmartSchedulerService {
     try {
       this.logger.debug(`Checking API: ${apiId}`);
 
+      // Get API details first
+      const api = await this.apisService.getApiByIdInternal(apiId);
+      if (!api) {
+        this.logger.error(`API not found: ${apiId}`);
+        return;
+      }
+
+      // Emit real-time status update - checking
+      this.notificationsGateway.broadcastAPIUpdate(
+        apiId,
+        api.userId.toString(),
+        {
+          apiId,
+          apiName: api.apiName,
+          status: 'checking',
+          lastChecked: new Date().toISOString(),
+        },
+      );
+
       const result = await this.apisService.checkApiForChanges(apiId);
+
+      // Determine health status
+      const healthStatus = result.hasChanges ? 'unhealthy' : 'healthy';
+
+      // Update API health status
+      await this.apisService.updateApiHealth(apiId, {
+        status: healthStatus,
+        lastChecked: new Date(),
+        responseTime: 200, // Could measure actual response time
+      });
+
+      // Emit real-time status update - completed
+      this.notificationsGateway.broadcastAPIUpdate(
+        apiId,
+        api.userId.toString(),
+        {
+          apiId,
+          apiName: api.apiName,
+          status: healthStatus,
+          responseTime: 200,
+          uptime: 99.9, // Calculate actual uptime
+          lastChecked: new Date().toISOString(),
+          changes: result.changes || [],
+        },
+      );
 
       if (result.hasChanges) {
         this.logger.log(`Changes detected for API ${apiId}`);
+
+        // Emit real-time API change notification
+        this.notificationsGateway.broadcastAPIChange(
+          apiId,
+          api.userId.toString(),
+          {
+            id: `change_${Date.now()}`,
+            apiId,
+            apiName: api.apiName,
+            changeType: this.determineChangeType(result.changes || []),
+            severity: 'medium', // Default severity since it's not in result
+            summary: `${result.changes?.length || 0} changes detected`,
+            details: result.changes,
+            timestamp: new Date().toISOString(),
+          },
+        );
 
         // Send notifications for the changes
         await this.notificationsService.notifyApiChanges(
@@ -70,35 +132,57 @@ export class SmartSchedulerService {
     } catch (error) {
       this.logger.error(`Failed to check API ${apiId}: ${error.message}`);
 
+      // Get API details for error broadcast
+      const api = await this.apisService.getApiByIdInternal(apiId);
+      if (api) {
+        // Emit error status
+        this.notificationsGateway.broadcastAPIUpdate(
+          apiId,
+          api.userId.toString(),
+          {
+            apiId,
+            apiName: api.apiName,
+            status: 'unhealthy',
+            lastChecked: new Date().toISOString(),
+            error: error.message,
+          },
+        );
+      }
+
       // Notify about API error
       await this.notificationsService.notifyApiError(apiId, error.message);
     }
   }
 
+  private determineChangeType(changes: any[]): string {
+    if (!changes || changes.length === 0) return 'schema';
+
+    // Simple logic to determine change type based on changes
+    const hasBreakingChanges = changes.some(
+      (change) => change.breaking || change.severity === 'critical',
+    );
+
+    return hasBreakingChanges ? 'breaking' : 'schema';
+  }
+
   // Health check every hour
   @Cron(CronExpression.EVERY_HOUR)
-  private performHealthChecks() {
+  private async performHealthChecks() {
     this.logger.log('Starting health check cycle...');
 
     try {
       // This could check system health, cleanup old data, etc.
-      this.cleanupOldSnapshots();
-      this.updateApiHealthScores();
+      // Perform maintenance tasks
+      const deletedCount = await this.apisService.cleanupOldSnapshots();
+      if (deletedCount > 0) {
+        this.logger.log(`Cleaned up ${deletedCount} old snapshots`);
+      }
+
+      await this.apisService.updateApiHealthScores();
+      this.logger.log('Updated API health scores');
     } catch (error) {
       this.logger.error(`Error in health check cycle: ${error.message}`);
     }
-  }
-
-  private cleanupOldSnapshots(): void {
-    // Implement cleanup logic for old snapshots (keep last 30 days)
-    this.logger.log('Cleaning up old snapshots...');
-    // Implementation here
-  }
-
-  private updateApiHealthScores(): void {
-    // Update API health scores based on recent checks
-    this.logger.log('Updating API health scores...');
-    // Implementation here
   }
 
   private delay(ms: number): Promise<void> {

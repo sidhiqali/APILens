@@ -12,6 +12,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { SchedulesModule } from './modules/schedules/schedules.module';
 import { UserModule } from './modules/user/user.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { WebSocketModule } from './modules/websocket/websocket.module';
 import configuration from './config/configuration';
 import { HealthModule } from './modules/health/health.module';
 
@@ -64,6 +65,7 @@ import { HealthModule } from './modules/health/health.module';
     SchedulesModule,
     DashboardModule,
     HealthModule,
+    WebSocketModule,
   ],
   controllers: [AppController],
   providers: [AppService],

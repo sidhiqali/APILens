@@ -31,7 +31,14 @@ interface SearchResult {
 }
 
 interface SearchFilter {
-  type: 'all' | 'api' | 'notification' | 'changelog' | 'setting' | 'team' | 'page';
+  type:
+    | 'all'
+    | 'api'
+    | 'notification'
+    | 'changelog'
+    | 'setting'
+    | 'team'
+    | 'page';
   label: string;
   icon: React.ElementType;
   count?: number;
@@ -56,9 +63,10 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
   const [results, setResults] = useState<SearchResult[]>([]);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedFilter, setSelectedFilter] = useState<SearchFilter['type']>('all');
+  const [selectedFilter, setSelectedFilter] =
+    useState<SearchFilter['type']>('all');
   const [selectedIndex, setSelectedIndex] = useState(-1);
-  
+
   const router = useRouter();
   const searchRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -73,11 +81,13 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
   ];
 
   // Mock search function - replace with actual API call
-  const performSearch = async (searchQuery: string): Promise<SearchResult[]> => {
+  const performSearch = async (
+    searchQuery: string
+  ): Promise<SearchResult[]> => {
     if (!searchQuery.trim()) return [];
 
     // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
+    await new Promise((resolve) => setTimeout(resolve, 300));
 
     // Mock search results
     const mockResults: SearchResult[] = [
@@ -122,10 +132,12 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
     ];
 
     // Filter based on query and selected filter
-    return mockResults.filter(result => {
-      const matchesQuery = result.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          result.description?.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesFilter = selectedFilter === 'all' || result.type === selectedFilter;
+    return mockResults.filter((result) => {
+      const matchesQuery =
+        result.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        result.description?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesFilter =
+        selectedFilter === 'all' || result.type === selectedFilter;
       return matchesQuery && matchesFilter;
     });
   };
@@ -165,7 +177,10 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
 
   // Save recent search
   const saveRecentSearch = (searchQuery: string) => {
-    const updated = [searchQuery, ...recentSearches.filter(s => s !== searchQuery)].slice(0, 5);
+    const updated = [
+      searchQuery,
+      ...recentSearches.filter((s) => s !== searchQuery),
+    ].slice(0, 5);
     setRecentSearches(updated);
     localStorage.setItem('recent_searches', JSON.stringify(updated));
   };
@@ -173,17 +188,17 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
   // Handle result selection
   const handleResultSelect = (result: SearchResult) => {
     saveRecentSearch(query);
-    
+
     if (onResultSelect) {
       onResultSelect(result);
     } else {
       router.push(result.url);
     }
-    
+
     if (isModal && onClose) {
       onClose();
     }
-    
+
     setQuery('');
     setResults([]);
   };
@@ -202,13 +217,13 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault();
-          setSelectedIndex(prev => 
+          setSelectedIndex((prev) =>
             prev < results.length - 1 ? prev + 1 : prev
           );
           break;
         case 'ArrowUp':
           e.preventDefault();
-          setSelectedIndex(prev => prev > 0 ? prev - 1 : prev);
+          setSelectedIndex((prev) => (prev > 0 ? prev - 1 : prev));
           break;
         case 'Enter':
           e.preventDefault();
@@ -344,24 +359,28 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
                         {result.metadata && (
                           <div className="flex items-center space-x-2 mt-1">
                             {result.metadata.status && (
-                              <span className={clsx(
-                                'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
-                                result.metadata.status === 'active' 
-                                  ? 'bg-green-100 text-green-800'
-                                  : 'bg-gray-100 text-gray-800'
-                              )}>
+                              <span
+                                className={clsx(
+                                  'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
+                                  result.metadata.status === 'active'
+                                    ? 'bg-green-100 text-green-800'
+                                    : 'bg-gray-100 text-gray-800'
+                                )}
+                              >
                                 {result.metadata.status}
                               </span>
                             )}
                             {result.metadata.severity && (
-                              <span className={clsx(
-                                'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
-                                result.metadata.severity === 'high'
-                                  ? 'bg-red-100 text-red-800'
-                                  : result.metadata.severity === 'medium'
-                                  ? 'bg-yellow-100 text-yellow-800'
-                                  : 'bg-blue-100 text-blue-800'
-                              )}>
+                              <span
+                                className={clsx(
+                                  'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
+                                  result.metadata.severity === 'high'
+                                    ? 'bg-red-100 text-red-800'
+                                    : result.metadata.severity === 'medium'
+                                      ? 'bg-yellow-100 text-yellow-800'
+                                      : 'bg-blue-100 text-blue-800'
+                                )}
+                              >
                                 {result.metadata.severity}
                               </span>
                             )}
@@ -372,7 +391,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
                     </div>
                   );
                 })}
-                
+
                 {results.length === 0 && (
                   <div className="p-8 text-center text-gray-500">
                     <Search className="w-8 h-8 mx-auto mb-2 text-gray-300" />
@@ -415,7 +434,10 @@ interface SearchModalProps {
   onClose: () => void;
 }
 
-export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
+export const SearchModal: React.FC<SearchModalProps> = ({
+  isOpen,
+  onClose,
+}) => {
   if (!isOpen) return null;
 
   return (
@@ -425,7 +447,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
         className="absolute inset-0 bg-black bg-opacity-50"
         onClick={onClose}
       />
-      
+
       {/* Modal */}
       <div className="relative z-10 flex items-start justify-center pt-16 px-4">
         <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full">

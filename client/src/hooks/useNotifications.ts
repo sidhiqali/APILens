@@ -1,4 +1,9 @@
-import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  useInfiniteQuery,
+} from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { notificationService } from '@/services/notification.service';
 import type {
@@ -168,10 +173,7 @@ export const useMarkAllAsRead = () => {
       );
 
       // Update unread count to 0
-      queryClient.setQueryData(
-        notificationQueryKeys.unreadCount(),
-        0
-      );
+      queryClient.setQueryData(notificationQueryKeys.unreadCount(), 0);
     },
     onError: (error: any) => {
       // Revert optimistic update
@@ -261,10 +263,7 @@ export const useUpdateNotificationPreferences = () => {
       notificationService.updatePreferences(preferences),
     onSuccess: (data) => {
       // Update cached preferences
-      queryClient.setQueryData(
-        notificationQueryKeys.preferences(),
-        data
-      );
+      queryClient.setQueryData(notificationQueryKeys.preferences(), data);
       toast.success('Notification preferences updated');
     },
     onError: (error: any) => {

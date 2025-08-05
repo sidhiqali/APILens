@@ -19,6 +19,8 @@ import {
 } from 'src/Schemas/notification.schema';
 import { User, UserSchema } from 'src/Schemas/user.schema';
 import { EmailService } from '../notifications/email.service';
+import { NotificationsGateway } from 'src/gateways/notifications.gateway';
+import { JwtService } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -38,6 +40,8 @@ import { EmailService } from '../notifications/email.service';
     SmartSchedulerService,
     NotificationsService,
     EmailService,
+    NotificationsGateway,
+    JwtService,
   ],
   exports: [ApisService],
 })

@@ -63,7 +63,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   const getActiveFilterCount = useCallback(() => {
     let count = 0;
     Object.entries(filterState).forEach(([groupId, value]) => {
-      const group = filters.find(f => f.id === groupId);
+      const group = filters.find((f) => f.id === groupId);
       if (!group) return;
 
       switch (group.type) {
@@ -75,7 +75,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           count += value ? 1 : 0;
           break;
         case 'daterange':
-          count += (value?.start || value?.end) ? 1 : 0;
+          count += value?.start || value?.end ? 1 : 0;
           break;
         case 'search':
           count += value?.trim() ? 1 : 0;
@@ -97,7 +97,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   // Clear all filters
   const handleClearAll = () => {
     const clearedState: FilterState = {};
-    filters.forEach(group => {
+    filters.forEach((group) => {
       switch (group.type) {
         case 'checkbox':
           clearedState[group.id] = [];
@@ -116,9 +116,9 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 
   // Toggle group collapse
   const toggleGroupCollapse = (groupId: string) => {
-    setCollapsedGroups(prev =>
+    setCollapsedGroups((prev) =>
       prev.includes(groupId)
-        ? prev.filter(id => id !== groupId)
+        ? prev.filter((id) => id !== groupId)
         : [...prev, groupId]
     );
   };
@@ -136,7 +136,11 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             'flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50',
             group.isCollapsible ? 'cursor-pointer' : 'cursor-default'
           )}
-          onClick={group.isCollapsible ? () => toggleGroupCollapse(group.id) : undefined}
+          onClick={
+            group.isCollapsible
+              ? () => toggleGroupCollapse(group.id)
+              : undefined
+          }
         >
           <h3 className="text-sm font-medium text-gray-900">{group.label}</h3>
           <div className="flex items-center space-x-2">
@@ -175,7 +179,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
       case 'select':
         return value ? 1 : 0;
       case 'daterange':
-        return (value?.start || value?.end) ? 1 : 0;
+        return value?.start || value?.end ? 1 : 0;
       case 'search':
         return value?.trim() ? 1 : 0;
       default:
@@ -215,7 +219,9 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                 </div>
                 <span className="text-sm text-gray-700">{option.label}</span>
                 {option.count !== undefined && (
-                  <span className="text-xs text-gray-500">({option.count})</span>
+                  <span className="text-xs text-gray-500">
+                    ({option.count})
+                  </span>
                 )}
                 {option.color && (
                   <div
@@ -246,7 +252,9 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                 />
                 <span className="text-sm text-gray-700">{option.label}</span>
                 {option.count !== undefined && (
-                  <span className="text-xs text-gray-500">({option.count})</span>
+                  <span className="text-xs text-gray-500">
+                    ({option.count})
+                  </span>
                 )}
               </label>
             ))}
@@ -282,7 +290,10 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                 type="date"
                 value={dateValue.start || ''}
                 onChange={(e) =>
-                  updateFilter(group.id, { ...dateValue, start: e.target.value })
+                  updateFilter(group.id, {
+                    ...dateValue,
+                    start: e.target.value,
+                  })
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
@@ -321,7 +332,12 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 
   if (isPanelCollapsed && isCollapsible) {
     return (
-      <div className={clsx('bg-white border border-gray-200 rounded-lg', className)}>
+      <div
+        className={clsx(
+          'bg-white border border-gray-200 rounded-lg',
+          className
+        )}
+      >
         <button
           onClick={() => setIsPanelCollapsed(false)}
           className="w-full p-3 flex items-center justify-between hover:bg-gray-50"
@@ -342,7 +358,9 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   }
 
   return (
-    <div className={clsx('bg-white border border-gray-200 rounded-lg', className)}>
+    <div
+      className={clsx('bg-white border border-gray-200 rounded-lg', className)}
+    >
       {/* Panel Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
         <div className="flex items-center space-x-2">
@@ -390,9 +408,27 @@ export const createAPIFilters = (): FilterGroup[] => [
     label: 'Status',
     type: 'checkbox',
     options: [
-      { id: 'active', label: 'Active', value: 'active', count: 15, color: '#10B981' },
-      { id: 'inactive', label: 'Inactive', value: 'inactive', count: 3, color: '#EF4444' },
-      { id: 'pending', label: 'Pending', value: 'pending', count: 2, color: '#F59E0B' },
+      {
+        id: 'active',
+        label: 'Active',
+        value: 'active',
+        count: 15,
+        color: '#10B981',
+      },
+      {
+        id: 'inactive',
+        label: 'Inactive',
+        value: 'inactive',
+        count: 3,
+        color: '#EF4444',
+      },
+      {
+        id: 'pending',
+        label: 'Pending',
+        value: 'pending',
+        count: 2,
+        color: '#F59E0B',
+      },
     ],
   },
   {
@@ -425,9 +461,21 @@ export const createNotificationFilters = (): FilterGroup[] => [
     label: 'Severity',
     type: 'checkbox',
     options: [
-      { id: 'critical', label: 'Critical', value: 'critical', count: 2, color: '#DC2626' },
+      {
+        id: 'critical',
+        label: 'Critical',
+        value: 'critical',
+        count: 2,
+        color: '#DC2626',
+      },
       { id: 'high', label: 'High', value: 'high', count: 5, color: '#EA580C' },
-      { id: 'medium', label: 'Medium', value: 'medium', count: 8, color: '#D97706' },
+      {
+        id: 'medium',
+        label: 'Medium',
+        value: 'medium',
+        count: 8,
+        color: '#D97706',
+      },
       { id: 'low', label: 'Low', value: 'low', count: 12, color: '#65A30D' },
     ],
   },
@@ -438,7 +486,12 @@ export const createNotificationFilters = (): FilterGroup[] => [
     options: [
       { id: 'api_change', label: 'API Change', value: 'api_change', count: 15 },
       { id: 'api_error', label: 'API Error', value: 'api_error', count: 8 },
-      { id: 'breaking_change', label: 'Breaking Change', value: 'breaking_change', count: 3 },
+      {
+        id: 'breaking_change',
+        label: 'Breaking Change',
+        value: 'breaking_change',
+        count: 3,
+      },
       { id: 'system', label: 'System', value: 'system', count: 2 },
     ],
   },

@@ -13,8 +13,10 @@ import type {
 export const settingsQueryKeys = {
   all: ['settings'] as const,
   profile: () => [...settingsQueryKeys.all, 'profile'] as const,
-  notificationPreferences: () => [...settingsQueryKeys.all, 'notificationPreferences'] as const,
-  apiSettings: (apiId: string) => [...settingsQueryKeys.all, 'apiSettings', apiId] as const,
+  notificationPreferences: () =>
+    [...settingsQueryKeys.all, 'notificationPreferences'] as const,
+  apiSettings: (apiId: string) =>
+    [...settingsQueryKeys.all, 'apiSettings', apiId] as const,
   systemSettings: () => [...settingsQueryKeys.all, 'systemSettings'] as const,
   apiKey: () => [...settingsQueryKeys.all, 'apiKey'] as const,
 };
@@ -114,11 +116,16 @@ export const useUpdateNotificationPreferences = () => {
       queryClient.invalidateQueries({
         queryKey: settingsQueryKeys.notificationPreferences(),
       });
-      toast.error(error?.message || 'Failed to update notification preferences');
+      toast.error(
+        error?.message || 'Failed to update notification preferences'
+      );
     },
     onSuccess: (data) => {
       // Update cached preferences
-      queryClient.setQueryData(settingsQueryKeys.notificationPreferences(), data);
+      queryClient.setQueryData(
+        settingsQueryKeys.notificationPreferences(),
+        data
+      );
       toast.success('Notification preferences updated');
     },
   });
@@ -255,7 +262,7 @@ export const useExportUserData = () => {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-      
+
       toast.success('User data exported successfully');
     },
     onError: (error: any) => {

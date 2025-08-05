@@ -86,16 +86,19 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({
 
     // Filter by category
     if (selectedCategory !== 'all') {
-      filteredData = filteredData.filter(api => api.category === selectedCategory);
+      filteredData = filteredData.filter(
+        (api) => api.category === selectedCategory
+      );
     }
 
     // Filter by issues
     if (showOnlyIssues) {
-      filteredData = filteredData.filter(api => 
-        api.metrics.uptime < 99 || 
-        api.metrics.errorRate > 1 || 
-        api.metrics.responseTime > 1000 ||
-        api.healthScore < 80
+      filteredData = filteredData.filter(
+        (api) =>
+          api.metrics.uptime < 99 ||
+          api.metrics.errorRate > 1 ||
+          api.metrics.responseTime > 1000 ||
+          api.healthScore < 80
       );
     }
 
@@ -104,7 +107,7 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({
       let aValue: number, bValue: number;
 
       if (sortBy === 'name') {
-        return sortOrder === 'asc' 
+        return sortOrder === 'asc'
           ? a.apiName.localeCompare(b.apiName)
           : b.apiName.localeCompare(a.apiName);
       }
@@ -127,14 +130,21 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({
   const chartData = useMemo(() => {
     if (viewType === 'radar') {
       // For radar chart, we need a different data structure
-      const subjects = ['Response Time', 'Uptime', 'Error Rate', 'Reliability', 'Performance', 'Availability'];
-      const radarData = subjects.map(subject => {
+      const subjects = [
+        'Response Time',
+        'Uptime',
+        'Error Rate',
+        'Reliability',
+        'Performance',
+        'Availability',
+      ];
+      const radarData = subjects.map((subject) => {
         const dataPoint: any = { subject };
-        processedData.forEach(api => {
+        processedData.forEach((api) => {
           let value;
           switch (subject) {
             case 'Response Time':
-              value = Math.max(0, 100 - (api.metrics.responseTime / 10)); // Normalized to 0-100
+              value = Math.max(0, 100 - api.metrics.responseTime / 10); // Normalized to 0-100
               break;
             case 'Uptime':
               value = api.metrics.uptime;
@@ -162,7 +172,7 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({
     }
 
     if (viewType === 'scatter') {
-      return processedData.map(api => ({
+      return processedData.map((api) => ({
         x: api.metrics.responseTime,
         y: api.metrics.uptime,
         z: api.metrics.requestCount,
@@ -174,7 +184,7 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({
     }
 
     // For bar and line charts
-    return processedData.map(api => ({
+    return processedData.map((api) => ({
       name: api.apiName,
       category: api.category,
       ...api.metrics,
@@ -185,7 +195,9 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({
 
   // Get unique categories
   const categories = useMemo(() => {
-    const uniqueCategories = Array.from(new Set(data.map(api => api.category)));
+    const uniqueCategories = Array.from(
+      new Set(data.map((api) => api.category))
+    );
     return ['all', ...uniqueCategories];
   }, [data]);
 
@@ -195,9 +207,19 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({
     { key: 'uptime', label: 'Uptime', unit: '%', icon: TrendingUp },
     { key: 'errorRate', label: 'Error Rate', unit: '%', icon: AlertTriangle },
     { key: 'requestCount', label: 'Requests', unit: '', icon: BarChart3 },
-    { key: 'reliability', label: 'Reliability', unit: '/100', icon: CheckCircle },
+    {
+      key: 'reliability',
+      label: 'Reliability',
+      unit: '/100',
+      icon: CheckCircle,
+    },
     { key: 'performance', label: 'Performance', unit: '/100', icon: Activity },
-    { key: 'availability', label: 'Availability', unit: '/100', icon: TrendingUp },
+    {
+      key: 'availability',
+      label: 'Availability',
+      unit: '/100',
+      icon: TrendingUp,
+    },
   ];
 
   // Chart view options
@@ -217,15 +239,18 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({
         <p className="font-semibold text-gray-900 mb-2">{label}</p>
         {payload.map((entry: any, index: number) => (
           <div key={index} className="flex items-center space-x-2 text-sm">
-            <div 
-              className="w-3 h-3 rounded-full" 
+            <div
+              className="w-3 h-3 rounded-full"
               style={{ backgroundColor: entry.color }}
             />
             <span className="text-gray-600">{entry.dataKey}:</span>
             <span className="font-medium">
-              {typeof entry.value === 'number' ? entry.value.toFixed(2) : entry.value}
+              {typeof entry.value === 'number'
+                ? entry.value.toFixed(2)
+                : entry.value}
               {entry.dataKey === 'responseTime' && 'ms'}
-              {(entry.dataKey === 'uptime' || entry.dataKey === 'errorRate') && '%'}
+              {(entry.dataKey === 'uptime' || entry.dataKey === 'errorRate') &&
+                '%'}
             </span>
           </div>
         ))}
@@ -235,15 +260,18 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({
 
   const renderChart = () => {
     const chartHeight = 400;
-    
+
     switch (viewType) {
       case 'bar':
         return (
           <ResponsiveContainer width="100%" height={chartHeight}>
-            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+            <BarChart
+              data={chartData}
+              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+            >
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis 
-                dataKey="name" 
+              <XAxis
+                dataKey="name"
                 angle={-45}
                 textAnchor="end"
                 height={80}
@@ -267,10 +295,13 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({
       case 'line':
         return (
           <ResponsiveContainer width="100%" height={chartHeight}>
-            <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+            <LineChart
+              data={chartData}
+              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+            >
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis 
-                dataKey="name" 
+              <XAxis
+                dataKey="name"
                 angle={-45}
                 textAnchor="end"
                 height={80}
@@ -296,7 +327,10 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({
       case 'radar':
         return (
           <ResponsiveContainer width="100%" height={chartHeight}>
-            <RadarChart data={chartData} margin={{ top: 20, right: 80, bottom: 20, left: 80 }}>
+            <RadarChart
+              data={chartData}
+              margin={{ top: 20, right: 80, bottom: 20, left: 80 }}
+            >
               <PolarGrid stroke="#f0f0f0" />
               <PolarAngleAxis dataKey="subject" fontSize={12} />
               <PolarRadiusAxis
@@ -325,34 +359,45 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({
       case 'scatter':
         return (
           <ResponsiveContainer width="100%" height={chartHeight}>
-            <ScatterChart data={chartData} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+            <ScatterChart
+              data={chartData}
+              margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+            >
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis 
-                type="number" 
-                dataKey="x" 
+              <XAxis
+                type="number"
+                dataKey="x"
                 name="Response Time"
                 unit="ms"
                 fontSize={12}
               />
-              <YAxis 
-                type="number" 
-                dataKey="y" 
+              <YAxis
+                type="number"
+                dataKey="y"
                 name="Uptime"
                 unit="%"
                 fontSize={12}
               />
-              <Tooltip 
+              <Tooltip
                 cursor={{ strokeDasharray: '3 3' }}
                 content={({ active, payload }) => {
                   if (!active || !payload || !payload.length) return null;
                   const data = payload[0].payload;
                   return (
                     <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-                      <p className="font-semibold text-gray-900 mb-2">{data.name}</p>
-                      <p className="text-sm text-gray-600">Response Time: {data.x}ms</p>
+                      <p className="font-semibold text-gray-900 mb-2">
+                        {data.name}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Response Time: {data.x}ms
+                      </p>
                       <p className="text-sm text-gray-600">Uptime: {data.y}%</p>
-                      <p className="text-sm text-gray-600">Requests: {data.z?.toLocaleString()}</p>
-                      <p className="text-sm text-gray-600">Health Score: {data.healthScore}/100</p>
+                      <p className="text-sm text-gray-600">
+                        Requests: {data.z?.toLocaleString()}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Health Score: {data.healthScore}/100
+                      </p>
                     </div>
                   );
                 }}
@@ -390,14 +435,23 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({
   };
 
   return (
-    <div className={clsx('bg-white rounded-lg border border-gray-200 p-6', className)}>
+    <div
+      className={clsx(
+        'bg-white rounded-lg border border-gray-200 p-6',
+        className
+      )}
+    >
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
           <GitCompare className="w-6 h-6 text-blue-600" />
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">API Comparison</h3>
-            <p className="text-sm text-gray-600">Compare performance across multiple APIs</p>
+            <h3 className="text-lg font-semibold text-gray-900">
+              API Comparison
+            </h3>
+            <p className="text-sm text-gray-600">
+              Compare performance across multiple APIs
+            </p>
           </div>
         </div>
 
@@ -492,12 +546,14 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({
 
       {/* Metrics Selection */}
       <div className="mb-6">
-        <h4 className="text-sm font-medium text-gray-900 mb-3">Select Metrics to Compare:</h4>
+        <h4 className="text-sm font-medium text-gray-900 mb-3">
+          Select Metrics to Compare:
+        </h4>
         <div className="flex flex-wrap gap-2">
           {availableMetrics.map((metric) => {
             const Icon = metric.icon;
             const isSelected = selectedMetrics.includes(metric.key);
-            
+
             return (
               <button
                 key={metric.key}
@@ -524,8 +580,12 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({
         ) : (
           <div className="text-center py-12 bg-gray-50 rounded-lg">
             <BarChart3 className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Select Metrics to Compare</h3>
-            <p className="text-gray-600">Choose one or more metrics above to visualize the comparison.</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Select Metrics to Compare
+            </h3>
+            <p className="text-gray-600">
+              Choose one or more metrics above to visualize the comparison.
+            </p>
           </div>
         )}
       </div>
@@ -535,29 +595,58 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-200">
-              <th className="text-left py-3 px-4 font-medium text-gray-900">API</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">Health Score</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">Trend</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">Response Time</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">Uptime</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">Error Rate</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">Requests</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">
+                API
+              </th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">
+                Health Score
+              </th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">
+                Trend
+              </th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">
+                Response Time
+              </th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">
+                Uptime
+              </th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">
+                Error Rate
+              </th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">
+                Requests
+              </th>
             </tr>
           </thead>
           <tbody>
             {processedData.map((api) => (
-              <tr key={api.apiId} className="border-b border-gray-100 hover:bg-gray-50">
+              <tr
+                key={api.apiId}
+                className="border-b border-gray-100 hover:bg-gray-50"
+              >
                 <td className="py-3 px-4">
                   <div className="flex items-center space-x-3">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: api.color }} />
+                    <div
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: api.color }}
+                    />
                     <div>
-                      <div className="font-medium text-gray-900">{api.apiName}</div>
-                      <div className="text-xs text-gray-500">{api.category}</div>
+                      <div className="font-medium text-gray-900">
+                        {api.apiName}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {api.category}
+                      </div>
                     </div>
                   </div>
                 </td>
                 <td className="py-3 px-4">
-                  <span className={clsx('px-2 py-1 rounded-full text-xs font-medium', getHealthScoreColor(api.healthScore))}>
+                  <span
+                    className={clsx(
+                      'px-2 py-1 rounded-full text-xs font-medium',
+                      getHealthScoreColor(api.healthScore)
+                    )}
+                  >
                     {api.healthScore}/100
                   </span>
                 </td>
@@ -565,7 +654,9 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({
                 <td className="py-3 px-4">{api.metrics.responseTime}ms</td>
                 <td className="py-3 px-4">{api.metrics.uptime}%</td>
                 <td className="py-3 px-4">{api.metrics.errorRate}%</td>
-                <td className="py-3 px-4">{api.metrics.requestCount.toLocaleString()}</td>
+                <td className="py-3 px-4">
+                  {api.metrics.requestCount.toLocaleString()}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -575,8 +666,12 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({
       {processedData.length === 0 && (
         <div className="text-center py-8">
           <Filter className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No APIs Match Filters</h3>
-          <p className="text-gray-600">Adjust your filters to see API comparisons.</p>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No APIs Match Filters
+          </h3>
+          <p className="text-gray-600">
+            Adjust your filters to see API comparisons.
+          </p>
         </div>
       )}
     </div>

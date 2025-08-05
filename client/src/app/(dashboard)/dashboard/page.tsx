@@ -38,7 +38,6 @@ const DashboardPage = () => {
   const {
     data: statsData,
     isLoading: statsLoading,
-    error: statsError,
   } = useDashboardStats();
 
   // Fetch APIs list
@@ -276,7 +275,7 @@ const DashboardPage = () => {
             )}
 
             {/* APIs Table */}
-            {!apisLoading && !apisError && apis.length > 0 && (
+            {!apisLoading && !apisError && (apis?.length ?? 0) > 0 && (
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-gray-50">
@@ -399,7 +398,7 @@ const DashboardPage = () => {
             {/* Pagination */}
             {!apisLoading &&
               !apisError &&
-              apis.length > 0 &&
+              (apis?.length ?? 0) > 0 &&
               pagination.totalPages > 1 && (
                 <div className="px-6 py-4 border-t border-gray-200">
                   <div className="flex items-center justify-between">

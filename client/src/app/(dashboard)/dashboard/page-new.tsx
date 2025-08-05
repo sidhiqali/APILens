@@ -38,7 +38,6 @@ const DashboardPage = () => {
   const {
     data: statsData,
     isLoading: statsLoading,
-    error: statsError,
   } = useDashboardStats();
 
   // Fetch APIs list

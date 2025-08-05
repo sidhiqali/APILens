@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import { useGetApiChanges } from '@/hooks/useChangelog';
 import { Eye } from 'lucide-react';
-import DiffViewerModal from '../modals/DiffViewerModal';
+// import DiffViewerModal from '../modals/DiffViewerModal';
 
 const DetailedChangeView = ({ apiId }: { apiId: string }) => {
     const { data: changes, isLoading, isError } = useGetApiChanges(apiId);
@@ -47,6 +47,7 @@ const DetailedChangeView = ({ apiId }: { apiId: string }) => {
                 ))}
             </div>
             {selectedChange && (
+                {/*
                 <DiffViewerModal
                     isOpen={!!selectedChange}
                     onClose={() => setSelectedChange(null)}
@@ -54,6 +55,7 @@ const DetailedChangeView = ({ apiId }: { apiId: string }) => {
                     newValue={selectedChange.newValue}
                     title={`Diff for ${selectedChange.path}`}
                 />
+                */}
             )}
         </>
     );

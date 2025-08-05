@@ -36,8 +36,8 @@ const ApiDetailPage = async ({ params }: Props) => {
     isLoading: apiLoading,
     error: apiError,
   } = useQuery({
-    queryKey: ['api', params.id],
-    queryFn: () => apiService.getApiById(params.id),
+    queryKey: ['api', id],
+    queryFn: () => apiService.getApiById(id),
   });
 
   const deleteApiMutation = useMutation({
@@ -55,14 +55,14 @@ const ApiDetailPage = async ({ params }: Props) => {
 
   const handleDelete = async () => {
     try {
-      await deleteApiMutation.mutateAsync(params.id);
+      await deleteApiMutation.mutateAsync(id);
     } catch (error) {
       console.error('Failed to delete API:', error);
     }
   };
 
   const handleEdit = () => {
-    router.push(`/add-api?edit=${params.id}`);
+    router.push(`/add-api?edit=${id}`);
   };
 
   const getStatusIcon = (status: string) => {

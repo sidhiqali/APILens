@@ -234,6 +234,120 @@ class ApiService {
     );
     return response;
   }
+
+  // Additional enhanced methods for Phase 1
+
+  // Test API connection
+  async testConnection(id: string): Promise<{
+    status: 'healthy' | 'unhealthy' | 'error';
+    responseTime: number;
+    statusCode: number;
+    error?: string;
+    timestamp: string;
+  }> {
+    return await apiClient.post(`${this.baseUrl}/${id}/test-connection`);
+  }
+
+  // Check API now (manual trigger)
+  async checkNow(id: string): Promise<{
+    message: string;
+    hasChanges: boolean;
+    changes?: any[];
+  }> {
+    return await apiClient.post(`${this.baseUrl}/${id}/check-now`);
+  }
+
+  // Check all APIs
+  async checkAllApis(): Promise<{
+    message: string;
+    checked: number;
+  }> {
+    return await apiClient.post(`${this.baseUrl}/check-all`);
+  }
+
+  // Get API by tag
+  async getApisByTag(tag: string): Promise<ApiResponse<Api>[]> {
+    return await apiClient.get(`${this.baseUrl}?tag=${tag}`);
+  }
+
+  // Get general API stats (not dashboard specific)
+  async getGeneralStats(): Promise<{
+    totalApis: number;
+    activeMonitoring: number;
+    totalChangesToday: number;
+    healthyApis: number;
+    criticalIssues: number;
+    avgResponseTime: number;
+    uptime: number;
+  }> {
+    return await apiClient.get(`${this.baseUrl}/stats`);
+  }
+
+  // Bulk operations
+  async bulkToggleStatus(ids: string[]): Promise<{
+    updated: number;
+    errors: string[];
+  }> {
+    return await apiClient.post(`${this.baseUrl}/bulk/toggle-status`, { ids });
+  }
+
+  async bulkDelete(ids: string[]): Promise<{
+    deleted: number;
+    errors: string[];
+  }> {
+    return await apiClient.post(`${this.baseUrl}/bulk/delete`, { ids });
+  }
+
+  async bulkUpdateTags(ids: string[], tags: string[]): Promise<{
+    updated: number;
+    errors: string[];
+  }> {
+    return await apiClient.post(`${this.baseUrl}/bulk/update-tags`, { ids, tags });
+  }
+
+  // Advanced search
+  async searchApis(query: string, filters?: {
+    tags?: string[];
+    status?: string;
+    healthStatus?: string;
+    lastChecked?: string;
+  }): Promise<PaginatedResponse<Api>> {
+    const params = new URLSearchParams();
+    params.append('q', query);
+    
+    if (filters?.tags?.length) {
+      params.append('tags', filters.tags.join(','));
+    }
+    if (filters?.status) {
+      params.append('status', filters.status);
+    }
+    if (filters?.healthStatus) {
+      params.append('healthStatus', filters.healthStatus);
+    }
+    if (filters?.lastChecked) {
+      params.append('lastChecked', filters.lastChecked);
+    }
+
+    return await apiClient.get(`${this.baseUrl}/search?${params.toString()}`);
+  }
+
+  // Validate API URL during registration
+  async validateApiUrl(url: string): Promise<{
+    valid: boolean;
+    accessible: boolean;
+    responseTime: number;
+    statusCode: number;
+    hasSwagger: boolean;
+    swaggerUrl?: string;
+    apiInfo?: {
+      title?: string;
+      version?: string;
+      description?: string;
+    };
+    error?: string;
+  }> {
+    return await apiClient.post(`${this.baseUrl}/validate-url`, { url });
+  }
 }
 
 export const apiService = new ApiService();

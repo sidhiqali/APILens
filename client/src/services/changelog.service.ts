@@ -1,30 +1,126 @@
 import { apiClient } from '@/lib/axios';
-import { Changelog, ApiResponse, PaginatedResponse } from '@/types';
+
+// Enhanced Changelog Types
+export interface ApiChange {
+  _id: string;
+  apiId: string;
+  fromVersion?: string;
+  toVersion?: string;
+  changeType: 'breaking' | 'non-breaking' | 'deprecation' | 'addition';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  changes: ChangeDetail[];
+  detectedAt: string;
+  summary: string;
+  impactScore: number;
+}
+
+export interface ChangeDetail {
+  path: string;
+  operation: 'added' | 'removed' | 'modified';
+  changeType: 'endpoint' | 'parameter' | 'schema' | 'response' | 'header';
+  oldValue?: any;
+  newValue?: any;
+  description: string;
+  breaking: boolean;
+}
+
+export interface ApiSnapshot {
+  _id: string;
+  apiId: string;
+  version: string;
+  detectedAt: string;
+  metadata: {
+    endpointCount: number;
+    schemaCount: number;
+    specSize: number;
+  };
+  schema: any;
+}
+
+export interface Changelog {
+  _id: string;
+  apiId: string;
+  title: string;
+  description: string;
+  version: string;
+  changeDate: string;
+  changes: string[];
+  createdAt: string;
+  previousVersion?: string;
+  newVersion?: string;
+  diffSummary?: string;
+  timestamp: string;
+}
+
+export interface PaginatedChanges {
+  changes: ApiChange[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface PaginatedSnapshots {
+  snapshots: ApiSnapshot[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
 
 class ChangelogService {
-  private baseUrl = '/changelogs';
+  private baseUrl = '/apis';
+
+  // Get API change history
+  async getApiChanges(
+    apiId: string,
+    params?: {
+      page?: number;
+      limit?: number;
+      severity?: string;
+      changeType?: string;
+    }
+  ): Promise<ApiChange[]> {
+    const queryParams = new URLSearchParams();
+    
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.severity) queryParams.append('severity', params.severity);
+    if (params?.changeType) queryParams.append('changeType', params.changeType);
+
+    return await apiClient.get<ApiChange[]>(
+      `${this.baseUrl}/${apiId}/changes?${queryParams.toString()}`
+    );
+  }
+
+  // Get API snapshots
+  async getApiSnapshots(
+    apiId: string,
+    limit: number = 10
+  ): Promise<ApiSnapshot[]> {
+    return await apiClient.get<ApiSnapshot[]>(
+      `${this.baseUrl}/${apiId}/snapshots?limit=${limit}`
+    );
+  }
 
   // Get all changelogs for an API
   async getApiChangelogs(
     apiId: string,
-    page = 1,
-    limit = 10
-  ): Promise<PaginatedResponse<Changelog>> {
-    const response = await apiClient.get<PaginatedResponse<Changelog>>(
-      `${this.baseUrl}/${apiId}?page=${page}&limit=${limit}`
+    page: number = 1,
+    limit: number = 10
+  ): Promise<Changelog[]> {
+    return await apiClient.get<Changelog[]>(
+      `${this.baseUrl}/${apiId}/changelog?page=${page}&limit=${limit}`
     );
-    return response;
   }
 
   // Get a specific changelog
   async getChangelog(
     apiId: string,
     changelogId: string
-  ): Promise<ApiResponse<Changelog>> {
-    const response = await apiClient.get<ApiResponse<Changelog>>(
-      `${this.baseUrl}/${apiId}/${changelogId}`
+  ): Promise<Changelog> {
+    return await apiClient.get<Changelog>(
+      `${this.baseUrl}/${apiId}/changelog/${changelogId}`
     );
-    return response;
   }
 
   // Create a new changelog entry
@@ -36,62 +132,77 @@ class ChangelogService {
       version: string;
       changes: string[];
     }
-  ): Promise<ApiResponse<Changelog>> {
-    const response = await apiClient.post<ApiResponse<Changelog>>(
-      `${this.baseUrl}/${apiId}`,
+  ): Promise<Changelog> {
+    return await apiClient.post<Changelog>(
+      `${this.baseUrl}/${apiId}/changelog`,
       changelogData
     );
-    return response;
   }
 
   // Update changelog
   async updateChangelog(
     apiId: string,
     changelogId: string,
-    updateData: Partial<{
-      title: string;
-      description: string;
-      version: string;
-      changes: string[];
-    }>
-  ): Promise<ApiResponse<Changelog>> {
-    const response = await apiClient.patch<ApiResponse<Changelog>>(
-      `${this.baseUrl}/${apiId}/${changelogId}`,
-      updateData
+    changelogData: {
+      title?: string;
+      description?: string;
+      version?: string;
+      changes?: string[];
+    }
+  ): Promise<Changelog> {
+    return await apiClient.put<Changelog>(
+      `${this.baseUrl}/${apiId}/changelog/${changelogId}`,
+      changelogData
     );
-    return response;
   }
 
   // Delete changelog
   async deleteChangelog(
     apiId: string,
     changelogId: string
-  ): Promise<ApiResponse<void>> {
-    const response = await apiClient.delete<ApiResponse<void>>(
-      `${this.baseUrl}/${apiId}/${changelogId}`
-    );
-    return response;
+  ): Promise<void> {
+    await apiClient.delete(`${this.baseUrl}/${apiId}/changelog/${changelogId}`);
   }
 
-  // Get all changelogs for user (across all APIs)
-  async getUserChangelogs(
-    page = 1,
-    limit = 10
-  ): Promise<PaginatedResponse<Changelog & { apiName: string }>> {
-    const response = await apiClient.get<PaginatedResponse<any>>(
-      `${this.baseUrl}?page=${page}&limit=${limit}`
+  // Compare two API versions
+  async compareVersions(
+    apiId: string,
+    fromVersion: string,
+    toVersion: string
+  ): Promise<{
+    changes: ChangeDetail[];
+    summary: string;
+    breakingChanges: number;
+    totalChanges: number;
+  }> {
+    return await apiClient.get(
+      `${this.baseUrl}/${apiId}/compare?from=${fromVersion}&to=${toVersion}`
     );
-    return response;
+  }
+
+  // Get change statistics for an API
+  async getChangeStats(
+    apiId: string,
+    timeRange: string = '30d'
+  ): Promise<{
+    totalChanges: number;
+    breakingChanges: number;
+    nonBreakingChanges: number;
+    changesByType: Record<string, number>;
+    changesBySeverity: Record<string, number>;
+    changesTrend: { date: string; count: number }[];
+  }> {
+    return await apiClient.get(
+      `${this.baseUrl}/${apiId}/stats?timeRange=${timeRange}`
+    );
   }
 
   // Export changelogs
   async exportChangelogs(apiId: string): Promise<Blob> {
-    const response = await apiClient.get(`${this.baseUrl}/${apiId}/export`, {
+    return await apiClient.get(`${this.baseUrl}/${apiId}/export`, {
       responseType: 'blob',
     });
-    return response;
   }
 }
 
 export const changelogService = new ChangelogService();
-export default changelogService;

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -10,7 +10,6 @@ import {
   LogOut,
   Plus,
   BarChart3,
-  Bell,
 } from 'lucide-react';
 import { useAuth } from '@/store/auth';
 import { useRouter } from 'next/navigation';
@@ -29,10 +28,7 @@ const Sidebar = ({
   const trigger = useRef<any>(null);
   const sidebar = useRef<any>(null);
 
-  let storedSidebarExpanded = 'true';
-  const [sidebarExpanded, setSidebarExpanded] = useState(
-    storedSidebarExpanded === null ? false : storedSidebarExpanded === 'true'
-  );
+  // ...existing code...
 
   const handleLogout = () => {
     logout();
@@ -63,15 +59,7 @@ const Sidebar = ({
     return () => document.removeEventListener('keydown', keyHandler);
   });
 
-  useEffect(() => {
-    localStorage.setItem('sidebar-expanded', sidebarExpanded.toString());
-    if (sidebarExpanded) {
-      document.querySelector('body')?.classList.add('sidebar-expanded');
-    } else {
-      document.querySelector('body')?.classList.remove('sidebar-expanded');
-    }
-  }, [sidebarExpanded]);
-
+  // ...existing code...
   const menuItems = [
     {
       title: 'Dashboard',

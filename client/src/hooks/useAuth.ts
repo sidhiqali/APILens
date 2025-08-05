@@ -10,7 +10,6 @@ import {
   ForgotPasswordRequest,
   ResetPasswordRequest,
   ChangePasswordRequest,
-  User,
 } from '@/types';
 
 export const useAuthHooks = () => {

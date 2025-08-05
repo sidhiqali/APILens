@@ -15,7 +15,7 @@ const Step3_Validation = ({ nextStep, prevStep, formData }: Props) => {
     const validateApiMutation = useValidateApiUrl();
 
     useEffect(() => {
-        validateApiMutation.mutate({ url: formData.openApiUrl });
+        validateApiMutation.mutate(formData.openApiUrl);
     }, [formData.openApiUrl]);
 
     const { isPending, isError, isSuccess, data, error } = validateApiMutation;
@@ -34,16 +34,22 @@ const Step3_Validation = ({ nextStep, prevStep, formData }: Props) => {
                     <div className="text-red-600 flex flex-col items-center">
                         <AlertTriangle className="mb-2" />
                         <p>Validation Failed:</p>
-                        <p className="text-sm">{error.message}</p>
+                        <p className="text-sm">{error?.message || 'Unknown error occurred'}</p>
                     </div>
                 )}
                 {isSuccess && (
                     <div className="text-green-600 flex flex-col items-center">
                         <CheckCircle className="mb-2" />
-                        <p>{data.message}</p>
+                        <p>{data.valid ? 'API URL is valid!' : 'API URL validation failed'}</p>
                         <div className="text-sm text-gray-700 mt-2 text-center">
-                            <p>Version: {data.specInfo.version}</p>
-                            <p>Found {data.specInfo.endpoints} endpoints and {data.specInfo.schemas} schemas.</p>
+                            {data.apiInfo && (
+                                <>
+                                    <p>Version: {data.apiInfo.version || 'Unknown'}</p>
+                                    <p>Status Code: {data.statusCode}</p>
+                                    <p>Response Time: {data.responseTime}ms</p>
+                                    {data.hasSwagger && <p>Swagger documentation available</p>}
+                                </>
+                            )}
                         </div>
                     </div>
                 )}

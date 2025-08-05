@@ -194,6 +194,16 @@ export const useCheckApi = () => {
   });
 };
 
+// Hook to validate API URL (for API registration form)
+export const useValidateApiUrl = () => {
+  return useMutation({
+    mutationFn: (url: string) => apiService.validateApiUrl(url),
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Failed to validate API URL');
+    },
+  });
+};
+
 // Legacy exports for backward compatibility
 export const useGetApis = useApis;
 export const useGetApiStats = useDashboardStats;

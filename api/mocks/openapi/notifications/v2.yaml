@@ -1,0 +1,273 @@
+openapi: 3.0.3
+info:
+  title: Notifications API
+  version: "2.0.0"
+  description: Event notifications API - Version 2 (Breaking Changes - Rate Limiting + Webhooks)
+paths:
+  /events:
+    get:
+      summary: Fetch events (v2 with 429s)
+      description: Retrieve a list of recent events with enhanced rate limiting
+      parameters:
+        - in: query
+          name: limit
+          schema: 
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 25
+          description: "CHANGED: Maximum reduced from 100 to 50"
+        - in: query
+          name: type
+          schema: 
+            type: string
+          description: Filter by event type
+          required: false
+        - in: query
+          name: since
+          schema: 
+            type: string
+            format: date-time
+          description: "NEW: Only return events after this timestamp"
+          required: false
+      responses:
+        "200":
+          description: Successfully retrieved events
+          headers:
+            Retry-After:
+              schema: 
+                type: integer
+                example: 1
+                description: "NEW: Seconds to wait before next request"
+            X-RateLimit-Reset:
+              schema: 
+                type: string
+                format: date-time
+                example: "2025-08-12T11:00:00Z"
+              description: "NEW: When rate limit resets"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventsResponse'
+              example:
+                events:
+                  - id: "e1"
+                    type: "user.created"
+                    data: 
+                      userId: "u_123"
+                      email: "newuser@example.com"
+                    timestamp: "2025-08-12T10:30:00Z"
+                    severity: "info"
+                  - id: "e2"
+                    type: "order.completed"
+                    data:
+                      orderId: "ord_456"
+                      amount: 99.99
+                    timestamp: "2025-08-12T10:25:00Z"
+                    severity: "info"
+                count: 2
+                hasMore: false
+        "429":
+          description: "NEW: Too Many Requests - rate limit exceeded"
+          headers:
+            Retry-After:
+              schema: 
+                type: integer
+                example: 60
+              description: Seconds to wait before retrying
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "rate_limited"
+                message: "Too many requests, retry after 60 seconds."
+                retryAfter: 60
+        "400":
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "invalid_since"
+                message: "Since parameter must be a valid ISO 8601 timestamp"
+
+  /webhooks:
+    post:
+      summary: Register a webhook
+      description: "NEW ENDPOINT: Register a webhook URL for event notifications"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWebhookRequest'
+            example:
+              url: "https://example.com/webhooks/events"
+              events: ["user.created", "order.completed"]
+              secret: "webhook_secret_123"
+      responses:
+        "201":
+          description: Webhook registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Webhook'
+              example:
+                id: "wh_1"
+                url: "https://example.com/webhooks/events"
+                events: ["user.created", "order.completed"]
+                status: "active"
+                createdAt: "2025-08-12T10:30:00Z"
+        "400":
+          description: Invalid webhook data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "invalid_url"
+                message: "Webhook URL must be a valid HTTPS endpoint"
+        "429":
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      summary: List webhooks
+      description: "NEW ENDPOINT: Retrieve registered webhooks"
+      responses:
+        "200":
+          description: Successfully retrieved webhooks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  webhooks:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Webhook'
+              example:
+                webhooks:
+                  - id: "wh_1"
+                    url: "https://example.com/webhooks/events"
+                    events: ["user.created", "order.completed"]
+                    status: "active"
+                    createdAt: "2025-08-12T10:30:00Z"
+
+components:
+  schemas:
+    Event:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique event identifier
+        type:
+          type: string
+          description: Event type
+        data:
+          type: object
+          description: Event-specific data
+        timestamp:
+          type: string
+          format: date-time
+          description: Event timestamp
+        severity:
+          type: string
+          enum: [info, warning, error]
+          description: "NEW: Event severity level"
+      required:
+        - id
+        - type
+        - data
+        - timestamp
+        - severity
+    
+    EventsResponse:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/Event'
+          description: List of events
+        count:
+          type: integer
+          description: Number of events in this response
+        hasMore:
+          type: boolean
+          description: "NEW: Whether more events are available"
+      required:
+        - events
+        - count
+        - hasMore
+    
+    CreateWebhookRequest:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+          description: Webhook endpoint URL (must be HTTPS)
+        events:
+          type: array
+          items:
+            type: string
+          description: Event types to subscribe to
+        secret:
+          type: string
+          description: Secret for webhook signature verification
+      required:
+        - url
+        - events
+    
+    Webhook:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique webhook identifier
+        url:
+          type: string
+          format: uri
+          description: Webhook endpoint URL
+        events:
+          type: array
+          items:
+            type: string
+          description: Subscribed event types
+        status:
+          type: string
+          enum: [active, inactive, failed]
+          description: Webhook status
+        createdAt:
+          type: string
+          format: date-time
+          description: Webhook creation timestamp
+      required:
+        - id
+        - url
+        - events
+        - status
+        - createdAt
+    
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Human-readable error message
+        retryAfter:
+          type: integer
+          description: Seconds to wait before retrying (for 429 errors)
+      required:
+        - error
+        - message

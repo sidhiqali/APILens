@@ -1,0 +1,98 @@
+openapi: 3.0.3
+info:
+  title: Orders API
+  version: "1.0.0"
+  description: Order management API - Version 1
+paths:
+  /orders:
+    post:
+      summary: Create an order
+      description: Create a new order with items and total amount
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+            example:
+              items: ["item_1", "item_2"]
+              total: 89.99
+              customerEmail: "customer@example.com"
+      responses:
+        "201":
+          description: Order created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+              example:
+                id: "ord_1"
+                status: "created"
+                items: ["item_1", "item_2"]
+                total: 89.99
+                customerEmail: "customer@example.com"
+                createdAt: "2025-08-12T10:30:00Z"
+        "400":
+          description: Invalid order data
+          content:
+            application/json:
+              example:
+                error: "invalid_order"
+                message: "Total must be a positive number"
+
+components:
+  schemas:
+    CreateOrderRequest:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: string
+          description: List of item IDs
+        total:
+          type: number
+          minimum: 0
+          description: Total order amount
+        customerEmail:
+          type: string
+          format: email
+          description: Customer's email address
+      required:
+        - items
+        - total
+        - customerEmail
+    
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique order identifier
+        status:
+          type: string
+          enum: [created, processing, shipped, delivered, cancelled]
+          description: Current order status
+        items:
+          type: array
+          items:
+            type: string
+          description: List of item IDs
+        total:
+          type: number
+          description: Total order amount
+        customerEmail:
+          type: string
+          format: email
+          description: Customer's email address
+        createdAt:
+          type: string
+          format: date-time
+          description: Order creation timestamp
+      required:
+        - id
+        - status
+        - items
+        - total
+        - customerEmail
+        - createdAt

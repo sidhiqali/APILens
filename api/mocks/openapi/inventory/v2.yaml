@@ -1,0 +1,134 @@
+openapi: 3.0.3
+info:
+  title: Inventory API
+  version: "2.0.0"
+  description: Product inventory management API - Version 2 (Breaking Changes - Cursor Pagination)
+paths:
+  /products:
+    get:
+      summary: List products (cursor pagination)
+      description: Retrieve a paginated list of products with cursor-based pagination
+      parameters:
+        - in: query
+          name: category
+          schema: 
+            type: string
+          description: Filter by product category
+          required: false
+        - in: query
+          name: inStock
+          schema: 
+            type: boolean
+          description: Filter by stock availability
+          required: false
+        - in: query
+          name: cursor
+          schema: 
+            type: string
+          description: "NEW: Cursor for pagination (from previous response)"
+          required: false
+        - in: query
+          name: limit
+          schema: 
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: "NEW: Maximum number of products to return"
+          required: false
+      responses:
+        "200":
+          description: "BREAKING: Returns paginated object instead of array"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductListResponse'
+              example:
+                data:
+                  - id: "p1"
+                    name: "T-Shirt"
+                    price: 19.99
+                    category: "clothing"
+                    stock: 150
+                    sku: "TSH-001"
+                    lastUpdated: "2025-08-12T10:30:00Z"
+                  - id: "p2"
+                    name: "Shoes"
+                    price: 59.99
+                    category: "footwear"
+                    stock: 75
+                    sku: "SHO-001"
+                    lastUpdated: "2025-08-12T09:15:00Z"
+                nextCursor: "eyJpZCI6InAyIiwidGltZXN0YW1wIjoiMjAyNS0wOC0xMlQwOToxNTowMFoifQ=="
+                hasMore: true
+                total: 156
+        "400":
+          description: Invalid query parameters
+          content:
+            application/json:
+              example:
+                error: "invalid_cursor"
+                message: "Cursor parameter is malformed"
+
+components:
+  schemas:
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique product identifier
+        name:
+          type: string
+          description: Product name
+        price:
+          type: number
+          minimum: 0
+          description: Product price
+        category:
+          type: string
+          description: Product category
+        stock:
+          type: integer
+          minimum: 0
+          description: Available stock quantity
+        sku:
+          type: string
+          description: Stock keeping unit
+        lastUpdated:
+          type: string
+          format: date-time
+          description: "NEW: Last update timestamp"
+      required:
+        - id
+        - name
+        - price
+        - category
+        - stock
+        - sku
+        - lastUpdated
+    
+    ProductListResponse:
+      type: object
+      description: "BREAKING: New paginated response structure"
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+          description: Array of products
+        nextCursor:
+          type: string
+          description: "NEW: Cursor for next page (null if no more pages)"
+          nullable: true
+        hasMore:
+          type: boolean
+          description: "NEW: Whether more results are available"
+        total:
+          type: integer
+          description: "NEW: Total number of products (across all pages)"
+      required:
+        - data
+        - nextCursor
+        - hasMore
+        - total

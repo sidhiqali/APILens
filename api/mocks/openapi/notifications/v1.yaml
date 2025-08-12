@@ -1,0 +1,104 @@
+openapi: 3.0.3
+info:
+  title: Notifications API
+  version: "1.0.0"
+  description: Event notifications API - Version 1
+paths:
+  /events:
+    get:
+      summary: Fetch events
+      description: Retrieve a list of recent events
+      parameters:
+        - in: query
+          name: limit
+          schema: 
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+          description: Maximum number of events to return
+        - in: query
+          name: type
+          schema: 
+            type: string
+          description: Filter by event type
+          required: false
+      responses:
+        "200":
+          description: Successfully retrieved events
+          headers:
+            X-RateLimit-Limit:
+              schema: 
+                type: integer
+                example: 100
+              description: Rate limit per hour
+            X-RateLimit-Remaining:
+              schema: 
+                type: integer
+                example: 99
+              description: Remaining requests in current window
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventsResponse'
+              example:
+                events:
+                  - id: "e1"
+                    type: "user.created"
+                    data: 
+                      userId: "u_123"
+                      email: "newuser@example.com"
+                    timestamp: "2025-08-12T10:30:00Z"
+                  - id: "e2"
+                    type: "order.completed"
+                    data:
+                      orderId: "ord_456"
+                      amount: 99.99
+                    timestamp: "2025-08-12T10:25:00Z"
+                count: 2
+        "400":
+          description: Invalid request parameters
+          content:
+            application/json:
+              example:
+                error: "invalid_limit"
+                message: "Limit must be between 1 and 100"
+
+components:
+  schemas:
+    Event:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique event identifier
+        type:
+          type: string
+          description: Event type
+        data:
+          type: object
+          description: Event-specific data
+        timestamp:
+          type: string
+          format: date-time
+          description: Event timestamp
+      required:
+        - id
+        - type
+        - data
+        - timestamp
+    
+    EventsResponse:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/Event'
+          description: List of events
+        count:
+          type: integer
+          description: Number of events in this response
+      required:
+        - events
+        - count

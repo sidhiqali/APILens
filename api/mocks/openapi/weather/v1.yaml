@@ -1,0 +1,81 @@
+openapi: 3.0.3
+info:
+  title: Weather API
+  version: "1.0.0"
+  description: Weather information API - Version 1
+paths:
+  /weather:
+    get:
+      summary: Get weather by city
+      description: Retrieve current weather information for a specified city
+      parameters:
+        - in: query
+          name: city
+          required: true
+          schema: 
+            type: string
+            minLength: 1
+          description: Name of the city
+          example: "London"
+      responses:
+        "200":
+          description: Successfully retrieved weather data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WeatherV1'
+              example:
+                city: "London"
+                tempC: 18.5
+                condition: "Cloudy"
+                humidity: 65
+                windSpeed: 12.3
+                timestamp: "2025-08-12T14:30:00Z"
+        "400":
+          description: Invalid city parameter
+          content:
+            application/json:
+              example:
+                error: "invalid_city"
+                message: "City parameter is required and cannot be empty"
+        "404":
+          description: City not found
+          content:
+            application/json:
+              example:
+                error: "city_not_found"
+                message: "Weather data for 'InvalidCity' not available"
+
+components:
+  schemas:
+    WeatherV1:
+      type: object
+      properties:
+        city:
+          type: string
+          description: City name
+        tempC:
+          type: number
+          description: Temperature in Celsius
+        condition:
+          type: string
+          description: Weather condition description
+        humidity:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Humidity percentage
+        windSpeed:
+          type: number
+          description: Wind speed in km/h
+        timestamp:
+          type: string
+          format: date-time
+          description: Data timestamp
+      required:
+        - city
+        - tempC
+        - condition
+        - humidity
+        - windSpeed
+        - timestamp

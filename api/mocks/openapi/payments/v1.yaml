@@ -1,0 +1,120 @@
+openapi: 3.0.3
+info:
+  title: Payments API
+  version: "1.0.0"
+  description: Payment processing API - Version 1 (API Key Authentication)
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for authentication
+
+paths:
+  /payments:
+    post:
+      summary: Create a payment
+      description: Process a new payment using API key authentication
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePaymentRequest'
+            example:
+              amount: 2999
+              currency: "USD"
+              description: "Order #12345"
+              customerEmail: "customer@example.com"
+      responses:
+        "201":
+          description: Payment created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+              example:
+                id: "pay_1"
+                status: "succeeded"
+                amount: 2999
+                currency: "USD"
+                description: "Order #12345"
+                customerEmail: "customer@example.com"
+                createdAt: "2025-08-12T10:30:00Z"
+        "401":
+          description: Invalid or missing API key
+          content:
+            application/json:
+              example:
+                error: "invalid_api_key"
+                message: "Valid X-API-Key header is required"
+        "400":
+          description: Invalid payment data
+          content:
+            application/json:
+              example:
+                error: "invalid_amount"
+                message: "Amount must be a positive integer in cents"
+
+components:
+  schemas:
+    CreatePaymentRequest:
+      type: object
+      properties:
+        amount:
+          type: integer
+          minimum: 1
+          description: Payment amount in cents
+        currency:
+          type: string
+          enum: [USD, EUR, GBP]
+          description: Payment currency
+        description:
+          type: string
+          description: Payment description
+        customerEmail:
+          type: string
+          format: email
+          description: Customer's email address
+      required:
+        - amount
+        - currency
+        - customerEmail
+    
+    Payment:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique payment identifier
+        status:
+          type: string
+          enum: [pending, succeeded, failed, cancelled]
+          description: Payment status
+        amount:
+          type: integer
+          description: Payment amount in cents
+        currency:
+          type: string
+          description: Payment currency
+        description:
+          type: string
+          description: Payment description
+        customerEmail:
+          type: string
+          format: email
+          description: Customer's email address
+        createdAt:
+          type: string
+          format: date-time
+          description: Payment creation timestamp
+      required:
+        - id
+        - status
+        - amount
+        - currency
+        - customerEmail
+        - createdAt

@@ -1,0 +1,104 @@
+openapi: 3.0.3
+info:
+  title: Weather API
+  version: "2.0.0"
+  description: Weather information API - Version 2 (Breaking Changes - Units Required)
+paths:
+  /weather:
+    get:
+      summary: Get weather by city (v2 with units)
+      description: Retrieve current weather information with required unit specification
+      parameters:
+        - in: query
+          name: city
+          required: true
+          schema: 
+            type: string
+            minLength: 1
+          description: Name of the city
+          example: "London"
+        - in: query
+          name: units
+          required: true
+          schema: 
+            type: string
+            enum: [metric, imperial]
+          description: "BREAKING: Temperature and wind speed units (required in v2)"
+          example: "metric"
+      responses:
+        "200":
+          description: Successfully retrieved weather data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WeatherV2'
+              example:
+                city: "London"
+                temperature: 65.3
+                units: "imperial"
+                condition: "Cloudy"
+                humidity: 65
+                windSpeed: 7.6
+                windUnit: "mph"
+                timestamp: "2025-08-12T14:30:00Z"
+        "400":
+          description: Invalid or missing parameters
+          content:
+            application/json:
+              example:
+                error: "missing_units"
+                message: "Units parameter is required. Must be 'metric' or 'imperial'"
+        "404":
+          description: City not found
+          content:
+            application/json:
+              example:
+                error: "city_not_found"
+                message: "Weather data for 'InvalidCity' not available"
+
+components:
+  schemas:
+    WeatherV2:
+      type: object
+      properties:
+        city:
+          type: string
+          description: City name
+        tempC:
+          type: number
+          deprecated: true
+          description: "DEPRECATED: Use 'temperature' instead"
+        temperature:
+          type: number
+          description: "NEW: Temperature in specified units"
+        units:
+          type: string
+          enum: [metric, imperial]
+          description: "NEW: Unit system used for temperature and wind"
+        condition:
+          type: string
+          description: Weather condition description
+        humidity:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Humidity percentage
+        windSpeed:
+          type: number
+          description: Wind speed in unit-appropriate measurement
+        windUnit:
+          type: string
+          description: "NEW: Wind speed unit (km/h for metric, mph for imperial)"
+        timestamp:
+          type: string
+          format: date-time
+          description: Data timestamp
+      required:
+        - city
+        - temperature
+        - units
+        - condition
+        - humidity
+        - windSpeed
+        - windUnit
+        - timestamp

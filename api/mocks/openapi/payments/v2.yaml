@@ -1,0 +1,176 @@
+openapi: 3.0.3
+info:
+  title: Payments API
+  version: "2.0.0"
+  description: Payment processing API - Version 2 (Breaking Changes - JWT Required)
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "BREAKING: JWT token required (replaces API key)"
+
+paths:
+  /payments:
+    post:
+      summary: Create a payment (JWT required)
+      description: Process a new payment using JWT Bearer token authentication
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePaymentRequest'
+            example:
+              amount: 2999
+              currency: "USD"
+              description: "Order #12345"
+              customerEmail: "customer@example.com"
+              merchantId: "merchant_123"
+      responses:
+        "201":
+          description: Payment created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+              example:
+                id: "pay_1"
+                status: "succeeded"
+                amount: 2999
+                currency: "USD"
+                description: "Order #12345"
+                customerEmail: "customer@example.com"
+                merchantId: "merchant_123"
+                createdAt: "2025-08-12T10:30:00Z"
+                processingFee: 87
+        "401":
+          description: Invalid or missing JWT token
+          content:
+            application/json:
+              example:
+                error: "invalid_token"
+                message: "Valid Bearer JWT token is required in Authorization header"
+        "403":
+          description: Token valid but insufficient permissions
+          content:
+            application/json:
+              example:
+                error: "insufficient_permissions"
+                message: "Token does not have payment:create permission"
+        "400":
+          description: Invalid payment data
+          content:
+            application/json:
+              example:
+                error: "invalid_merchant"
+                message: "merchantId is required and must match token claims"
+
+  /payments/{id}:
+    get:
+      summary: Get payment details
+      description: "NEW ENDPOINT: Retrieve payment information"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: 
+            type: string
+          description: Payment ID
+      responses:
+        "200":
+          description: Payment details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        "404":
+          description: Payment not found
+          content:
+            application/json:
+              example:
+                error: "payment_not_found"
+                message: "Payment with ID pay_1 not found"
+        "401":
+          description: Invalid or missing JWT token
+          content:
+            application/json:
+              example:
+                error: "invalid_token"
+                message: "Valid Bearer JWT token is required"
+
+components:
+  schemas:
+    CreatePaymentRequest:
+      type: object
+      properties:
+        amount:
+          type: integer
+          minimum: 1
+          description: Payment amount in cents
+        currency:
+          type: string
+          enum: [USD, EUR, GBP, CAD]
+          description: Payment currency (expanded in v2)
+        description:
+          type: string
+          description: Payment description
+        customerEmail:
+          type: string
+          format: email
+          description: Customer's email address
+        merchantId:
+          type: string
+          description: "NEW: Merchant identifier (required in v2)"
+      required:
+        - amount
+        - currency
+        - customerEmail
+        - merchantId
+    
+    Payment:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique payment identifier
+        status:
+          type: string
+          enum: [pending, succeeded, failed, cancelled, refunded]
+          description: Payment status (expanded in v2)
+        amount:
+          type: integer
+          description: Payment amount in cents
+        currency:
+          type: string
+          description: Payment currency
+        description:
+          type: string
+          description: Payment description
+        customerEmail:
+          type: string
+          format: email
+          description: Customer's email address
+        merchantId:
+          type: string
+          description: "NEW: Merchant identifier"
+        processingFee:
+          type: integer
+          description: "NEW: Processing fee in cents"
+        createdAt:
+          type: string
+          format: date-time
+          description: Payment creation timestamp
+      required:
+        - id
+        - status
+        - amount
+        - currency
+        - customerEmail
+        - merchantId
+        - createdAt

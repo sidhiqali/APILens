@@ -55,6 +55,8 @@ export class ApisService {
 
   private getCheckIntervalMs(frequency: string): number {
     const intervals = {
+      '30s': 30 * 1000,
+      '1m': 60 * 1000,
       '5m': 5 * 60 * 1000,
       '15m': 15 * 60 * 1000,
       '1h': 60 * 60 * 1000,

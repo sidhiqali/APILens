@@ -1,0 +1,163 @@
+openapi: 3.0.3
+info:
+  title: Orders API
+  version: "2.0.0"
+  description: Order management API - Version 2 (Breaking Changes - Idempotency Required)
+paths:
+  /orders:
+    post:
+      summary: Create an order (idempotent)
+      description: Create a new order with required idempotency key to prevent duplicates
+      parameters:
+        - in: header
+          name: X-Idempotency-Key
+          required: true
+          schema: 
+            type: string
+            minLength: 1
+            maxLength: 255
+          description: "BREAKING: Unique key to ensure idempotent order creation"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+            example:
+              items: ["item_1", "item_2"]
+              total: 89.99
+              customerEmail: "customer@example.com"
+      responses:
+        "201":
+          description: Order created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+              example:
+                id: "ord_1"
+                status: "created"
+                items: ["item_1", "item_2"]
+                total: 89.99
+                customerEmail: "customer@example.com"
+                createdAt: "2025-08-12T10:30:00Z"
+                idempotencyKey: "unique-key-123"
+        "400":
+          description: Invalid order data or missing idempotency key
+          content:
+            application/json:
+              example:
+                error: "missing_idempotency_key"
+                message: "X-Idempotency-Key header is required"
+        "409":
+          description: Duplicate idempotency key
+          content:
+            application/json:
+              example:
+                error: "duplicate_request"
+                message: "Order with this idempotency key already exists"
+
+  /orders/{id}/cancel:
+    post:
+      summary: Cancel an order
+      description: "NEW ENDPOINT: Cancel an existing order"
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: 
+            type: string
+          description: Order ID to cancel
+      responses:
+        "200":
+          description: Order cancelled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+              example:
+                id: "ord_1"
+                status: "cancelled"
+                items: ["item_1", "item_2"]
+                total: 89.99
+                customerEmail: "customer@example.com"
+                createdAt: "2025-08-12T10:30:00Z"
+                cancelledAt: "2025-08-12T11:15:00Z"
+        "404":
+          description: Order not found
+          content:
+            application/json:
+              example:
+                error: "order_not_found"
+                message: "Order with ID ord_1 not found"
+        "400":
+          description: Order cannot be cancelled
+          content:
+            application/json:
+              example:
+                error: "cannot_cancel"
+                message: "Order is already shipped and cannot be cancelled"
+
+components:
+  schemas:
+    CreateOrderRequest:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: string
+          description: List of item IDs
+        total:
+          type: number
+          minimum: 0
+          description: Total order amount
+        customerEmail:
+          type: string
+          format: email
+          description: Customer's email address
+      required:
+        - items
+        - total
+        - customerEmail
+    
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique order identifier
+        status:
+          type: string
+          enum: [created, processing, shipped, delivered, cancelled]
+          description: Current order status
+        items:
+          type: array
+          items:
+            type: string
+          description: List of item IDs
+        total:
+          type: number
+          description: Total order amount
+        customerEmail:
+          type: string
+          format: email
+          description: Customer's email address
+        createdAt:
+          type: string
+          format: date-time
+          description: Order creation timestamp
+        cancelledAt:
+          type: string
+          format: date-time
+          description: Order cancellation timestamp (if cancelled)
+        idempotencyKey:
+          type: string
+          description: "NEW: Idempotency key used for this order"
+      required:
+        - id
+        - status
+        - items
+        - total
+        - customerEmail
+        - createdAt

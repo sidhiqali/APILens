@@ -1,5 +1,5 @@
 // api/src/modules/apis/dto/create-api.dto.ts
-import { IsString, IsUrl, IsOptional, IsArray, IsIn } from 'class-validator';
+import { IsString, IsOptional, IsArray, IsIn } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateApiDto {
@@ -15,7 +15,7 @@ export class CreateApiDto {
     example: 'https://api.example.com/openapi.json',
     format: 'url',
   })
-  @IsUrl()
+  @IsString()
   openApiUrl: string;
 
   @ApiProperty({
@@ -31,13 +31,13 @@ export class CreateApiDto {
   @ApiProperty({
     description: 'How frequently to check for changes',
     example: '1h',
-    enum: ['5m', '15m', '1h', '6h', '1d'],
+    enum: ['30s', '1m', '5m', '15m', '1h', '6h', '1d'],
     default: '1h',
     required: false,
   })
   @IsOptional()
   @IsString()
-  @IsIn(['5m', '15m', '1h', '6h', '1d'])
+  @IsIn(['30s', '1m', '5m', '15m', '1h', '6h', '1d'])
   checkFrequency: string = '1h';
 
   @ApiProperty({

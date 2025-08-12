@@ -1,0 +1,91 @@
+openapi: 3.0.3
+info:
+  title: Inventory API
+  version: "1.0.0"
+  description: Product inventory management API - Version 1
+paths:
+  /products:
+    get:
+      summary: List products
+      description: Retrieve a list of all products in inventory
+      parameters:
+        - in: query
+          name: category
+          schema: 
+            type: string
+          description: Filter by product category
+          required: false
+        - in: query
+          name: inStock
+          schema: 
+            type: boolean
+          description: Filter by stock availability
+          required: false
+      responses:
+        "200":
+          description: Successfully retrieved products (returns array directly)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+              example:
+                - id: "p1"
+                  name: "T-Shirt"
+                  price: 19.99
+                  category: "clothing"
+                  stock: 150
+                  sku: "TSH-001"
+                - id: "p2"
+                  name: "Shoes"
+                  price: 59.99
+                  category: "footwear"
+                  stock: 75
+                  sku: "SHO-001"
+                - id: "p3"
+                  name: "Hat"
+                  price: 24.99
+                  category: "accessories"
+                  stock: 0
+                  sku: "HAT-001"
+        "400":
+          description: Invalid query parameters
+          content:
+            application/json:
+              example:
+                error: "invalid_category"
+                message: "Category must be a valid string"
+
+components:
+  schemas:
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique product identifier
+        name:
+          type: string
+          description: Product name
+        price:
+          type: number
+          minimum: 0
+          description: Product price
+        category:
+          type: string
+          description: Product category
+        stock:
+          type: integer
+          minimum: 0
+          description: Available stock quantity
+        sku:
+          type: string
+          description: Stock keeping unit
+      required:
+        - id
+        - name
+        - price
+        - category
+        - stock
+        - sku

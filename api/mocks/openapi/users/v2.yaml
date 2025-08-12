@@ -1,0 +1,89 @@
+openapi: 3.0.3
+info:
+  title: Users API
+  version: "2.0.0"
+  description: User management API - Version 2 (Breaking Changes)
+paths:
+  /users:
+    get:
+      summary: List users (v2 with enhanced filtering)
+      description: Retrieve a paginated list of users with optional status filtering
+      parameters:
+        - in: query
+          name: page
+          schema: 
+            type: integer
+            minimum: 1
+            default: 1
+          description: Page number for pagination
+        - in: query
+          name: status
+          schema: 
+            type: string
+            enum: [active, inactive, pending]
+          required: false
+          description: Filter users by status
+      responses:
+        "200":
+          description: Successfully retrieved users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UserV2'
+                  page:
+                    type: integer
+                  total:
+                    type: integer
+              example:
+                users:
+                  - id: "u_1"
+                    handle: "alice"
+                    email: "alice@example.com"
+                    status: "active"
+                  - id: "u_2"
+                    handle: "bob"  
+                    email: "bob@example.com"
+                    status: "active"
+                page: 1
+                total: 2
+        "400":
+          description: Invalid request parameters
+          content:
+            application/json:
+              example:
+                error: "invalid_status"
+                message: "Status must be one of: active, inactive, pending"
+
+components:
+  schemas:
+    UserV2:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique user identifier
+        username:
+          type: string
+          deprecated: true
+          description: "DEPRECATED: Use 'handle' instead. This field will be removed in v3."
+        handle:
+          type: string
+          description: "NEW: User's unique handle (replaces username)"
+        email:
+          type: string
+          format: email
+          description: User's email address
+        status:
+          type: string
+          enum: [active, inactive, pending]
+          description: "NEW: User account status"
+      required:
+        - id
+        - handle
+        - email
+        - status

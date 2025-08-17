@@ -2,10 +2,14 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Layout from '@/components/layout/Layout';
 import RouteGuard from '@/components/RouteGuard';
-import { apiService } from '@/services/api.service';
+import {
+  useApi,
+  useDeleteApi,
+  useToggleApiStatus,
+  useCheckApi,
+} from '@/hooks/useApis';
 import {
   Activity,
   AlertTriangle,
@@ -29,35 +33,37 @@ interface Props {
 const ApiDetailPage = async ({ params }: Props) => {
   const { id } = await params;
   const router = useRouter();
-  const queryClient = useQueryClient();
 
-  const {
-    data: apiResponse,
-    isLoading: apiLoading,
-    error: apiError,
-  } = useQuery({
-    queryKey: ['api', id],
-    queryFn: () => apiService.getApiById(id),
-  });
-
-  const deleteApiMutation = useMutation({
-    mutationFn: (id: string) => apiService.deleteApi(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['apis'] });
-      router.push('/dashboard');
-    },
-  });
+  const { data: api, isLoading: apiLoading, error: apiError } = useApi(id);
+  const deleteApiMutation = useDeleteApi();
+  const toggleStatusMutation = useToggleApiStatus();
+  const checkApiMutation = useCheckApi();
 
   const [activeTab, setActiveTab] = useState('overview');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const api = apiResponse?.data;
-
   const handleDelete = async () => {
     try {
       await deleteApiMutation.mutateAsync(id);
+      router.push('/apis');
     } catch (error) {
       console.error('Failed to delete API:', error);
+    }
+  };
+
+  const handleToggleStatus = async () => {
+    try {
+      await toggleStatusMutation.mutateAsync(id);
+    } catch (error) {
+      console.error('Failed to toggle API status:', error);
+    }
+  };
+
+  const handleCheckNow = async () => {
+    try {
+      await checkApiMutation.mutateAsync(id);
+    } catch (error) {
+      console.error('Failed to check API:', error);
     }
   };
 
@@ -308,8 +314,19 @@ const ApiDetailPage = async ({ params }: Props) => {
                 <div className="p-6 bg-white border rounded-lg shadow-sm">
                   <h3 className="mb-4 text-lg font-semibold">Quick Actions</h3>
                   <div className="space-y-3">
-                    <button className="w-full px-3 py-2 text-sm text-left text-gray-700 rounded hover:bg-gray-50">
-                      Force Check Now
+                    <button 
+                      onClick={handleCheckNow}
+                      disabled={checkApiMutation.isPending}
+                      className="w-full px-3 py-2 text-sm text-left text-gray-700 rounded hover:bg-gray-50 disabled:opacity-50"
+                    >
+                      {checkApiMutation.isPending ? 'Checking...' : 'Force Check Now'}
+                    </button>
+                    <button 
+                      onClick={handleToggleStatus}
+                      disabled={toggleStatusMutation.isPending}
+                      className="w-full px-3 py-2 text-sm text-left text-gray-700 rounded hover:bg-gray-50 disabled:opacity-50"
+                    >
+                      {api?.isActive ? 'Pause Monitoring' : 'Resume Monitoring'}
                     </button>
                     <button className="w-full px-3 py-2 text-sm text-left text-gray-700 rounded hover:bg-gray-50">
                       Download Report

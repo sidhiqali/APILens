@@ -32,7 +32,7 @@ export interface AuthUser extends User {
 
 // API Types (matching backend Api schema)
 export interface Api {
-  _id: string;
+  id: string; // Backend transforms _id to id in response
   apiName: string; // Changed from 'name' to match backend
   openApiUrl: string; // Changed from 'url' to match backend
   type: string;

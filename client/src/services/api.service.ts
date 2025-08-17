@@ -72,8 +72,8 @@ class ApiService {
 
   // Toggle API active status
   async toggleApiStatus(id: string): Promise<ApiResponse<Api>> {
-    const response = await apiClient.patch<ApiResponse<Api>>(
-      `${this.baseUrl}/${id}/toggle-status`
+    const response = await apiClient.put<ApiResponse<Api>>(
+      `${this.baseUrl}/${id}/toggle`
     );
     return response;
   }
@@ -81,7 +81,7 @@ class ApiService {
   // Manually trigger API check
   async checkApi(id: string): Promise<ApiResponse<any>> {
     const response = await apiClient.post<ApiResponse<any>>(
-      `${this.baseUrl}/${id}/check`
+      `${this.baseUrl}/${id}/check-now`
     );
     return response;
   }
@@ -221,7 +221,7 @@ class ApiService {
     error?: string;
     timestamp: string;
   }> {
-    return await apiClient.post(`${this.baseUrl}/${id}/test-connection`);
+    return await apiClient.post(`${this.baseUrl}/${id}/test`);
   }
 
   // Check API now (manual trigger)

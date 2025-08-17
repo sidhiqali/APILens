@@ -321,7 +321,7 @@ const DashboardPage = () => {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {apis?.map((api: any) => (
-                      <tr key={api._id} className="hover:bg-gray-50">
+                      <tr key={api.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>
                             <div className="flex items-center">
@@ -363,7 +363,7 @@ const DashboardPage = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex items-center space-x-2">
                             <button
-                              onClick={() => handleCheckNow(api._id)}
+                              onClick={() => handleCheckNow(api.id)}
                               disabled={checkApiMutation.isPending}
                               className="text-blue-600 hover:text-blue-900 disabled:opacity-50"
                               title="Check now"
@@ -371,7 +371,7 @@ const DashboardPage = () => {
                               <Activity className="w-4 h-4" />
                             </button>
                             <button
-                              onClick={() => handleToggleStatus(api._id)}
+                              onClick={() => handleToggleStatus(api.id)}
                               disabled={toggleStatusMutation.isPending}
                               className="text-green-600 hover:text-green-900 disabled:opacity-50"
                               title={
@@ -387,21 +387,21 @@ const DashboardPage = () => {
                               )}
                             </button>
                             <Link
-                              href={`/apis/${api._id}`}
+                              href={`/apis/${api.id}`}
                               className="text-indigo-600 hover:text-indigo-900"
                               title="View details"
                             >
                               <ExternalLink className="w-4 h-4" />
                             </Link>
                             <Link
-                              href={`/apis/${api._id}/settings`}
+                              href={`/apis/${api.id}/settings`}
                               className="text-gray-600 hover:text-gray-900"
                               title="Settings"
                             >
                               <Settings className="w-4 h-4" />
                             </Link>
                             <button
-                              onClick={() => handleDeleteApi(api._id)}
+                              onClick={() => handleDeleteApi(api.id)}
                               disabled={deleteApiMutation.isPending}
                               className="text-red-600 hover:text-red-900 disabled:opacity-50"
                               title="Delete API"

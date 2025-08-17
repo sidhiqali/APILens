@@ -449,7 +449,7 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
           <select
             value={timeRange}
             onChange={(e) => onTimeRangeChange(e.target.value as any)}
-            className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
           >
             {timeRangeOptions.map((option) => (
               <option key={option.key} value={option.key}>

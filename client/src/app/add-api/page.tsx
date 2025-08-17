@@ -132,7 +132,7 @@ const AddAPIPage = () => {
                   value={formData.apiName}
                   onChange={(e) => handleInputChange('apiName', e.target.value)}
                   placeholder="e.g., User Management API"
-                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white placeholder-gray-500 ${
                     errors.apiName ? 'border-red-500' : 'border-gray-300'
                   }`}
                 />
@@ -152,7 +152,7 @@ const AddAPIPage = () => {
                   value={formData.openApiUrl}
                   onChange={(e) => handleInputChange('openApiUrl', e.target.value)}
                   placeholder="https://api.example.com/v1/docs/swagger.json"
-                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white placeholder-gray-500 ${
                     errors.openApiUrl ? 'border-red-500' : 'border-gray-300'
                   }`}
                 />
@@ -172,7 +172,7 @@ const AddAPIPage = () => {
                 <select
                   value={formData.type}
                   onChange={(e) => handleInputChange('type', e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
                 >
                   <option value="REST">REST API</option>
                   <option value="GraphQL">GraphQL</option>
@@ -192,7 +192,7 @@ const AddAPIPage = () => {
                   onChange={(e) => handleInputChange('description', e.target.value)}
                   placeholder="Brief description of your API..."
                   rows={3}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white placeholder-gray-500"
                 />
               </div>
             </div>
@@ -210,7 +210,7 @@ const AddAPIPage = () => {
                 <select
                   value={formData.checkFrequency}
                   onChange={(e) => handleInputChange('checkFrequency', e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
                 >
                   <option value="5m">Every 5 minutes</option>
                   <option value="15m">Every 15 minutes</option>
@@ -236,7 +236,7 @@ const AddAPIPage = () => {
                     onChange={(e) => setTagInput(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
                     placeholder="Add a tag..."
-                    className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white placeholder-gray-500"
                   />
                   <button
                     type="button"

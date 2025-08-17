@@ -343,23 +343,23 @@ const MetricsHeatmap: React.FC<MetricsHeatmapProps> = ({
         </div>
 
         <div className="flex items-center space-x-2">
-          <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg">
+          <button className="p-2 text-gray-600 rounded-lg hover:text-gray-900 hover:bg-gray-100">
             <RotateCcw className="w-4 h-4" />
           </button>
-          <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg">
+          <button className="p-2 text-gray-600 rounded-lg hover:text-gray-900 hover:bg-gray-100">
             <Download className="w-4 h-4" />
           </button>
         </div>
       </div>
 
       {/* Controls */}
-      <div className="flex flex-wrap items-center gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+      <div className="flex flex-wrap items-center gap-4 p-4 mb-6 rounded-lg bg-gray-50">
         <div className="flex items-center space-x-2">
           <span className="text-sm font-medium text-gray-700">Metric:</span>
           <select
             value={selectedMetric}
             onChange={(e) => onMetricChange(e.target.value as any)}
-            className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500"
+            className="px-3 py-1 text-sm text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
           >
             {metricOptions.map((option) => (
               <option key={option.key} value={option.key}>
@@ -374,7 +374,7 @@ const MetricsHeatmap: React.FC<MetricsHeatmapProps> = ({
           <select
             value={timeRange}
             onChange={(e) => onTimeRangeChange(e.target.value as any)}
-            className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500"
+            className="px-3 py-1 text-sm text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
           >
             {timeRangeOptions.map((option) => (
               <option key={option.key} value={option.key}>
@@ -389,7 +389,7 @@ const MetricsHeatmap: React.FC<MetricsHeatmapProps> = ({
           <select
             value={selectedApi}
             onChange={(e) => setSelectedApi(e.target.value)}
-            className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500"
+            className="px-3 py-1 text-sm text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
           >
             {availableApis.map((api) => (
               <option key={api.id} value={api.id}>
@@ -407,7 +407,7 @@ const MetricsHeatmap: React.FC<MetricsHeatmapProps> = ({
             <div className="inline-block min-w-full">
               {/* Column headers */}
               <div className="flex mb-2">
-                <div className="w-16 flex-shrink-0" />{' '}
+                <div className="flex-shrink-0 w-16" />{' '}
                 {/* Space for row labels */}
                 {Array(heatmapGrid.cols)
                   .fill(null)
@@ -428,7 +428,7 @@ const MetricsHeatmap: React.FC<MetricsHeatmapProps> = ({
               {heatmapGrid.grid.map((row, rowIndex) => (
                 <div key={rowIndex} className="flex items-center mb-1">
                   {/* Row label */}
-                  <div className="w-16 text-right text-xs font-medium text-gray-600 pr-2 flex-shrink-0">
+                  <div className="flex-shrink-0 w-16 pr-2 text-xs font-medium text-right text-gray-600">
                     {row[0].rowLabel}
                   </div>
 
@@ -453,14 +453,14 @@ const MetricsHeatmap: React.FC<MetricsHeatmapProps> = ({
 
           {/* Tooltip */}
           {showTooltip && hoveredCell && (
-            <div className="absolute z-10 bg-white border border-gray-200 rounded-lg shadow-lg p-3 pointer-events-none">
-              <div className="flex items-center space-x-2 mb-2">
+            <div className="absolute z-10 p-3 bg-white border border-gray-200 rounded-lg shadow-lg pointer-events-none">
+              <div className="flex items-center mb-2 space-x-2">
                 {getStatusIcon(hoveredCell.status)}
                 <span className="font-semibold text-gray-900">
                   {hoveredCell.rowLabel} - {hoveredCell.colLabel}
                 </span>
               </div>
-              <div className="text-sm text-gray-600 space-y-1">
+              <div className="space-y-1 text-sm text-gray-600">
                 <div>
                   Value: {formatValue(hoveredCell.value, selectedMetric)}
                 </div>
@@ -471,9 +471,9 @@ const MetricsHeatmap: React.FC<MetricsHeatmapProps> = ({
           )}
         </div>
       ) : (
-        <div className="text-center py-12 bg-gray-50 rounded-lg">
+        <div className="py-12 text-center rounded-lg bg-gray-50">
           <Thermometer className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
+          <h3 className="mb-2 text-lg font-medium text-gray-900">
             No Data Available
           </h3>
           <p className="text-gray-600">
@@ -484,10 +484,10 @@ const MetricsHeatmap: React.FC<MetricsHeatmapProps> = ({
 
       {/* Legend */}
       {showLegend && heatmapGrid.grid.length > 0 && (
-        <div className="mt-6 pt-6 border-t border-gray-200">
+        <div className="pt-6 mt-6 border-t border-gray-200">
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="text-sm font-medium text-gray-900 mb-2">Legend</h4>
+              <h4 className="mb-2 text-sm font-medium text-gray-900">Legend</h4>
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
                   <div className="w-4 h-4 bg-gray-100 rounded" />
@@ -525,7 +525,7 @@ const MetricsHeatmap: React.FC<MetricsHeatmapProps> = ({
 
       {/* Summary Stats */}
       {heatmapGrid.grid.length > 0 && heatmapGrid.rows && heatmapGrid.cols && (
-        <div className="mt-4 grid grid-cols-4 gap-4 text-center">
+        <div className="grid grid-cols-4 gap-4 mt-4 text-center">
           <div>
             <div className="text-xs text-gray-500">Total Cells</div>
             <div className="text-sm font-semibold text-gray-900">

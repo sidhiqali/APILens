@@ -26,7 +26,7 @@ const Step1_BasicInfo = ({ nextStep, formData, updateFormData }: Props) => {
                         placeholder="e.g., Payment Processing API"
                         value={formData.apiName}
                         onChange={handleChange}
-                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white placeholder-gray-500"
                         required
                     />
                 </div>
@@ -38,7 +38,7 @@ const Step1_BasicInfo = ({ nextStep, formData, updateFormData }: Props) => {
                         placeholder="https://api.example.com/openapi.json"
                         value={formData.openApiUrl}
                         onChange={handleChange}
-                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white placeholder-gray-500"
                         required
                     />
                 </div>
@@ -49,7 +49,7 @@ const Step1_BasicInfo = ({ nextStep, formData, updateFormData }: Props) => {
                         rows={3}
                         value={formData.description}
                         onChange={handleChange}
-                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white placeholder-gray-500"
                     />
                 </div>
                 <div className="flex justify-end">

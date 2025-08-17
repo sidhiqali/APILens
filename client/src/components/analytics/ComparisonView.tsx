@@ -499,7 +499,7 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
             >
               {categories.map((category) => (
                 <option key={category} value={category}>
@@ -516,7 +516,7 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
           >
             <option value="healthScore">Health Score</option>
             <option value="responseTime">Response Time</option>

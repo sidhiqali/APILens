@@ -266,7 +266,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           <select
             value={currentValue || ''}
             onChange={(e) => updateFilter(group.id, e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
           >
             <option value="">{group.placeholder || 'Select...'}</option>
             {group.options?.map((option) => (
@@ -295,7 +295,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                     start: e.target.value,
                   })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
               />
             </div>
             <div>
@@ -308,7 +308,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                 onChange={(e) =>
                   updateFilter(group.id, { ...dateValue, end: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
               />
             </div>
           </div>
@@ -321,7 +321,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             placeholder={group.placeholder || 'Search...'}
             value={currentValue || ''}
             onChange={(e) => updateFilter(group.id, e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white placeholder-gray-500"
           />
         );
 

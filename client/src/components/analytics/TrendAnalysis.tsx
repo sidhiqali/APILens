@@ -403,7 +403,7 @@ const TrendAnalysis: React.FC<TrendAnalysisProps> = ({
           <select
             value={selectedMetric}
             onChange={(e) => setSelectedMetric(e.target.value as any)}
-            className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+            className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 text-gray-900 bg-white"
           >
             {metricOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -415,7 +415,7 @@ const TrendAnalysis: React.FC<TrendAnalysisProps> = ({
           <select
             value={timeRange}
             onChange={(e) => onTimeRangeChange(e.target.value as any)}
-            className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+            className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 text-gray-900 bg-white"
           >
             {timeRangeOptions.map((option) => (
               <option key={option.value} value={option.value}>

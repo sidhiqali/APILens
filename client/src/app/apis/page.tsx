@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import Layout from '@/components/layout/Layout';
 import RouteGuard from '@/components/RouteGuard';
+import FilterPanel, { FilterGroup, FilterState } from '@/components/search/FilterPanel';
 import { useApis, useDeleteApi, useToggleApiStatus, useCheckApi, apiQueryKeys } from '@/hooks/useApis';
 import { useWebSocket } from '@/providers/WebSocketProvider';
 import {
@@ -35,6 +36,7 @@ const APIsPage = () => {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [selectedApis, setSelectedApis] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
+  const [additionalFilters, setAdditionalFilters] = useState<FilterState>({});
 
   // Initialize filters from URL parameters
   useEffect(() => {
@@ -138,6 +140,48 @@ const APIsPage = () => {
     console.log(`Bulk ${action} for APIs:`, selectedApis);
   };
 
+  // Get unique values for filter options
+  const allTags = Array.from(new Set(apis.flatMap(api => api.tags || [])));
+  const allHealthStatuses = Array.from(new Set(apis.map(api => api.healthStatus).filter(Boolean)));
+  const allCheckFrequencies = Array.from(new Set(apis.map(api => api.checkFrequency).filter(Boolean)));
+
+  // Filter configuration
+  const filterGroups: FilterGroup[] = [
+    {
+      id: 'healthStatus',
+      label: 'Health Status',
+      type: 'checkbox',
+      options: allHealthStatuses.map(status => ({
+        id: status,
+        label: status.charAt(0).toUpperCase() + status.slice(1),
+        value: status,
+        count: apis.filter(api => api.healthStatus === status).length
+      }))
+    },
+    {
+      id: 'tags',
+      label: 'Tags',
+      type: 'checkbox',
+      options: allTags.map(tag => ({
+        id: tag,
+        label: tag,
+        value: tag,
+        count: apis.filter(api => api.tags?.includes(tag)).length
+      }))
+    },
+    {
+      id: 'checkFrequency',
+      label: 'Check Frequency',
+      type: 'radio',
+      options: allCheckFrequencies.map(freq => ({
+        id: freq,
+        label: freq,
+        value: freq,
+        count: apis.filter(api => api.checkFrequency === freq).length
+      }))
+    }
+  ];
+
   const filteredApis = apis.filter(api => {
     const matchesSearch = !searchTerm || 
       api.apiName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -146,8 +190,18 @@ const APIsPage = () => {
     const matchesStatus = statusFilter === 'all' || 
       (statusFilter === 'active' && api.isActive) ||
       (statusFilter === 'inactive' && !api.isActive);
+
+    // Additional filters
+    const matchesHealthStatus = !additionalFilters.healthStatus?.length || 
+      additionalFilters.healthStatus.includes(api.healthStatus);
     
-    return matchesSearch && matchesStatus;
+    const matchesTags = !additionalFilters.tags?.length || 
+      additionalFilters.tags.some((tag: string) => api.tags?.includes(tag));
+    
+    const matchesCheckFrequency = !additionalFilters.checkFrequency || 
+      api.checkFrequency === additionalFilters.checkFrequency;
+    
+    return matchesSearch && matchesStatus && matchesHealthStatus && matchesTags && matchesCheckFrequency;
   });
 
   const activeApis = filteredApis.filter(api => api.isActive);
@@ -345,14 +399,14 @@ const APIsPage = () => {
                   placeholder="Search APIs..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white placeholder-gray-500"
                 />
               </div>
               
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as any)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="px-3 py-2 pr-8 min-w-[120px] border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
               >
                 <option value="all">All Status</option>
                 <option value="active">Active</option>
@@ -390,6 +444,20 @@ const APIsPage = () => {
               </div>
             )}
           </div>
+
+          {/* Advanced Filters */}
+          {showFilters && (
+            <div className="mb-6">
+              <FilterPanel
+                filters={filterGroups}
+                initialState={additionalFilters}
+                onFiltersChange={setAdditionalFilters}
+                onClearAll={() => setAdditionalFilters({})}
+                title="Advanced Filters"
+                className="bg-gray-50"
+              />
+            </div>
+          )}
 
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">

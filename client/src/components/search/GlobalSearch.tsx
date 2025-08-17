@@ -280,7 +280,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
             setQuery(e.target.value);
             setSelectedIndex(-1);
           }}
-          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white placeholder-gray-500"
         />
         {query && (
           <button

@@ -4,6 +4,38 @@ info:
   version: "1.0.0"
   description: Order management API - Version 1
 paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      description: Returns the health status of the Orders API
+      responses:
+        "200":
+          description: Health status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [healthy, unhealthy, degraded, error]
+                  timestamp:
+                    type: string
+                    format: date-time
+                  service:
+                    type: string
+                  version:
+                    type: string
+                required:
+                  - status
+                  - timestamp
+                  - service
+                  - version
+              example:
+                status: "healthy"
+                timestamp: "2025-08-17T22:45:00Z"
+                service: "Orders API"
+                version: "v1.0.0"
   /orders:
     post:
       summary: Create an order

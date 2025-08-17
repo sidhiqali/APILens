@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import Layout from '@/components/layout/Layout';
 import RouteGuard from '@/components/RouteGuard';
@@ -28,12 +28,26 @@ import {
 
 const APIsPage = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const { subscribe } = useWebSocket();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [selectedApis, setSelectedApis] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
+
+  // Initialize filters from URL parameters
+  useEffect(() => {
+    const status = searchParams.get('status');
+    const search = searchParams.get('search');
+    
+    if (status && ['all', 'active', 'inactive'].includes(status)) {
+      setStatusFilter(status as 'all' | 'active' | 'inactive');
+    }
+    if (search) {
+      setSearchTerm(search);
+    }
+  }, [searchParams]);
 
   const { data: apis = [], isLoading } = useApis({
     search: searchTerm,

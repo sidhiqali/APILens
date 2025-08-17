@@ -210,16 +210,63 @@ function createSpecServer(name, port, currentSpecPath) {
       }
     } else if (parsedUrl.pathname === '/health') {
       res.setHeader('Content-Type', 'application/json');
-      res.writeHead(200);
+      
       // Get the current spec path dynamically from the specServers map
       const serverInfo = specServers.get(name);
       const activeSpecPath = serverInfo ? serverInfo.currentSpecPath : currentSpecPath;
-      res.end(JSON.stringify({ 
-        status: 'healthy', 
+      
+      // Randomly make some APIs unhealthy to simulate real-world scenarios
+      const healthScenarios = [
+        { status: 'healthy', weight: 60 },
+        { status: 'unhealthy', weight: 25 },
+        { status: 'error', weight: 10 },
+        { status: 'degraded', weight: 5 }
+      ];
+      
+      // Use API name and time to create some deterministic but varying health status
+      const timeSlot = Math.floor(Date.now() / (5 * 60 * 1000)); // Changes every 5 minutes
+      const nameHash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      const randomSeed = (nameHash + timeSlot) % 100;
+      
+      let accumulatedWeight = 0;
+      let selectedStatus = 'healthy';
+      
+      for (const scenario of healthScenarios) {
+        accumulatedWeight += scenario.weight;
+        if (randomSeed < accumulatedWeight) {
+          selectedStatus = scenario.status;
+          break;
+        }
+      }
+      
+      // Make certain APIs more prone to issues (for demo purposes)
+      if (name.includes('Payments') && randomSeed < 40) {
+        selectedStatus = 'unhealthy';
+      } else if (name.includes('Orders') && randomSeed < 30) {
+        selectedStatus = 'degraded';
+      }
+      
+      const responseData = { 
+        status: selectedStatus, 
         api: name, 
         currentSpec: path.basename(activeSpecPath),
-        timestamp: new Date().toISOString()
-      }));
+        timestamp: new Date().toISOString(),
+        responseTime: Math.floor(Math.random() * 500) + 50, // Random response time 50-550ms
+        version: activeSpecPath.includes('v2') ? 'v2' : 'v1',
+        checks: {
+          database: selectedStatus === 'healthy' ? 'ok' : 'degraded',
+          cache: Math.random() > 0.1 ? 'ok' : 'error',
+          externalDeps: Math.random() > 0.05 ? 'ok' : 'timeout'
+        }
+      };
+      
+      // Set appropriate HTTP status codes
+      const statusCode = selectedStatus === 'healthy' ? 200 : 
+                        selectedStatus === 'degraded' ? 200 : 
+                        selectedStatus === 'unhealthy' ? 503 : 500;
+      
+      res.writeHead(statusCode);
+      res.end(JSON.stringify(responseData, null, 2));
     } else {
       res.writeHead(404);
       res.end('Not Found - Available endpoints: /openapi.json, /openapi.yaml, /health');

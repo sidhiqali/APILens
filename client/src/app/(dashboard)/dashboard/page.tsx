@@ -164,61 +164,81 @@ const DashboardPage = () => {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="bg-white p-6 rounded-lg shadow-sm border">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">
-                    Total APIs
-                  </p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {statsLoading ? '...' : stats?.totalApis}
-                  </p>
+            <Link href="/apis" className="block">
+              <div className="bg-white p-6 rounded-lg shadow-sm border hover:shadow-md transition-shadow cursor-pointer">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">
+                      Total APIs
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {statsLoading ? '...' : stats?.totalApis}
+                    </p>
+                  </div>
+                  <Activity className="w-8 h-8 text-blue-600" />
                 </div>
-                <Activity className="w-8 h-8 text-blue-600" />
+                <div className="mt-2 text-xs text-blue-600">
+                  Click to view all APIs →
+                </div>
               </div>
-            </div>
+            </Link>
 
-            <div className="bg-white p-6 rounded-lg shadow-sm border">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">
-                    Active APIs
-                  </p>
-                  <p className="text-2xl font-bold text-green-600">
-                    {statsLoading ? '...' : stats?.activeApis}
-                  </p>
+            <Link href="/apis?status=active" className="block">
+              <div className="bg-white p-6 rounded-lg shadow-sm border hover:shadow-md transition-shadow cursor-pointer">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">
+                      Active APIs
+                    </p>
+                    <p className="text-2xl font-bold text-green-600">
+                      {statsLoading ? '...' : stats?.activeApis}
+                    </p>
+                  </div>
+                  <CheckCircle className="w-8 h-8 text-green-600" />
                 </div>
-                <CheckCircle className="w-8 h-8 text-green-600" />
+                <div className="mt-2 text-xs text-green-600">
+                  Click to view active APIs →
+                </div>
               </div>
-            </div>
+            </Link>
 
-            <div className="bg-white p-6 rounded-lg shadow-sm border">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">
-                    Total Changes
-                  </p>
-                  <p className="text-2xl font-bold text-orange-600">
-                    {statsLoading ? '...' : stats?.totalChanges}
-                  </p>
+            <Link href="/apis" className="block">
+              <div className="bg-white p-6 rounded-lg shadow-sm border hover:shadow-md transition-shadow cursor-pointer">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">
+                      Total Changes
+                    </p>
+                    <p className="text-2xl font-bold text-orange-600">
+                      {statsLoading ? '...' : stats?.totalChanges}
+                    </p>
+                  </div>
+                  <Clock className="w-8 h-8 text-orange-600" />
                 </div>
-                <Clock className="w-8 h-8 text-orange-600" />
+                <div className="mt-2 text-xs text-orange-600">
+                  Click to view APIs with changes →
+                </div>
               </div>
-            </div>
+            </Link>
 
-            <div className="bg-white p-6 rounded-lg shadow-sm border">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">
-                    Critical Issues
-                  </p>
-                  <p className="text-2xl font-bold text-red-600">
-                    {statsLoading ? '...' : stats?.criticalIssues}
-                  </p>
+            <Link href="/issues" className="block">
+              <div className="bg-white p-6 rounded-lg shadow-sm border hover:shadow-md transition-shadow cursor-pointer">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">
+                      Critical Issues
+                    </p>
+                    <p className="text-2xl font-bold text-red-600">
+                      {statsLoading ? '...' : stats?.criticalIssues}
+                    </p>
+                  </div>
+                  <AlertTriangle className="w-8 h-8 text-red-600" />
                 </div>
-                <AlertTriangle className="w-8 h-8 text-red-600" />
+                <div className="mt-2 text-xs text-red-600">
+                  Click to view issues & alerts →
+                </div>
               </div>
-            </div>
+            </Link>
           </div>
 
           {/* Filters and Search */}

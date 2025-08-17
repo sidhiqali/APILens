@@ -4,6 +4,38 @@ info:
   version: "2.0.0"
   description: User management API - Version 2 (Breaking Changes)
 paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      description: Returns the health status of the Users API
+      responses:
+        "200":
+          description: Health status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [healthy, unhealthy, degraded, error]
+                  timestamp:
+                    type: string
+                    format: date-time
+                  service:
+                    type: string
+                  version:
+                    type: string
+                required:
+                  - status
+                  - timestamp
+                  - service
+                  - version
+              example:
+                status: "healthy"
+                timestamp: "2025-08-17T22:45:00Z"
+                service: "Users API"
+                version: "v2.0.0"
   /users:
     get:
       summary: List users (v2 with enhanced filtering)

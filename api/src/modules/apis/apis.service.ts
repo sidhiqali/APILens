@@ -153,6 +153,33 @@ export class ApisService {
       const newSpec = response.data;
       const oldSpec = api.latestSpec;
 
+      // Check the health endpoint to get actual API health status
+      let healthStatus = 'healthy';
+      try {
+        // Try to get health status from the API's health endpoint
+        const healthUrl = api.openApiUrl
+          .replace('/openapi.json', '/health')
+          .replace('/openapi.yaml', '/health');
+        const healthResponse = await axios.get(healthUrl, { timeout: 5000 });
+        
+        if (healthResponse.data?.status) {
+          const status = healthResponse.data.status.toLowerCase();
+          healthStatus =
+            status === 'healthy'
+              ? 'healthy'
+              : status === 'degraded'
+                ? 'unhealthy'
+                : status === 'unhealthy'
+                  ? 'unhealthy'
+                  : 'error';
+        }
+      } catch (healthError) {
+        this.logger.warn(
+          `Health check failed for ${api.apiName}: ${healthError.message}`,
+        );
+        // If health endpoint fails, keep the default 'healthy' status from successful spec fetch
+      }
+
       // Detect changes using the change detector service
       const changeResult = await this.changeDetectorService.detectChanges(
         oldSpec,
@@ -160,9 +187,9 @@ export class ApisService {
         apiId,
       );
 
-      // Update API health status
+      // Update API health status with the actual health status
       await this.apiModel.findByIdAndUpdate(apiId, {
-        healthStatus: 'healthy',
+        healthStatus,
         lastChecked: new Date(),
         lastHealthCheck: new Date(),
         lastError: null,

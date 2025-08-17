@@ -149,18 +149,48 @@ export const useDeleteApi = () => {
 
   return useMutation({
     mutationFn: (id: string) => apiService.deleteApi(id),
-    onSuccess: (response, id) => {
+    onMutate: async (id) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: apiQueryKeys.lists() });
+      
+      // Snapshot the previous value
+      const previousApis = queryClient.getQueryData(apiQueryKeys.lists());
+      
+      // Get the API name for the toast message
+      const apis = previousApis as any[];
+      const apiToDelete = apis?.find((api: any) => api.id === id);
+      
+      // Optimistically remove the API
+      queryClient.setQueriesData(
+        { queryKey: apiQueryKeys.lists() },
+        (old: any) => {
+          if (!old) return old;
+          return old.filter((api: any) => api.id !== id);
+        }
+      );
+      
+      return { previousApis, apiName: apiToDelete?.apiName };
+    },
+    onError: (err: any, _id, context: any) => {
+      // If the mutation fails, roll back
+      if (context?.previousApis) {
+        queryClient.setQueryData(apiQueryKeys.lists(), context.previousApis);
+      }
+      toast.error(err.response?.data?.message || 'Failed to delete API');
+    },
+    onSuccess: (response, id, context: any) => {
       if (response.success) {
-        queryClient.invalidateQueries({ queryKey: apiQueryKeys.lists() });
         queryClient.removeQueries({ queryKey: apiQueryKeys.detail(id) });
         queryClient.invalidateQueries({
           queryKey: apiQueryKeys.dashboardStats(),
         });
-        toast.success('API deleted successfully!');
+        
+        const apiName = context?.apiName || 'API';
+        toast.success(`"${apiName}" has been deleted successfully`);
       }
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to delete API');
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: apiQueryKeys.lists() });
     },
   });
 };
@@ -171,20 +201,54 @@ export const useToggleApiStatus = () => {
 
   return useMutation({
     mutationFn: (id: string) => apiService.toggleApiStatus(id),
+    onMutate: async (id) => {
+      // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+      await queryClient.cancelQueries({ queryKey: apiQueryKeys.lists() });
+      
+      // Snapshot the previous value
+      const previousApis = queryClient.getQueryData(apiQueryKeys.lists());
+      
+      // Optimistically update to the new value
+      queryClient.setQueriesData(
+        { queryKey: apiQueryKeys.lists() },
+        (old: any) => {
+          if (!old) return old;
+          return old.map((api: any) => 
+            api.id === id ? { ...api, isActive: !api.isActive } : api
+          );
+        }
+      );
+      
+      // Return a context object with the snapshotted value
+      return { previousApis };
+    },
+    onError: (err: any, _id, context: any) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousApis) {
+        queryClient.setQueryData(apiQueryKeys.lists(), context.previousApis);
+      }
+      toast.error(
+        err.response?.data?.message || 'Failed to update API status'
+      );
+    },
     onSuccess: (response, id) => {
       if (response.success) {
-        queryClient.invalidateQueries({ queryKey: apiQueryKeys.lists() });
+        // Update individual API data
         queryClient.invalidateQueries({ queryKey: apiQueryKeys.detail(id) });
         queryClient.invalidateQueries({
           queryKey: apiQueryKeys.dashboardStats(),
         });
-        toast.success('API status updated successfully!');
+        
+        const apiData = response.data;
+        const message = apiData?.isActive 
+          ? `API "${apiData?.apiName || 'API'}" has been activated` 
+          : `API "${apiData?.apiName || 'API'}" has been paused`;
+        toast.success(message);
       }
     },
-    onError: (error: any) => {
-      toast.error(
-        error.response?.data?.message || 'Failed to update API status'
-      );
+    onSettled: () => {
+      // Always refetch after error or success to ensure consistency
+      queryClient.invalidateQueries({ queryKey: apiQueryKeys.lists() });
     },
   });
 };
@@ -195,15 +259,25 @@ export const useCheckApi = () => {
 
   return useMutation({
     mutationFn: (id: string) => apiService.checkApi(id),
-    onSuccess: (response, id) => {
+    onMutate: async (id) => {
+      // Get the API name for better toast messages
+      const apis = queryClient.getQueryData(apiQueryKeys.lists()) as any[];
+      const api = apis?.find((api: any) => api.id === id);
+      return { apiName: api?.apiName };
+    },
+    onSuccess: (response, id, context: any) => {
       if (response.success) {
         queryClient.invalidateQueries({ queryKey: apiQueryKeys.detail(id) });
         queryClient.invalidateQueries({ queryKey: apiQueryKeys.changes(id) });
-        toast.success('API check completed!');
+        queryClient.invalidateQueries({ queryKey: apiQueryKeys.lists() });
+        
+        const apiName = context?.apiName || 'API';
+        toast.success(`"${apiName}" check completed successfully`);
       }
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to check API');
+    onError: (error: any, _id, context: any) => {
+      const apiName = context?.apiName || 'API';
+      toast.error(error.response?.data?.message || `Failed to check "${apiName}"`);
     },
   });
 };

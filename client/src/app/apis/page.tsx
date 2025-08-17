@@ -1,10 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import Layout from '@/components/layout/Layout';
 import RouteGuard from '@/components/RouteGuard';
-import { useApis, useDeleteApi, useToggleApiStatus, useCheckApi } from '@/hooks/useApis';
+import { useApis, useDeleteApi, useToggleApiStatus, useCheckApi, apiQueryKeys } from '@/hooks/useApis';
+import { useWebSocket } from '@/providers/WebSocketProvider';
 import {
   Search,
   Filter,
@@ -26,6 +28,8 @@ import {
 
 const APIsPage = () => {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const { subscribe } = useWebSocket();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [selectedApis, setSelectedApis] = useState<string[]>([]);
@@ -39,6 +43,31 @@ const APIsPage = () => {
   const deleteApiMutation = useDeleteApi();
   const toggleStatusMutation = useToggleApiStatus();
   const checkApiMutation = useCheckApi();
+
+  // Set up real-time updates via WebSocket
+  useEffect(() => {
+    const unsubscribe = subscribe('api_status_changed', (data: any) => {
+      // Invalidate queries to refresh the data
+      queryClient.invalidateQueries({ queryKey: apiQueryKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: apiQueryKeys.detail(data.apiId) });
+    });
+
+    const unsubscribeApiUpdated = subscribe('api_updated', (data: any) => {
+      queryClient.invalidateQueries({ queryKey: apiQueryKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: apiQueryKeys.detail(data.apiId) });
+    });
+
+    const unsubscribeApiDeleted = subscribe('api_deleted', (data: any) => {
+      queryClient.invalidateQueries({ queryKey: apiQueryKeys.lists() });
+      queryClient.removeQueries({ queryKey: apiQueryKeys.detail(data.apiId) });
+    });
+
+    return () => {
+      unsubscribe();
+      unsubscribeApiUpdated();
+      unsubscribeApiDeleted();
+    };
+  }, [subscribe, queryClient]);
 
   const getStatusIcon = (status: string, isActive: boolean) => {
     if (!isActive) {
@@ -185,17 +214,23 @@ const APIsPage = () => {
 
         {/* Action Buttons */}
         <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 flex-shrink-0">
             <button
               onClick={() => toggleStatusMutation.mutate(api.id)}
               disabled={toggleStatusMutation.isPending}
-              className={`flex items-center px-3 py-1 text-xs font-medium rounded-full ${
+              className={`flex items-center px-3 py-1 text-xs font-medium rounded-full whitespace-nowrap ${
                 api.isActive
-                  ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                  : 'bg-green-100 text-green-700 hover:bg-green-200'
+                  ? 'bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50'
+                  : 'bg-green-100 text-green-700 hover:bg-green-200 disabled:opacity-50'
               }`}
             >
-              {api.isActive ? <Pause className="w-3 h-3 mr-1" /> : <Play className="w-3 h-3 mr-1" />}
+              {toggleStatusMutation.isPending ? (
+                <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
+              ) : api.isActive ? (
+                <Pause className="w-3 h-3 mr-1" />
+              ) : (
+                <Play className="w-3 h-3 mr-1" />
+              )}
               {api.isActive ? 'Pause' : 'Resume'}
             </button>
             
@@ -203,7 +238,7 @@ const APIsPage = () => {
               <button
                 onClick={() => checkApiMutation.mutate(api.id)}
                 disabled={checkApiMutation.isPending}
-                className="flex items-center px-3 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-full hover:bg-blue-200"
+                className="flex items-center px-3 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-full hover:bg-blue-200 disabled:opacity-50 whitespace-nowrap"
               >
                 <RefreshCw className={`w-3 h-3 mr-1 ${checkApiMutation.isPending ? 'animate-spin' : ''}`} />
                 Check Now
@@ -211,28 +246,36 @@ const APIsPage = () => {
             )}
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1 flex-shrink-0 ml-2">
             <button
               onClick={() => router.push(`/apis/${api.id}`)}
-              className="flex items-center px-3 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-full hover:bg-gray-200"
+              className="flex items-center px-2 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-full hover:bg-gray-200 whitespace-nowrap"
+              title="View Details"
             >
-              <Eye className="w-3 h-3 mr-1" />
-              Details
+              <Eye className="w-3 h-3" />
             </button>
             <button
               onClick={() => router.push(`/apis/${api.id}?tab=settings`)}
-              className="flex items-center px-3 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-full hover:bg-gray-200"
+              className="flex items-center px-2 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-full hover:bg-gray-200 whitespace-nowrap"
+              title="Settings"
             >
-              <Settings className="w-3 h-3 mr-1" />
-              Settings
+              <Settings className="w-3 h-3" />
             </button>
             <button
-              onClick={() => deleteApiMutation.mutate(api.id)}
+              onClick={() => {
+                if (window.confirm(`Are you sure you want to delete "${api.apiName}"? This action cannot be undone.`)) {
+                  deleteApiMutation.mutate(api.id);
+                }
+              }}
               disabled={deleteApiMutation.isPending}
-              className="flex items-center px-3 py-1 text-xs font-medium text-red-700 bg-red-100 rounded-full hover:bg-red-200"
+              className="flex items-center px-2 py-1 text-xs font-medium text-red-700 bg-red-100 rounded-full hover:bg-red-200 disabled:opacity-50 whitespace-nowrap"
+              title="Delete API"
             >
-              <Trash2 className="w-3 h-3 mr-1" />
-              Delete
+              {deleteApiMutation.isPending ? (
+                <RefreshCw className="w-3 h-3 animate-spin" />
+              ) : (
+                <Trash2 className="w-3 h-3" />
+              )}
             </button>
           </div>
         </div>

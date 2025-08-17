@@ -69,7 +69,7 @@ const SettingsPage = () => {
                 {/* Profile Information */}
                 <div className="bg-white rounded-lg shadow-sm border">
                   <div className="p-6 border-b border-gray-200">
-                    <h3 className="text-lg font-semibold flex items-center">
+                    <h3 className="text-lg font-semibold flex items-center text-gray-900">
                       <User size={20} className="mr-2" />
                       Profile Information
                     </h3>
@@ -92,7 +92,7 @@ const SettingsPage = () => {
                               email: e.target.value,
                             }))
                           }
-                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white placeholder-gray-500"
                           placeholder="Enter your email"
                         />
                       </div>
@@ -103,7 +103,7 @@ const SettingsPage = () => {
                 {/* Notification Preferences */}
                 <div className="bg-white rounded-lg shadow-sm border">
                   <div className="p-6 border-b border-gray-200">
-                    <h3 className="text-lg font-semibold">
+                    <h3 className="text-lg font-semibold text-gray-900">
                       Notification Preferences
                     </h3>
                     <p className="text-sm text-gray-600 mt-1">
@@ -205,14 +205,14 @@ const SettingsPage = () => {
               <div className="space-y-6">
                 {/* API Key */}
                 <div className="bg-white rounded-lg shadow-sm border p-6">
-                  <h3 className="text-lg font-semibold mb-4 flex items-center">
+                  <h3 className="text-lg font-semibold mb-4 flex items-center text-gray-900">
                     <Key size={20} className="mr-2" />
                     API Key
                   </h3>
                   <div className="space-y-3">
                     <div className="p-3 bg-gray-50 rounded-md">
                       <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm font-medium">
+                        <span className="text-sm font-medium text-gray-900">
                           Personal API Key
                         </span>
                         <button
@@ -222,7 +222,7 @@ const SettingsPage = () => {
                           Regenerate
                         </button>
                       </div>
-                      <code className="text-xs text-gray-600 break-all">
+                      <code className="text-xs text-gray-800 break-all bg-gray-50 p-2 rounded">
                         {user?.api_key || 'Loading...'}
                       </code>
                     </div>

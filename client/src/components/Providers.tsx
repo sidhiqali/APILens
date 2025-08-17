@@ -3,6 +3,8 @@
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { WebSocketProvider } from '@/providers/WebSocketProvider';
+import { RealtimeProvider } from '@/providers/RealtimeProvider';
 
 // Create query client instance once
 const queryClient = new QueryClient({
@@ -45,7 +47,11 @@ interface ProvidersProps {
 export function Providers({ children }: ProvidersProps) {
   return (
     <QueryClientProvider client={queryClient}>
-      {children}
+      <WebSocketProvider>
+        <RealtimeProvider>
+          {children}
+        </RealtimeProvider>
+      </WebSocketProvider>
       {process.env.NODE_ENV === 'development' && (
         <ReactQueryDevtools initialIsOpen={false} />
       )}

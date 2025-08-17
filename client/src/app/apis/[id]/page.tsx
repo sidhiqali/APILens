@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Layout from '@/components/layout/Layout';
 import RouteGuard from '@/components/RouteGuard';
@@ -30,9 +30,18 @@ interface Props {
   }>;
 }
 
-const ApiDetailPage = async ({ params }: Props) => {
-  const { id } = await params;
+const ApiDetailPage = ({ params }: Props) => {
   const router = useRouter();
+  const [id, setId] = useState<string>('');
+  const [isParamsLoaded, setIsParamsLoaded] = useState(false);
+
+  // Handle async params
+  useEffect(() => {
+    params.then((resolvedParams) => {
+      setId(resolvedParams.id);
+      setIsParamsLoaded(true);
+    });
+  }, [params]);
 
   const { data: api, isLoading: apiLoading, error: apiError } = useApi(id);
   const deleteApiMutation = useDeleteApi();
@@ -41,6 +50,19 @@ const ApiDetailPage = async ({ params }: Props) => {
 
   const [activeTab, setActiveTab] = useState('overview');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Show loading while params are being resolved
+  if (!isParamsLoaded) {
+    return (
+      <RouteGuard requireAuth={true}>
+        <Layout>
+          <div className="flex items-center justify-center min-h-96">
+            <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+          </div>
+        </Layout>
+      </RouteGuard>
+    );
+  }
 
   const handleDelete = async () => {
     try {
@@ -217,7 +239,7 @@ const ApiDetailPage = async ({ params }: Props) => {
               {/* Main Info */}
               <div className="space-y-6 lg:col-span-2">
                 <div className="p-6 bg-white border rounded-lg shadow-sm">
-                  <h3 className="mb-4 text-lg font-semibold">
+                  <h3 className="mb-4 text-lg font-semibold text-gray-900">
                     API Information
                   </h3>
                   <div className="grid grid-cols-2 gap-4">
@@ -269,7 +291,7 @@ const ApiDetailPage = async ({ params }: Props) => {
                 {/* Recent Changes */}
                 <div className="bg-white border rounded-lg shadow-sm">
                   <div className="p-6 border-b border-gray-200">
-                    <h3 className="text-lg font-semibold">Recent Changes</h3>
+                    <h3 className="text-lg font-semibold text-gray-900">Recent Changes</h3>
                   </div>
                   <div className="p-6">
                     <p className="py-8 text-center text-gray-500">
@@ -284,10 +306,10 @@ const ApiDetailPage = async ({ params }: Props) => {
               <div className="space-y-6">
                 {/* Health Status */}
                 <div className="p-6 bg-white border rounded-lg shadow-sm">
-                  <h3 className="mb-4 text-lg font-semibold">Health Status</h3>
+                  <h3 className="mb-4 text-lg font-semibold text-gray-900">Health Status</h3>
                   <div className="flex items-center justify-center py-6">
                     {getStatusIcon(api.healthStatus)}
-                    <span className="ml-3 text-lg font-medium">
+                    <span className="ml-3 text-lg font-medium text-gray-900">
                       {api.healthStatus || 'Unknown'}
                     </span>
                   </div>
@@ -296,7 +318,7 @@ const ApiDetailPage = async ({ params }: Props) => {
                 {/* Tags */}
                 {api.tags && api.tags.length > 0 && (
                   <div className="p-6 bg-white border rounded-lg shadow-sm">
-                    <h3 className="mb-4 text-lg font-semibold">Tags</h3>
+                    <h3 className="mb-4 text-lg font-semibold text-gray-900">Tags</h3>
                     <div className="flex flex-wrap gap-2">
                       {api.tags.map((tag: string, index: number) => (
                         <span
@@ -312,7 +334,7 @@ const ApiDetailPage = async ({ params }: Props) => {
 
                 {/* Quick Actions */}
                 <div className="p-6 bg-white border rounded-lg shadow-sm">
-                  <h3 className="mb-4 text-lg font-semibold">Quick Actions</h3>
+                  <h3 className="mb-4 text-lg font-semibold text-gray-900">Quick Actions</h3>
                   <div className="space-y-3">
                     <button 
                       onClick={handleCheckNow}
@@ -343,7 +365,7 @@ const ApiDetailPage = async ({ params }: Props) => {
           {activeTab === 'changes' && (
             <div className="bg-white border rounded-lg shadow-sm">
               <div className="p-6 border-b border-gray-200">
-                <h3 className="text-lg font-semibold">Change History</h3>
+                <h3 className="text-lg font-semibold text-gray-900">Change History</h3>
               </div>
               <div className="p-6">
                 <div className="py-12 text-center">
@@ -365,7 +387,7 @@ const ApiDetailPage = async ({ params }: Props) => {
 
           {activeTab === 'settings' && (
             <div className="p-6 bg-white border rounded-lg shadow-sm">
-              <h3 className="mb-6 text-lg font-semibold">API Settings</h3>
+              <h3 className="mb-6 text-lg font-semibold text-gray-900">API Settings</h3>
               <div className="space-y-6">
                 <div>
                   <label className="block mb-2 text-sm font-medium text-gray-700">
@@ -374,7 +396,7 @@ const ApiDetailPage = async ({ params }: Props) => {
                   <input
                     type="text"
                     defaultValue={api.apiName}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
                   />
                 </div>
                 <div>
@@ -384,7 +406,7 @@ const ApiDetailPage = async ({ params }: Props) => {
                   <input
                     type="url"
                     defaultValue={api.openApiUrl}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
                   />
                 </div>
                 <div>
@@ -395,7 +417,7 @@ const ApiDetailPage = async ({ params }: Props) => {
                     type="number"
                     defaultValue={api.checkFrequency}
                     min="1"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
                   />
                 </div>
                 <div>
@@ -405,7 +427,7 @@ const ApiDetailPage = async ({ params }: Props) => {
                   <input
                     type="text"
                     defaultValue={api.tags?.join(', ')}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white placeholder-gray-500"
                     placeholder="e.g. production, user-api, v2"
                   />
                 </div>

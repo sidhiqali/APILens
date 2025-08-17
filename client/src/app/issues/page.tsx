@@ -284,7 +284,7 @@ const IssuesPage = () => {
                               {issueType.toUpperCase()}
                             </span>
                             <Link
-                              href={`/apis/${api.id}`}
+                              href={`/apis/${api.id}?highlight=issues`}
                               className="inline-flex items-center px-3 py-1 border border-gray-300 rounded text-sm text-gray-700 bg-white hover:bg-gray-50"
                             >
                               <ExternalLink className="w-4 h-4 mr-1" />

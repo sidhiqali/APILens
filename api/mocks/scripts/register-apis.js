@@ -24,6 +24,7 @@ const apis = [
     name: 'Users API',
     description: 'User management API - will flip from v1 to v2 after 60s',
     baseUrl: 'http://localhost:4101',
+    specUrl: 'http://localhost:5101/openapi.json',
     category: 'User Management',
     tags: ['users', 'authentication', 'demo'],
     frequency: '30s',
@@ -34,9 +35,10 @@ const apis = [
     name: 'Orders API', 
     description: 'Order management API - stays on v1 for manual testing',
     baseUrl: 'http://localhost:4102',
+    specUrl: 'http://localhost:5102/openapi.json',
     category: 'E-commerce',
     tags: ['orders', 'commerce', 'manual-test'],
-    frequency: '2m',
+    frequency: '30s', // Faster for testing notifications
     expectedChange: 'New required header + cancel endpoint',
     flipTime: 'manual'
   },
@@ -44,6 +46,7 @@ const apis = [
     name: 'Weather API',
     description: 'Weather information API - will flip from v1 to v2 after 90s', 
     baseUrl: 'http://localhost:4103',
+    specUrl: 'http://localhost:5103/openapi.json',
     category: 'External Data',
     tags: ['weather', 'external', 'demo'],
     frequency: '45s',
@@ -53,10 +56,11 @@ const apis = [
   {
     name: 'Payments API',
     description: 'Payment processing API - stays on v1 for auth scheme testing',
-    baseUrl: 'http://localhost:4104', 
+    baseUrl: 'http://localhost:4104',
+    specUrl: 'http://localhost:5104/openapi.json',
     category: 'Financial',
     tags: ['payments', 'auth', 'security', 'manual-test'],
-    frequency: '5m',
+    frequency: '30s', // Faster for testing notifications
     expectedChange: 'Auth scheme change: API Key → Bearer JWT',
     flipTime: 'manual'
   },
@@ -64,6 +68,7 @@ const apis = [
     name: 'Inventory API',
     description: 'Product inventory API - will flip from v1 to v2 after 120s (2 minutes)',
     baseUrl: 'http://localhost:4105',
+    specUrl: 'http://localhost:5105/openapi.json',
     category: 'Inventory', 
     tags: ['inventory', 'products', 'pagination', 'demo'],
     frequency: '1m',
@@ -74,6 +79,7 @@ const apis = [
     name: 'Notifications API',
     description: 'Event notifications API - will flip from v1 to v2 after 60s',
     baseUrl: 'http://localhost:4106',
+    specUrl: 'http://localhost:5106/openapi.json',
     category: 'Messaging',
     tags: ['notifications', 'events', 'webhooks', 'rate-limiting', 'demo'], 
     frequency: '20s',
@@ -84,28 +90,18 @@ const apis = [
 
 async function registerAPI(api) {
   const payload = {
-    name: api.name,
+    apiName: api.name,
     description: api.description,
-    baseUrl: api.baseUrl,
-    openApiUrl: `${api.baseUrl}/openapi.json`,
-    version: '1.0.0',
-    category: api.category,
+    openApiUrl: api.specUrl,
+    type: api.category,
     tags: api.tags,
-    monitoringConfig: {
-      enabled: true,
-      frequency: api.frequency,
-      alertOnChange: true,
-      changeTypes: ['breaking', 'non-breaking', 'feature']
-    },
-    expectedChanges: {
-      description: api.expectedChange,
-      changeType: api.flipTime === 'manual' ? 'manual-test' : 'breaking',
-      estimatedTime: api.flipTime
-    }
+    checkFrequency: api.frequency === '30s' ? '30s' : 
+                   api.frequency === '45s' ? '1m' : 
+                   api.frequency === '20s' ? '30s' : api.frequency
   };
 
   try {
-    const response = await axios.post(`${APILENS_BASE}/api/apis`, payload, {
+    const response = await axios.post(`${APILENS_BASE}/apis`, payload, {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${AUTH_TOKEN}`
@@ -113,10 +109,10 @@ async function registerAPI(api) {
     });
 
     console.log(`✅ ${api.name} registered successfully`);
-    console.log(`   📊 Monitoring: ${api.frequency}`);
+    console.log(`   📊 Monitoring: ${payload.checkFrequency}`);
     console.log(`   🔄 Change: ${api.expectedChange}`);
     console.log(`   ⏰ Flip time: ${api.flipTime}`);
-    console.log(`   🆔 API ID: ${response.data.id}`);
+    console.log(`   🆔 API ID: ${response.data._id || response.data.id}`);
     console.log('');
     
     return response.data;

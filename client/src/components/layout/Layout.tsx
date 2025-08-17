@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
+import NotificationToastManager from '@/components/notifications/NotificationToastManager';
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -18,6 +19,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           </div>
         </main>
       </div>
+      {/* Real-time notification toasts */}
+      <NotificationToastManager />
     </div>
   );
 };

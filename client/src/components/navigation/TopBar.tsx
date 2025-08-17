@@ -13,9 +13,20 @@ import {
   ChevronDown,
   Plus,
   RefreshCw,
+  Check,
+  X,
+  ExternalLink,
 } from 'lucide-react';
 import { useAuth } from '@/store/auth';
-import { useNotifications } from '@/hooks/useNotifications';
+import { 
+  useNotifications, 
+  useUnreadCount, 
+  useMarkAsRead, 
+  useMarkAllAsRead,
+  useDeleteNotification,
+  useNotificationRealtime 
+} from '@/hooks/useNotifications';
+import { useWebSocket } from '@/providers/WebSocketProvider';
 import { clsx } from 'clsx';
 
 interface TopBarProps {
@@ -33,7 +44,18 @@ const TopBar: React.FC<TopBarProps> = ({
 }) => {
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const { data: notificationsData } = useNotifications({ unreadOnly: true });
+  const { subscribe } = useWebSocket();
+  
+  // Notification hooks
+  const { data: notificationsData, isLoading: notificationsLoading } = useNotifications({ 
+    limit: 10,
+    unreadOnly: false 
+  });
+  const { data: unreadCount = 0 } = useUnreadCount();
+  const markAsReadMutation = useMarkAsRead();
+  const markAllAsReadMutation = useMarkAllAsRead();
+  const deleteNotificationMutation = useDeleteNotification();
+  const { addNewNotification, invalidateNotifications } = useNotificationRealtime();
 
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -42,7 +64,73 @@ const TopBar: React.FC<TopBarProps> = ({
   const notificationRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
-  const unreadCount = notificationsData?.notifications?.length || 0;
+  // Set up real-time notification updates
+  useEffect(() => {
+    const unsubscribe = subscribe('notification_created', (notification: any) => {
+      addNewNotification(notification);
+    });
+
+    const unsubscribeUpdated = subscribe('notification_updated', () => {
+      invalidateNotifications();
+    });
+
+    return () => {
+      unsubscribe?.();
+      unsubscribeUpdated?.();
+    };
+  }, [subscribe, addNewNotification, invalidateNotifications]);
+
+  // Handle notification click - navigate to API detail page
+  const handleNotificationClick = async (notification: any) => {
+    try {
+      // Mark as read if not already read
+      if (!notification.read) {
+        await markAsReadMutation.mutateAsync(notification._id);
+      }
+
+      // Navigate to API detail page if apiId exists
+      if (notification.apiId) {
+        window.location.href = `/apis/${notification.apiId}?notification=${notification._id}`;
+      }
+      
+      setShowNotifications(false);
+    } catch (error) {
+      console.error('Error handling notification click:', error);
+    }
+  };
+
+  // Handle mark all as read
+  const handleMarkAllAsRead = async () => {
+    try {
+      await markAllAsReadMutation.mutateAsync();
+    } catch (error) {
+      console.error('Error marking all as read:', error);
+    }
+  };
+
+  // Handle delete notification
+  const handleDeleteNotification = async (e: React.MouseEvent, notificationId: string) => {
+    e.stopPropagation(); // Prevent notification click
+    try {
+      await deleteNotificationMutation.mutateAsync(notificationId);
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+    }
+  };
+
+  // Format relative time
+  const formatRelativeTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return `${diffDays}d ago`;
+  };
 
   // Get dynamic title based on route
   const getPageTitle = () => {
@@ -200,60 +288,99 @@ const TopBar: React.FC<TopBarProps> = ({
 
           {/* Notifications Dropdown */}
           {showNotifications && (
-            <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+            <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
               <div className="p-4 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-medium text-gray-900">
                     Notifications
                   </h3>
-                  {unreadCount > 0 && (
-                    <span className="text-sm text-blue-600 font-medium">
-                      {unreadCount} unread
-                    </span>
-                  )}
+                  <div className="flex items-center space-x-2">
+                    {unreadCount > 0 && (
+                      <>
+                        <span className="text-sm text-blue-600 font-medium">
+                          {unreadCount} unread
+                        </span>
+                        <button
+                          onClick={handleMarkAllAsRead}
+                          disabled={markAllAsReadMutation.isPending}
+                          className="text-sm text-blue-600 hover:text-blue-700 font-medium disabled:opacity-50"
+                        >
+                          <Check className="w-4 h-4" />
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
 
               <div className="max-h-96 overflow-y-auto">
-                {notificationsData?.notifications
-                  ?.slice(0, 5)
-                  .map((notification) => (
-                    <div
-                      key={notification._id}
-                      className="p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
-                    >
-                      <div className="flex items-start space-x-3">
-                        <div
-                          className={clsx(
-                            'w-2 h-2 rounded-full mt-2 flex-shrink-0',
-                            notification.severity === 'critical'
-                              ? 'bg-red-500'
-                              : notification.severity === 'high'
-                                ? 'bg-orange-500'
-                                : notification.severity === 'medium'
-                                  ? 'bg-yellow-500'
-                                  : 'bg-blue-500'
-                          )}
-                        />
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900">
-                            {notification.title}
-                          </p>
-                          <p className="text-sm text-gray-600 mt-1">
-                            {notification.message}
-                          </p>
-                          <p className="text-xs text-gray-500 mt-2">
-                            {new Date(
-                              notification.createdAt
-                            ).toLocaleDateString()}
-                          </p>
+                {notificationsLoading ? (
+                  <div className="p-8 text-center">
+                    <RefreshCw className="w-6 h-6 mx-auto mb-2 text-gray-400 animate-spin" />
+                    <p className="text-sm text-gray-500">Loading notifications...</p>
+                  </div>
+                ) : notificationsData?.notifications && notificationsData.notifications.length > 0 ? (
+                  notificationsData.notifications
+                    .slice(0, 8)
+                    .map((notification) => (
+                      <div
+                        key={notification._id}
+                        onClick={() => handleNotificationClick(notification)}
+                        className={clsx(
+                          'p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors relative group',
+                          !notification.read && 'bg-blue-50 border-l-4 border-l-blue-500'
+                        )}
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div
+                            className={clsx(
+                              'w-2 h-2 rounded-full mt-2 flex-shrink-0',
+                              notification.severity === 'critical'
+                                ? 'bg-red-500'
+                                : notification.severity === 'high'
+                                  ? 'bg-orange-500'
+                                  : notification.severity === 'medium'
+                                    ? 'bg-yellow-500'
+                                    : 'bg-blue-500'
+                            )}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between">
+                              <p className={clsx(
+                                'text-sm font-medium text-gray-900 truncate',
+                                !notification.read && 'font-semibold'
+                              )}>
+                                {notification.title}
+                              </p>
+                              <div className="flex items-center space-x-1 ml-2">
+                                {notification.apiId && (
+                                  <ExternalLink className="w-3 h-3 text-gray-400" />
+                                )}
+                                <button
+                                  onClick={(e) => handleDeleteNotification(e, notification._id)}
+                                  className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded transition-all"
+                                  disabled={deleteNotificationMutation.isPending}
+                                >
+                                  <X className="w-3 h-3 text-gray-500" />
+                                </button>
+                              </div>
+                            </div>
+                            <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                              {notification.message}
+                            </p>
+                            <div className="flex items-center justify-between mt-2">
+                              <p className="text-xs text-gray-500">
+                                {formatRelativeTime(notification.createdAt)}
+                              </p>
+                              {!notification.read && (
+                                <span className="inline-block w-2 h-2 bg-blue-500 rounded-full"></span>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-
-                {(!notificationsData?.notifications ||
-                  notificationsData.notifications.length === 0) && (
+                    ))
+                ) : (
                   <div className="p-8 text-center text-gray-500">
                     <Bell className="w-8 h-8 mx-auto mb-2 text-gray-300" />
                     <p>No notifications</p>

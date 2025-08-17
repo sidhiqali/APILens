@@ -215,16 +215,16 @@ function createSpecServer(name, port, currentSpecPath) {
       const serverInfo = specServers.get(name);
       const activeSpecPath = serverInfo ? serverInfo.currentSpecPath : currentSpecPath;
       
-      // Randomly make some APIs unhealthy to simulate real-world scenarios
+      // Create more dynamic health scenarios for testing notifications
       const healthScenarios = [
-        { status: 'healthy', weight: 60 },
-        { status: 'unhealthy', weight: 25 },
-        { status: 'error', weight: 10 },
-        { status: 'degraded', weight: 5 }
+        { status: 'healthy', weight: 35 },
+        { status: 'unhealthy', weight: 30 },
+        { status: 'degraded', weight: 20 },
+        { status: 'error', weight: 15 }
       ];
       
-      // Use API name and time to create some deterministic but varying health status
-      const timeSlot = Math.floor(Date.now() / (5 * 60 * 1000)); // Changes every 5 minutes
+      // Use API name and time to create deterministic but frequently changing health status
+      const timeSlot = Math.floor(Date.now() / (2 * 60 * 1000)); // Changes every 2 minutes for more activity
       const nameHash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
       const randomSeed = (nameHash + timeSlot) % 100;
       
@@ -239,11 +239,69 @@ function createSpecServer(name, port, currentSpecPath) {
         }
       }
       
-      // Make certain APIs more prone to issues (for demo purposes)
-      if (name.includes('Payments') && randomSeed < 40) {
-        selectedStatus = 'unhealthy';
-      } else if (name.includes('Orders') && randomSeed < 30) {
-        selectedStatus = 'degraded';
+      // Create specific patterns for different APIs to simulate real-world behavior
+      const currentMinute = Math.floor(Date.now() / (60 * 1000)) % 10; // 10-minute cycle
+      
+      if (name.includes('Payments')) {
+        // Payments API: Alternates between healthy and unhealthy more frequently
+        selectedStatus = (currentMinute % 3 === 0) ? 'unhealthy' : 
+                        (currentMinute % 4 === 0) ? 'degraded' : 'healthy';
+      } else if (name.includes('Orders')) {
+        // Orders API: Periodic degraded states during "peak hours"
+        selectedStatus = (currentMinute >= 2 && currentMinute <= 4) ? 'degraded' :
+                        (currentMinute === 7) ? 'error' : 'healthy';
+      } else if (name.includes('Inventory')) {
+        // Inventory API: Occasionally goes into error state
+        selectedStatus = (currentMinute === 1 || currentMinute === 6) ? 'error' :
+                        (currentMinute === 9) ? 'unhealthy' : 'healthy';
+      } else if (name.includes('Notifications')) {
+        // Notifications API: Mix of all states for comprehensive testing
+        selectedStatus = (currentMinute % 4 === 0) ? 'unhealthy' :
+                        (currentMinute % 4 === 1) ? 'degraded' :
+                        (currentMinute % 4 === 2) ? 'error' : 'healthy';
+      }
+      
+      
+      // Generate appropriate error messages for unhealthy states
+      let errorMessage = null;
+      let responseTime = Math.floor(Math.random() * 200) + 50; // Base response time 50-250ms
+      
+      switch (selectedStatus) {
+        case 'unhealthy':
+          const unhealthyReasons = [
+            'Database connection pool exhausted',
+            'External payment service timeout',
+            'Memory usage above 90%',
+            'Too many failed authentication attempts',
+            'Circuit breaker is open'
+          ];
+          errorMessage = unhealthyReasons[Math.floor(Math.random() * unhealthyReasons.length)];
+          responseTime = Math.floor(Math.random() * 2000) + 1000; // Slow response 1-3s
+          break;
+        case 'degraded':
+          const degradedReasons = [
+            'High response times detected',
+            'Database queries running slowly',
+            'Cache hit rate below threshold',
+            'External dependency latency increased',
+            'CPU usage above 80%'
+          ];
+          errorMessage = degradedReasons[Math.floor(Math.random() * degradedReasons.length)];
+          responseTime = Math.floor(Math.random() * 1000) + 500; // Degraded response 500ms-1.5s
+          break;
+        case 'error':
+          const errorReasons = [
+            'Database connection failed',
+            'Critical service unavailable',
+            'Configuration error detected',
+            'Authentication service down',
+            'Internal server error'
+          ];
+          errorMessage = errorReasons[Math.floor(Math.random() * errorReasons.length)];
+          responseTime = Math.floor(Math.random() * 5000) + 2000; // Very slow or timeout 2-7s
+          break;
+        default:
+          responseTime = Math.floor(Math.random() * 200) + 50; // Healthy response 50-250ms
       }
       
       const responseData = { 
@@ -251,13 +309,22 @@ function createSpecServer(name, port, currentSpecPath) {
         api: name, 
         currentSpec: path.basename(activeSpecPath),
         timestamp: new Date().toISOString(),
-        responseTime: Math.floor(Math.random() * 500) + 50, // Random response time 50-550ms
+        responseTime,
         version: activeSpecPath.includes('v2') ? 'v2' : 'v1',
+        error: errorMessage,
         checks: {
-          database: selectedStatus === 'healthy' ? 'ok' : 'degraded',
-          cache: Math.random() > 0.1 ? 'ok' : 'error',
-          externalDeps: Math.random() > 0.05 ? 'ok' : 'timeout'
-        }
+          database: selectedStatus === 'healthy' ? 'ok' : 
+                   selectedStatus === 'degraded' ? 'slow' : 'failed',
+          cache: selectedStatus === 'error' ? 'failed' : 
+                Math.random() > 0.15 ? 'ok' : 'degraded',
+          externalDeps: selectedStatus === 'unhealthy' ? 'timeout' :
+                       Math.random() > 0.1 ? 'ok' : 'degraded'
+        },
+        uptime: Math.floor(Math.random() * 99) + 85, // Uptime percentage
+        requestsPerMinute: Math.floor(Math.random() * 1000) + 100,
+        errorRate: selectedStatus === 'healthy' ? Math.random() * 0.01 : 
+                  selectedStatus === 'degraded' ? Math.random() * 0.05 + 0.01 :
+                  Math.random() * 0.15 + 0.05
       };
       
       // Set appropriate HTTP status codes

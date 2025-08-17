@@ -62,9 +62,50 @@ const ApiDetailPage = ({ params }: Props) => {
   useEffect(() => {
     const tab = searchParams.get('tab');
     const highlight = searchParams.get('highlight');
+    const notificationId = searchParams.get('notification');
     
     if (tab && ['overview', 'changes', 'settings'].includes(tab)) {
       setActiveTab(tab);
+    }
+    
+    // If coming from notification, handle navigation
+    if (notificationId) {
+      // Default to changes tab for notifications
+      setActiveTab('changes');
+      
+      // Scroll to changes section and highlight it
+      setTimeout(() => {
+        const changesSection = document.getElementById('changes-section');
+        if (changesSection) {
+          changesSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Add notification highlight effect
+          changesSection.classList.add('ring-2', 'ring-blue-500', 'ring-opacity-50');
+          setTimeout(() => {
+            changesSection.classList.remove('ring-2', 'ring-blue-500', 'ring-opacity-50');
+          }, 3000);
+        }
+        
+        // Show a notification banner
+        const banner = document.createElement('div');
+        banner.className = 'fixed top-4 right-4 bg-blue-100 border border-blue-300 text-blue-800 px-4 py-2 rounded-lg shadow-lg z-50';
+        banner.innerHTML = `
+          <div class="flex items-center space-x-2">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+            </svg>
+            <span>Viewing API details from notification</span>
+            <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-blue-600 hover:text-blue-800">×</button>
+          </div>
+        `;
+        document.body.appendChild(banner);
+        
+        // Auto-remove banner after 5 seconds
+        setTimeout(() => {
+          if (banner.parentElement) {
+            banner.remove();
+          }
+        }, 5000);
+      }, 500);
     }
     
     // If coming from issues page, highlight issues section
@@ -586,7 +627,7 @@ const ApiDetailPage = ({ params }: Props) => {
               </div>
 
               {/* Changes List */}
-              <div className="bg-white border rounded-lg shadow-sm">
+              <div id="changes-section" className="bg-white border rounded-lg shadow-sm">
                 <div className="p-6 border-b border-gray-200">
                   <h3 className="text-lg font-semibold text-gray-900">Change History</h3>
                 </div>

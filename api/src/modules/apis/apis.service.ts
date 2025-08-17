@@ -17,6 +17,7 @@ import { Changelog } from 'src/Schemas/changelog-schema';
 import { ApiSnapshot } from 'src/Schemas/api-snapshot.schema';
 import { ChangeDetectorService } from './change-detector.service';
 import { ApiChange } from 'src/Schemas/api-change.schema';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class ApisService {
@@ -28,6 +29,7 @@ export class ApisService {
     @InjectModel(ApiSnapshot.name) private snapshotModel: Model<ApiSnapshot>,
     @InjectModel(ApiChange.name) private apiChangeModel: Model<ApiChange>,
     private changeDetectorService: ChangeDetectorService,
+    private notificationsService: NotificationsService,
   ) {}
 
   async getAllApis(userId: string): Promise<ApiResponseDto[]> {
@@ -153,16 +155,28 @@ export class ApisService {
       const newSpec = response.data;
       const oldSpec = api.latestSpec;
 
-      // Check the health endpoint to get actual API health status
-      let healthStatus = 'healthy';
+      // Extract base URL for health endpoint
+      const baseUrl = api.openApiUrl
+        .replace(/\/[^/]*\.json.*$/, '')
+        .replace(/\/[^/]*\.yaml.*$/, '');
+
+      // Try to get health status from health endpoint
+      let healthStatus = 'healthy'; // Default to healthy if spec fetch was successful
+      let healthErrorMessage: string | undefined;
+      
       try {
-        // Try to get health status from the API's health endpoint
-        const healthUrl = api.openApiUrl
-          .replace('/openapi.json', '/health')
-          .replace('/openapi.yaml', '/health');
+        const healthUrl = `${baseUrl}/health`;
         const healthResponse = await axios.get(healthUrl, { timeout: 5000 });
         
-        if (healthResponse.data?.status) {
+        // Check HTTP status code first
+        if (healthResponse.status >= 500) {
+          healthStatus = 'error';
+          healthErrorMessage = `Health endpoint returned ${healthResponse.status}`;
+        } else if (healthResponse.status >= 400) {
+          healthStatus = 'unhealthy';
+          healthErrorMessage = `Health endpoint returned ${healthResponse.status}`;
+        } else if (healthResponse.data?.status) {
+          // Parse response body status
           const status = healthResponse.data.status.toLowerCase();
           healthStatus =
             status === 'healthy'
@@ -171,13 +185,30 @@ export class ApisService {
                 ? 'unhealthy'
                 : status === 'unhealthy'
                   ? 'unhealthy'
-                  : 'error';
+                  : status === 'error'
+                    ? 'error'
+                    : 'healthy';
         }
       } catch (healthError) {
         this.logger.warn(
           `Health check failed for ${api.apiName}: ${healthError.message}`,
         );
-        // If health endpoint fails, keep the default 'healthy' status from successful spec fetch
+        healthErrorMessage = healthError.message;
+        
+        // Map HTTP status codes to health status
+        if (healthError.response?.status) {
+          const statusCode = healthError.response.status;
+          if (statusCode >= 500) {
+            healthStatus = 'error';
+          } else if (statusCode >= 400) {
+            healthStatus = 'unhealthy';
+          } else {
+            healthStatus = 'healthy';
+          }
+        } else {
+          // Network error or timeout
+          healthStatus = 'error';
+        }
       }
 
       // Detect changes using the change detector service
@@ -187,13 +218,31 @@ export class ApisService {
         apiId,
       );
 
+      // Get previous health status for comparison
+      const previousHealthStatus = api.healthStatus;
+      
+      this.logger.debug(
+        `Health status check for ${api.apiName}: previous=${previousHealthStatus}, new=${healthStatus}`,
+      );
+
       // Update API health status with the actual health status
       await this.apiModel.findByIdAndUpdate(apiId, {
         healthStatus,
         lastChecked: new Date(),
         lastHealthCheck: new Date(),
-        lastError: null,
+        lastError: healthErrorMessage || null,
       });
+
+      // Create notification for health status changes
+      if (previousHealthStatus && previousHealthStatus !== healthStatus) {
+        await this.createHealthStatusNotification(
+          apiId,
+          api.apiName,
+          previousHealthStatus,
+          healthStatus,
+          healthErrorMessage,
+        );
+      }
 
       if (changeResult.hasChanges) {
         // Update API with new spec and version
@@ -205,6 +254,13 @@ export class ApisService {
 
         // Create new snapshot
         await this.createSnapshot(apiId, newSpec);
+
+        // Create notification for API changes
+        await this.notificationsService.notifyApiChanges(
+          apiId,
+          changeResult.changes,
+          newSpec.info?.version,
+        );
 
         this.logger.log(`Changes detected for API: ${api.apiName}`);
         return {
@@ -223,12 +279,20 @@ export class ApisService {
     } catch (error) {
       this.logger.error(`Error checking API ${api.apiName}: ${error.message}`);
 
+      // Get previous health status
+      const previousHealthStatus = api.healthStatus;
+
       // Update error status
       await this.apiModel.findByIdAndUpdate(apiId, {
         healthStatus: 'error',
         lastHealthCheck: new Date(),
         lastError: error.message,
       });
+
+      // Create notification for API error if status changed
+      if (previousHealthStatus !== 'error') {
+        await this.notificationsService.notifyApiError(apiId, error.message);
+      }
 
       return { hasChanges: false };
     }
@@ -249,6 +313,38 @@ export class ApisService {
       });
     } catch (error) {
       this.logger.error(`Failed to create snapshot: ${error.message}`);
+    }
+  }
+
+  private async createHealthStatusNotification(
+    apiId: string,
+    apiName: string,
+    oldStatus: string,
+    newStatus: string,
+    errorMessage?: string,
+  ) {
+    try {
+      this.logger.log(
+        `Health status change for ${apiName}: ${oldStatus} → ${newStatus}`,
+      );
+
+      if (newStatus === 'healthy' && oldStatus !== 'healthy') {
+        // API recovered
+        this.logger.log(`Creating recovery notification for ${apiName}`);
+        await this.notificationsService.notifyApiRecovered(apiId);
+      } else if (newStatus === 'unhealthy' || newStatus === 'error') {
+        // API has issues
+        const message =
+          errorMessage || 'API endpoint is not responding properly';
+        this.logger.log(
+          `Creating error notification for ${apiName}: ${message}`,
+        );
+        await this.notificationsService.notifyApiError(apiId, message);
+      }
+    } catch (error) {
+      this.logger.error(
+        `Failed to create health status notification for ${apiName}: ${error.message}`,
+      );
     }
   }
 
@@ -621,7 +717,7 @@ export class ApisService {
       const startTime = Date.now();
       const response = await fetch(url, {
         method: 'HEAD',
-        // @ts-ignore - timeout is valid but types may not be updated
+        // @ts-expect-error - timeout is valid but types may not be updated
         timeout: 10000,
       });
       const responseTime = Date.now() - startTime;

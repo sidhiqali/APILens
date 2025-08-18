@@ -185,10 +185,10 @@ const NotificationsPage = () => {
   return (
     <RouteGuard requireAuth={true}>
       <Layout>
-        <div className="max-w-4xl mx-auto p-6">
+        <div className="max-w-4xl p-6 mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Notifications</h1>
+            <h1 className="mb-2 text-3xl font-bold text-gray-900">Notifications</h1>
             <div className="flex items-center justify-between">
               <p className="text-gray-600">
                 {unreadCount > 0 ? `${unreadCount} unread notifications` : 'All caught up!'}
@@ -197,7 +197,7 @@ const NotificationsPage = () => {
                 <button
                   onClick={handleMarkAllAsRead}
                   disabled={markAllAsReadMutation.isPending}
-                  className="flex items-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-100 rounded-lg hover:bg-blue-200 disabled:opacity-50 transition-colors"
+                  className="flex items-center px-4 py-2 text-sm font-medium text-blue-600 transition-colors bg-blue-100 rounded-lg hover:bg-blue-200 disabled:opacity-50"
                 >
                   <Check className="w-4 h-4 mr-2" />
                   Mark all as read
@@ -214,7 +214,7 @@ const NotificationsPage = () => {
               </h2>
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
               >
                 <Filter className="w-4 h-4 mr-2" />
                 Filters
@@ -223,16 +223,16 @@ const NotificationsPage = () => {
             </div>
 
             {showFilters && (
-              <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-4 mt-4 border rounded-lg bg-gray-50">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block mb-2 text-sm font-medium text-gray-700">
                       Severity
                     </label>
                     <select
                       value={severityFilter}
                       onChange={(e) => setSeverityFilter(e.target.value as SeverityFilter)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                      className="w-full px-3 py-2 text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       <option value="all">All Severities</option>
                       <option value="critical">Critical</option>
@@ -242,13 +242,13 @@ const NotificationsPage = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block mb-2 text-sm font-medium text-gray-700">
                       Type
                     </label>
                     <select
                       value={typeFilter}
                       onChange={(e) => setTypeFilter(e.target.value as TypeFilter)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                      className="w-full px-3 py-2 text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       <option value="all">All Types</option>
                       <option value="api_change">API Changes</option>
@@ -258,13 +258,13 @@ const NotificationsPage = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block mb-2 text-sm font-medium text-gray-700">
                       Status
                     </label>
                     <select
                       value={readFilter}
                       onChange={(e) => setReadFilter(e.target.value as ReadFilter)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                      className="w-full px-3 py-2 text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       <option value="all">All Notifications</option>
                       <option value="unread">Unread Only</option>
@@ -296,7 +296,7 @@ const NotificationsPage = () => {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
-                            <div className="flex items-center space-x-2 mb-1">
+                            <div className="flex items-center mb-1 space-x-2">
                               <h3 className={clsx(
                                 'text-lg font-medium text-gray-900',
                                 !notification.read && 'font-semibold'
@@ -313,7 +313,7 @@ const NotificationsPage = () => {
                                 <span className="inline-block w-2 h-2 bg-blue-500 rounded-full"></span>
                               )}
                             </div>
-                            <p className="text-gray-600 mb-3">
+                            <p className="mb-3 text-gray-600">
                               {notification.message}
                             </p>
                             <div className="flex items-center space-x-4 text-sm text-gray-500">
@@ -327,11 +327,11 @@ const NotificationsPage = () => {
                               )}
                             </div>
                           </div>
-                          <div className="flex items-center space-x-2 ml-4">
+                          <div className="flex items-center ml-4 space-x-2">
                             <button
                               onClick={(e) => handleDeleteNotification(e, notification._id)}
                               disabled={deleteNotificationMutation.isPending}
-                              className="opacity-0 group-hover:opacity-100 p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                              className="p-2 text-gray-400 transition-all rounded-lg opacity-0 group-hover:opacity-100 hover:text-red-600 hover:bg-red-50"
                             >
                               <X className="w-4 h-4" />
                             </button>
@@ -344,11 +344,11 @@ const NotificationsPage = () => {
 
                 {/* Load More Button */}
                 {hasNextPage && (
-                  <div className="text-center pt-6">
+                  <div className="pt-6 text-center">
                     <button
                       onClick={() => fetchNextPage()}
                       disabled={isFetchingNextPage}
-                      className="px-6 py-3 text-sm font-medium text-blue-600 bg-white border border-blue-300 rounded-lg hover:bg-blue-50 disabled:opacity-50 transition-colors"
+                      className="px-6 py-3 text-sm font-medium text-blue-600 transition-colors bg-white border border-blue-300 rounded-lg hover:bg-blue-50 disabled:opacity-50"
                     >
                       {isFetchingNextPage ? (
                         <div className="flex items-center">
@@ -363,9 +363,9 @@ const NotificationsPage = () => {
                 )}
               </>
             ) : (
-              <div className="text-center py-12">
+              <div className="py-12 text-center">
                 <Bell className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                <h3 className="mb-2 text-lg font-medium text-gray-900">
                   No notifications found
                 </h3>
                 <p className="text-gray-600">

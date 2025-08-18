@@ -89,6 +89,12 @@ export class DashboardService {
         }),
       ]);
 
+    // Critical Issues: APIs with error status OR high change count (same as issues page)
+    const criticalIssues = await this.apiModel.countDocuments({
+      userId: userObjectId,
+      $or: [{ healthStatus: 'error' }, { changeCount: { $gt: 5 } }],
+    });
+
     // Notification Statistics
     const [totalNotifications, unreadNotifications, recentNotifications] =
       await Promise.all([
@@ -149,7 +155,7 @@ export class DashboardService {
       healthyApis,
       unhealthyApis,
       totalChanges,
-      criticalIssues: breakingChanges, // Map breaking changes to critical issues
+      criticalIssues, // Use the new calculation
       recentChanges,
       breakingChanges,
       nonBreakingChanges,

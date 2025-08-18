@@ -39,10 +39,17 @@ const NotificationsPage = () => {
   const [showFilters, setShowFilters] = useState(false);
 
   // Hooks
-  const { data: unreadCount = 0 } = useUnreadCount();
+  const { data: unreadCount = 0, error: unreadCountError } = useUnreadCount();
   const markAsReadMutation = useMarkAsRead();
   const markAllAsReadMutation = useMarkAllAsRead();
   const deleteNotificationMutation = useDeleteNotification();
+
+  // Handle errors silently
+  React.useEffect(() => {
+    if (unreadCountError) {
+      // Could add error tracking here if needed
+    }
+  }, [unreadCountError]);
 
   // Build filter params for API call
   const filterParams = {
@@ -60,14 +67,28 @@ const NotificationsPage = () => {
   } = useInfiniteNotifications(filterParams);
 
   // Flatten paginated data and apply client-side filters
-  const allNotifications = data?.pages.flatMap(page => page.notifications) || [];
-  const filteredNotifications = allNotifications.filter(notification => {
-    if (severityFilter !== 'all' && notification.severity !== severityFilter) return false;
-    if (typeFilter !== 'all' && notification.type !== typeFilter) return false;
-    if (readFilter === 'read' && !notification.read) return false;
-    if (readFilter === 'unread' && notification.read) return false;
-    return true;
-  });
+  const allNotifications = React.useMemo(() => {
+    if (!data || !data.pages) {
+      return [];
+    }
+    return data.pages.flatMap(page => {
+      if (!page || !page.notifications) {
+        return [];
+      }
+      return page.notifications || [];
+    });
+  }, [data]);
+
+  const filteredNotifications = React.useMemo(() => {
+    return allNotifications.filter(notification => {
+      if (!notification) return false;
+      if (severityFilter !== 'all' && notification.severity !== severityFilter) return false;
+      if (typeFilter !== 'all' && notification.type !== typeFilter) return false;
+      if (readFilter === 'read' && !notification.read) return false;
+      if (readFilter === 'unread' && notification.read) return false;
+      return true;
+    });
+  }, [allNotifications, severityFilter, typeFilter, readFilter]);
 
   // Handle notification click
   const handleNotificationClick = async (notification: any) => {
@@ -78,8 +99,16 @@ const NotificationsPage = () => {
       }
 
       // Navigate to API detail page if apiId exists
-      if (notification.apiId) {
-        router.push(`/apis/${notification.apiId}?notification=${notification._id}`);
+      // Handle both populated (object) and non-populated (string) apiId
+      const apiId = typeof notification.apiId === 'object' && notification.apiId?._id 
+        ? notification.apiId._id 
+        : notification.apiId;
+
+      if (apiId) {
+        router.push(`/apis/${apiId}?notification=${notification._id}`);
+      } else {
+        // If no apiId, just mark as read - for system notifications
+        console.log('No apiId found for notification:', notification);
       }
     } catch (error) {
       console.error('Error handling notification click:', error);

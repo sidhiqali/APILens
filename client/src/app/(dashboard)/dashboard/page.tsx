@@ -202,7 +202,7 @@ const DashboardPage = () => {
               </div>
             </Link>
 
-            <Link href="/apis" className="block">
+            <Link href="/changes" className="block">
               <div className="bg-white p-6 rounded-lg shadow-sm border hover:shadow-md transition-shadow cursor-pointer">
                 <div className="flex items-center justify-between">
                   <div>
@@ -216,7 +216,7 @@ const DashboardPage = () => {
                   <Clock className="w-8 h-8 text-orange-600" />
                 </div>
                 <div className="mt-2 text-xs text-orange-600">
-                  Click to view APIs with changes →
+                  Click to view all changes →
                 </div>
               </div>
             </Link>

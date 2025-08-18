@@ -107,18 +107,22 @@ export const useMarkAsRead = () => {
         queryKey: notificationQueryKeys.all,
       });
 
-      // Optimistically update notification
+      // Optimistically update notification in infinite query data
       queryClient.setQueriesData(
         { queryKey: notificationQueryKeys.lists() },
-        (oldData: PaginatedNotifications | undefined) => {
-          if (!oldData) return oldData;
+        (oldData: any) => {
+          if (!oldData?.pages) return oldData;
+          
           return {
             ...oldData,
-            notifications: oldData.notifications.map((notification) =>
-              notification._id === notificationId
-                ? { ...notification, read: true }
-                : notification
-            ),
+            pages: oldData.pages.map((page: PaginatedNotifications) => ({
+              ...page,
+              notifications: page.notifications?.map((notification) =>
+                notification._id === notificationId
+                  ? { ...notification, read: true }
+                  : notification
+              ) || [],
+            })),
           };
         }
       );
@@ -157,16 +161,20 @@ export const useMarkAllAsRead = () => {
         queryKey: notificationQueryKeys.all,
       });
 
-      // Optimistically update all notifications
+      // Optimistically update all notifications in infinite query data
       queryClient.setQueriesData(
         { queryKey: notificationQueryKeys.lists() },
-        (oldData: PaginatedNotifications | undefined) => {
-          if (!oldData) return oldData;
+        (oldData: any) => {
+          if (!oldData?.pages) return oldData;
+          
           return {
             ...oldData,
-            notifications: oldData.notifications.map((notification) => ({
-              ...notification,
-              read: true,
+            pages: oldData.pages.map((page: PaginatedNotifications) => ({
+              ...page,
+              notifications: page.notifications?.map((notification) => ({
+                ...notification,
+                read: true,
+              })) || [],
             })),
           };
         }
@@ -204,26 +212,39 @@ export const useDeleteNotification = () => {
         queryKey: notificationQueryKeys.all,
       });
 
-      // Get the notification to check if it was unread
-      const currentData = queryClient.getQueriesData({
+      // Get the notification to check if it was unread from infinite query data
+      const allQueriesData = queryClient.getQueriesData({
         queryKey: notificationQueryKeys.lists(),
-      })[0]?.[1] as PaginatedNotifications | undefined;
+      });
+      
+      let notification: any = null;
+      for (const [, data] of allQueriesData) {
+        if (data && (data as any).pages) {
+          for (const page of (data as any).pages) {
+            if (page.notifications) {
+              notification = page.notifications.find((n: any) => n._id === notificationId);
+              if (notification) break;
+            }
+          }
+          if (notification) break;
+        }
+      }
 
-      const notification = currentData?.notifications.find(
-        (n) => n._id === notificationId
-      );
-
-      // Optimistically remove notification
+      // Optimistically remove notification from infinite query data
       queryClient.setQueriesData(
         { queryKey: notificationQueryKeys.lists() },
-        (oldData: PaginatedNotifications | undefined) => {
-          if (!oldData) return oldData;
+        (oldData: any) => {
+          if (!oldData?.pages) return oldData;
+          
           return {
             ...oldData,
-            notifications: oldData.notifications.filter(
-              (n) => n._id !== notificationId
-            ),
-            total: oldData.total - 1,
+            pages: oldData.pages.map((page: PaginatedNotifications) => ({
+              ...page,
+              notifications: page.notifications?.filter(
+                (n) => n._id !== notificationId
+              ) || [],
+              total: Math.max(0, (page.total || 1) - 1),
+            })),
           };
         }
       );

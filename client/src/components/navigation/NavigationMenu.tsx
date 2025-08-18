@@ -18,6 +18,8 @@ import {
   ChevronDown,
   ChevronRight,
   X,
+  GitCommit,
+  AlertTriangle,
 } from 'lucide-react';
 import { useAuth } from '@/store/auth';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -79,12 +81,36 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
           icon: Plus,
         },
         {
+          id: 'apis-changes',
+          label: 'Changes',
+          href: '/changes',
+          icon: GitCommit,
+        },
+        {
+          id: 'apis-issues',
+          label: 'Issues',
+          href: '/issues',
+          icon: AlertTriangle,
+        },
+        {
           id: 'apis-monitoring',
           label: 'Monitoring',
           href: '/apis/monitoring',
           icon: BarChart3,
         },
       ],
+    },
+    {
+      id: 'changes',
+      label: 'Changes',
+      href: '/changes',
+      icon: GitCommit,
+    },
+    {
+      id: 'issues',
+      label: 'Issues',
+      href: '/issues',
+      icon: AlertTriangle,
     },
     {
       id: 'notifications',
@@ -211,7 +237,7 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
       {/* Mobile Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
           onClick={onToggle}
         />
       )}
@@ -228,14 +254,14 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200">
             <Link href="/dashboard" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+              <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-lg">
                 <Activity className="w-5 h-5 text-white" />
               </div>
               <span className="text-xl font-bold text-gray-900">APILens</span>
             </Link>
             <button
               onClick={onToggle}
-              className="lg:hidden p-2 rounded-lg hover:bg-gray-100"
+              className="p-2 rounded-lg lg:hidden hover:bg-gray-100"
             >
               <X className="w-5 h-5" />
             </button>
@@ -261,8 +287,8 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
           {/* User Section */}
           {user && (
             <div className="p-4 border-t border-gray-200">
-              <div className="flex items-center space-x-3 mb-3">
-                <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+              <div className="flex items-center mb-3 space-x-3">
+                <div className="flex items-center justify-center w-8 h-8 bg-gray-300 rounded-full">
                   <Users className="w-4 h-4 text-gray-600" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -276,7 +302,7 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
               </div>
               <button
                 onClick={logout}
-                className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+                className="flex items-center w-full px-3 py-2 space-x-2 text-sm text-gray-700 transition-colors rounded-lg hover:bg-gray-100"
               >
                 <LogOut className="w-4 h-4" />
                 <span>Sign Out</span>
@@ -334,7 +360,7 @@ const NavigationItem: React.FC<NavigationItemProps> = ({
       />
       <span className="flex-1 font-medium">{item.label}</span>
       {item.badge && item.badge > 0 && (
-        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+        <span className="inline-flex items-center px-2 py-1 text-xs font-medium text-red-800 bg-red-100 rounded-full">
           {item.badge > 99 ? '99+' : item.badge}
         </span>
       )}

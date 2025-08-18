@@ -291,7 +291,17 @@ export class NotificationsService {
       offset?: number;
       unreadOnly?: boolean;
     } = {},
-  ): Promise<{ notifications: Notification[]; total: number }> {
+  ): Promise<{
+    notifications: Notification[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    const limit = options.limit || 50;
+    const offset = options.offset || 0;
+    const page = Math.floor(offset / limit) + 1;
+    
     const query: any = { userId: new Types.ObjectId(userId) };
 
     if (options.unreadOnly) {
@@ -303,12 +313,20 @@ export class NotificationsService {
         .find(query)
         .populate('apiId', 'apiName')
         .sort({ createdAt: -1 })
-        .limit(options.limit || 50)
-        .skip(options.offset || 0),
+        .limit(limit)
+        .skip(offset),
       this.notificationModel.countDocuments(query),
     ]);
 
-    return { notifications, total };
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      notifications,
+      total,
+      page,
+      limit,
+      totalPages,
+    };
   }
 
   async markAsRead(notificationId: string, userId: string): Promise<void> {

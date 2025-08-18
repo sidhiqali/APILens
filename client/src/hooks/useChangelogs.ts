@@ -6,6 +6,8 @@ import type { ApiChange, Changelog } from '@/services/changelog.service';
 // Query keys for React Query
 export const changelogQueryKeys = {
   all: ['changelogs'] as const,
+  allChanges: (params?: any) =>
+    [...changelogQueryKeys.all, 'all-changes', params] as const,
   apiChanges: (apiId: string) =>
     [...changelogQueryKeys.all, 'changes', apiId] as const,
   apiSnapshots: (apiId: string) =>
@@ -24,6 +26,25 @@ export const changelogQueryKeys = {
     ] as const,
   stats: (apiId: string) =>
     [...changelogQueryKeys.all, 'stats', apiId] as const,
+};
+
+// Hook to get all changes across APIs
+export const useChangelogs = (
+  params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    severity?: string;
+    type?: string;
+    days?: number;
+  }
+) => {
+  return useQuery({
+    queryKey: changelogQueryKeys.allChanges(params),
+    queryFn: () => changelogService.getAllChanges(params),
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    retry: 3,
+  });
 };
 
 // Hook to get API changes

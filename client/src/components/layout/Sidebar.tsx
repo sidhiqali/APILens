@@ -3,7 +3,7 @@
 import React, { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Eye, Home, Settings, LogOut, Plus, BarChart3, AlertTriangle } from 'lucide-react';
+import { Eye, Home, Settings, LogOut, Plus, BarChart3, AlertTriangle, GitCommit, Bell } from 'lucide-react';
 import { useAuth } from '@/store/auth';
 import { useRouter } from 'next/navigation';
 
@@ -70,9 +70,24 @@ const Sidebar = ({
       icon: BarChart3,
     },
     {
+      title: 'Changes',
+      href: '/changes',
+      icon: GitCommit,
+    },
+    {
       title: 'Issues & Alerts',
       href: '/issues',
       icon: AlertTriangle,
+    },
+    {
+      title: 'Notifications',
+      href: '/notifications',
+      icon: Bell,
+    },
+    {
+      title: 'Analytics',
+      href: '/analytics',
+      icon: BarChart3,
     },
     {
       title: 'Settings',

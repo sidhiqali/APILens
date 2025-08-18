@@ -71,6 +71,31 @@ export interface PaginatedSnapshots {
 class ChangelogService {
   private baseUrl = '/apis';
 
+  // Get all changes across APIs
+  async getAllChanges(
+    params?: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      severity?: string;
+      type?: string;
+      days?: number;
+    }
+  ): Promise<PaginatedChanges> {
+    const queryParams = new URLSearchParams();
+
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.search) queryParams.append('search', params.search);
+    if (params?.severity) queryParams.append('severity', params.severity);
+    if (params?.type) queryParams.append('type', params.type);
+    if (params?.days) queryParams.append('days', params.days.toString());
+
+    return await apiClient.get<PaginatedChanges>(
+      `/changelogs?${queryParams.toString()}`
+    );
+  }
+
   // Get API change history
   async getApiChanges(
     apiId: string,

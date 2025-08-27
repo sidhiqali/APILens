@@ -113,6 +113,9 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
             case 'createApi':
                 await this.handleCreateApi(message.data);
                 break;
+            case 'testOpenApiUrl':
+                await this.handleTestOpenApiUrl(message.url);
+                break;
             case 'toggleApiStatus':
                 await this.handleToggleApiStatus(message.id);
                 break;
@@ -274,6 +277,24 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
             this.sendMessage({ 
                 type: 'error', 
                 error: error.message 
+            });
+        }
+    }
+
+    private async handleTestOpenApiUrl(url: string) {
+        try {
+            const result = await this.apiService.testOpenApiUrl(url);
+            this.sendMessage({ 
+                type: 'openApiUrlTestResult', 
+                data: result 
+            });
+        } catch (error: any) {
+            this.sendMessage({ 
+                type: 'openApiUrlTestResult', 
+                data: { 
+                    valid: false, 
+                    error: error.message 
+                } 
             });
         }
     }
@@ -1405,6 +1426,161 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* Form Styles */
+        .add-api-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            padding: 1rem;
+            max-width: 1200px;
+        }
+
+        .form-section {
+            background: var(--vscode-editor-background);
+            border: 1px solid var(--vscode-widget-border);
+            border-radius: 8px;
+            padding: 2rem;
+        }
+
+        .form-section h3 {
+            margin: 0 0 0.5rem 0;
+            color: var(--vscode-foreground);
+            font-size: 1.25rem;
+        }
+
+        .form-description {
+            color: var(--vscode-descriptionForeground);
+            margin-bottom: 2rem;
+            line-height: 1.5;
+        }
+
+        .api-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: var(--vscode-foreground);
+            font-size: 0.9rem;
+        }
+
+        .input-with-button {
+            display: flex;
+            gap: 8px;
+            align-items: stretch;
+        }
+
+        .input-with-button input {
+            flex: 1;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 8px 12px;
+            border: 1px solid var(--vscode-input-border);
+            border-radius: 4px;
+            background: var(--vscode-input-background);
+            color: var(--vscode-input-foreground);
+            font-size: 14px;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--vscode-focusBorder);
+            box-shadow: 0 0 0 1px var(--vscode-focusBorder);
+        }
+
+        .form-group small {
+            color: var(--vscode-descriptionForeground);
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--vscode-widget-border);
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        .test-url-btn {
+            flex-shrink: 0;
+        }
+
+        .help-section {
+            background: var(--vscode-editor-background);
+            border: 1px solid var(--vscode-widget-border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            height: fit-content;
+        }
+
+        .help-section h4 {
+            margin: 0 0 1rem 0;
+            color: var(--vscode-foreground);
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .help-section ul {
+            margin: 0 0 1.5rem 0;
+            padding-left: 1.2rem;
+            color: var(--vscode-descriptionForeground);
+        }
+
+        .help-section li {
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+
+        .form-error {
+            animation: slideDown 0.3s ease;
+        }
+
+        .form-success {
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .add-api-container {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1506,6 +1682,17 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
                     if (currentTab === 'apis') {
                         renderApis(message.data);
                     }
+                    break;
+                case 'apiCreated':
+                    handleApiCreated(message.data);
+                    break;
+                case 'error':
+                    if (currentTab === 'add-api') {
+                        handleApiCreationError(message.error);
+                    }
+                    break;
+                case 'openApiUrlTestResult':
+                    handleOpenApiUrlTestResult(message.data);
                     break;
             }
         });
@@ -1666,7 +1853,10 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
                             
                             <div class="form-group">
                                 <label for="api-url">OpenAPI Specification URL *</label>
-                                <input type="url" id="api-url" name="openApiUrl" placeholder="https://api.example.com/openapi.json" required>
+                                <div class="input-with-button">
+                                    <input type="url" id="api-url" name="openApiUrl" placeholder="https://api.example.com/openapi.json" required>
+                                    <button type="button" class="btn-secondary btn-small test-url-btn">Test URL</button>
+                                </div>
                                 <small>URL to your OpenAPI/Swagger JSON specification</small>
                             </div>
                             
@@ -1733,23 +1923,229 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
             // Add form submission handler
             document.getElementById('add-api-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
+                
+                const submitBtn = document.querySelector('#add-api-form button[type="submit"]');
                 const formData = new FormData(e.target);
+                
+                // Validate form
+                const apiName = formData.get('apiName').toString().trim();
+                const openApiUrl = formData.get('openApiUrl').toString().trim();
+                
+                if (!apiName) {
+                    showFormError('API name is required');
+                    return;
+                }
+                
+                if (!openApiUrl) {
+                    showFormError('OpenAPI URL is required');
+                    return;
+                }
+                
+                if (!isValidUrl(openApiUrl)) {
+                    showFormError('Please enter a valid URL');
+                    return;
+                }
+                
+                // Show loading state
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Adding API...';
+                clearFormError();
+                
                 const apiData = {
-                    apiName: formData.get('apiName'),
-                    openApiUrl: formData.get('openApiUrl'),
+                    apiName: apiName,
+                    openApiUrl: openApiUrl,
                     type: formData.get('type'),
-                    description: formData.get('description'),
+                    description: formData.get('description').toString().trim(),
                     checkFrequency: formData.get('checkFrequency'),
-                    tags: formData.get('tags') ? formData.get('tags').split(',').map(tag => tag.trim()) : []
+                    tags: formData.get('tags') ? formData.get('tags').toString().split(',').map(tag => tag.trim()).filter(tag => tag) : []
                 };
                 
                 try {
                     vscode.postMessage({ type: 'createApi', data: apiData });
-                    // Form will be reset after successful creation
                 } catch (error) {
-                    console.error('Error creating API:', error);
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Add API';
+                    showFormError('Failed to create API. Please try again.');
                 }
             });
+            
+            // URL validation as user types
+            document.getElementById('api-url').addEventListener('blur', (e) => {
+                const url = e.target.value.trim();
+                if (url && !isValidUrl(url)) {
+                    showFieldError('api-url', 'Please enter a valid URL');
+                } else {
+                    clearFieldError('api-url');
+                }
+            });
+            
+            // Test URL button functionality
+            document.querySelector('.test-url-btn').addEventListener('click', testOpenApiUrl);
+        }
+        
+        // Form validation and helper functions
+        function isValidUrl(string) {
+            try {
+                new URL(string);
+                return true;
+            } catch (_) {
+                return false;
+            }
+        }
+        
+        function showFormError(message) {
+            clearFormError();
+            const form = document.getElementById('add-api-form');
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'form-error';
+            errorDiv.textContent = message;
+            errorDiv.style.color = 'var(--vscode-errorForeground)';
+            errorDiv.style.backgroundColor = 'var(--vscode-inputValidation-errorBackground)';
+            errorDiv.style.border = '1px solid var(--vscode-inputValidation-errorBorder)';
+            errorDiv.style.padding = '8px 12px';
+            errorDiv.style.borderRadius = '4px';
+            errorDiv.style.marginBottom = '16px';
+            form.insertBefore(errorDiv, form.firstChild);
+        }
+        
+        function clearFormError() {
+            const errorDiv = document.querySelector('.form-error');
+            if (errorDiv) {
+                errorDiv.remove();
+            }
+        }
+        
+        function showFieldError(fieldId, message) {
+            clearFieldError(fieldId);
+            const field = document.getElementById(fieldId);
+            const errorSpan = document.createElement('span');
+            errorSpan.className = 'field-error';
+            errorSpan.textContent = message;
+            errorSpan.style.color = 'var(--vscode-errorForeground)';
+            errorSpan.style.fontSize = '12px';
+            errorSpan.style.marginTop = '4px';
+            errorSpan.style.display = 'block';
+            field.parentNode.appendChild(errorSpan);
+            field.style.borderColor = 'var(--vscode-inputValidation-errorBorder)';
+        }
+        
+        function clearFieldError(fieldId) {
+            const field = document.getElementById(fieldId);
+            const errorSpan = field.parentNode.querySelector('.field-error');
+            if (errorSpan) {
+                errorSpan.remove();
+            }
+            field.style.borderColor = '';
+        }
+        
+        function testOpenApiUrl() {
+            const urlInput = document.getElementById('api-url');
+            const url = urlInput.value.trim();
+            
+            if (!url) {
+                showFieldError('api-url', 'Please enter a URL to test');
+                return;
+            }
+            
+            if (!isValidUrl(url)) {
+                showFieldError('api-url', 'Please enter a valid URL');
+                return;
+            }
+            
+            clearFieldError('api-url');
+            
+            // Show testing state
+            const testBtn = document.querySelector('.test-url-btn');
+            const originalText = testBtn.textContent;
+            testBtn.disabled = true;
+            testBtn.textContent = 'Testing...';
+            
+            // Test the URL
+            vscode.postMessage({ type: 'testOpenApiUrl', url: url });
+            
+            // Reset button after timeout
+            setTimeout(() => {
+                testBtn.disabled = false;
+                testBtn.textContent = originalText;
+            }, 5000);
+        }
+        
+        function handleApiCreated(data) {
+            // Show success message
+            const form = document.getElementById('add-api-form');
+            const successDiv = document.createElement('div');
+            successDiv.className = 'form-success';
+            successDiv.innerHTML = '✅ API successfully added! Redirecting to APIs list...';
+            successDiv.style.color = 'var(--vscode-terminal-ansiGreen)';
+            successDiv.style.backgroundColor = 'rgba(0, 255, 0, 0.1)';
+            successDiv.style.border = '1px solid rgba(0, 255, 0, 0.3)';
+            successDiv.style.padding = '8px 12px';
+            successDiv.style.borderRadius = '4px';
+            successDiv.style.marginBottom = '16px';
+            form.insertBefore(successDiv, form.firstChild);
+            
+            // Reset form
+            form.reset();
+            
+            // Reset button state
+            const submitBtn = document.querySelector('#add-api-form button[type="submit"]');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Add API';
+            
+            // Redirect to APIs list after a moment
+            setTimeout(() => {
+                switchTab('apis');
+            }, 2000);
+        }
+        
+        function handleApiCreationError(error) {
+            const submitBtn = document.querySelector('#add-api-form button[type="submit"]');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Add API';
+            showFormError(error || 'Failed to create API. Please try again.');
+        }
+        
+        function handleOpenApiUrlTestResult(result) {
+            const field = document.getElementById('api-url');
+            
+            if (result.valid) {
+                // Show success feedback
+                clearFieldError('api-url');
+                const successSpan = document.createElement('span');
+                successSpan.className = 'field-success';
+                successSpan.textContent = '✅ Valid OpenAPI specification detected';
+                successSpan.style.color = 'var(--vscode-terminal-ansiGreen)';
+                successSpan.style.fontSize = '12px';
+                successSpan.style.marginTop = '4px';
+                successSpan.style.display = 'block';
+                field.parentNode.appendChild(successSpan);
+                field.style.borderColor = 'var(--vscode-terminal-ansiGreen)';
+                
+                // Auto-fill form if specification data is available
+                if (result.spec && result.spec.info) {
+                    const nameField = document.getElementById('api-name');
+                    const descField = document.getElementById('api-description');
+                    
+                    if (!nameField.value && result.spec.info.title) {
+                        nameField.value = result.spec.info.title;
+                    }
+                    
+                    if (!descField.value && result.spec.info.description) {
+                        descField.value = result.spec.info.description;
+                    }
+                }
+                
+                // Remove success message after 3 seconds
+                setTimeout(() => {
+                    const successSpan = field.parentNode.querySelector('.field-success');
+                    if (successSpan) {
+                        successSpan.remove();
+                        field.style.borderColor = '';
+                    }
+                }, 3000);
+            } else {
+                showFieldError('api-url', result.error || 'Invalid or inaccessible OpenAPI specification');
+            }
         }
         
         function renderApisList() {

@@ -7,6 +7,7 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import axios, { AxiosResponse } from 'axios';
+import * as yaml from 'yaml';
 import { CreateApiDto } from './dto/create-api.dto';
 import { ApiResponseDto } from './dto/api-response.dto';
 import { Api } from 'src/Schemas/api.schema';
@@ -733,6 +734,150 @@ export class ApisService {
         accessible: false,
         error: error.message,
       };
+    }
+  }
+
+  async testOpenApiUrl(url: string): Promise<{
+    valid: boolean;
+    accessible?: boolean;
+    spec?: any;
+    error?: string;
+    metadata?: {
+      title?: string;
+      version?: string;
+      description?: string;
+      endpoints?: number;
+    };
+  }> {
+    try {
+      // Basic URL validation
+      new URL(url);
+
+      this.logger.log(`Testing OpenAPI URL: ${url}`);
+
+      // Fetch the OpenAPI specification
+      const response = await axios.get(url, {
+        timeout: 15000,
+        headers: {
+          Accept: 'application/json, application/yaml, text/yaml, */*',
+          'User-Agent': 'APILens/1.0.0',
+        },
+        validateStatus: (status) => status < 500, // Accept redirects and client errors
+      });
+
+      if (response.status >= 400) {
+        return {
+          valid: false,
+          accessible: false,
+          error: `HTTP ${response.status}: ${response.statusText}`,
+        };
+      }
+
+      let spec: any;
+      const contentType = response.headers['content-type'] || '';
+
+      try {
+        // Try to parse as JSON first
+        if (contentType.includes('json') || response.data.toString().trim().startsWith('{')) {
+          spec = typeof response.data === 'string' ? JSON.parse(response.data) : response.data;
+        } else {
+          // Try to parse as YAML
+          spec = yaml.parse(response.data.toString());
+        }
+      } catch (parseError) {
+        return {
+          valid: false,
+          accessible: true,
+          error: `Failed to parse specification: ${parseError.message}`,
+        };
+      }
+
+      // Validate OpenAPI structure
+      if (!spec || typeof spec !== 'object') {
+        return {
+          valid: false,
+          accessible: true,
+          error: 'Invalid specification format: not a valid object',
+        };
+      }
+
+      // Check for required OpenAPI fields
+      const isOpenAPI3 = spec.openapi && spec.openapi.startsWith('3.');
+      const isSwagger2 = spec.swagger && spec.swagger.startsWith('2.');
+
+      if (!isOpenAPI3 && !isSwagger2) {
+        return {
+          valid: false,
+          accessible: true,
+          error:
+            'Not a valid OpenAPI/Swagger specification. Missing version field.',
+        };
+      }
+
+      // Check for required sections
+      if (!spec.info) {
+        return {
+          valid: false,
+          accessible: true,
+          error: 'Invalid specification: missing info section',
+        };
+      }
+
+      if (!spec.paths && !spec.components) {
+        return {
+          valid: false,
+          accessible: true,
+          error: 'Invalid specification: missing paths or components section',
+        };
+      }
+
+      // Extract metadata
+      const metadata = {
+        title: spec.info?.title || 'Untitled API',
+        version: spec.info?.version || '1.0.0',
+        description: spec.info?.description || '',
+        endpoints: spec.paths ? Object.keys(spec.paths).length : 0,
+      };
+
+      this.logger.log(
+        `Valid OpenAPI specification found: ${metadata.title} v${metadata.version}`,
+      );
+
+      return {
+        valid: true,
+        accessible: true,
+        spec: {
+          info: spec.info,
+          openapi: spec.openapi,
+          swagger: spec.swagger,
+          paths: spec.paths ? Object.keys(spec.paths) : [],
+          components: spec.components ? Object.keys(spec.components) : [],
+        },
+        metadata,
+      };
+
+    } catch (error) {
+      this.logger.error(`Error testing OpenAPI URL ${url}:`, error.message);
+      
+      if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
+        return {
+          valid: false,
+          accessible: false,
+          error: `Cannot connect to ${url}. Please check the URL and try again.`,
+        };
+      } else if (error.code === 'ETIMEDOUT') {
+        return {
+          valid: false,
+          accessible: false,
+          error: 'Request timed out. The server may be slow or unreachable.',
+        };
+      } else {
+        return {
+          valid: false,
+          accessible: false,
+          error: error.message,
+        };
+      }
     }
   }
 }

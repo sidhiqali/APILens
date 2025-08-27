@@ -476,4 +476,45 @@ export class ApisController {
   validateApiUrl(@Body() body: { url: string }) {
     return this.apisService.validateApiUrl(body.url);
   }
+
+  @Post('test-openapi-url')
+  @ApiOperation({
+    summary: 'Test OpenAPI URL',
+    description:
+      'Test and validate an OpenAPI specification URL, parse the spec, and return metadata.',
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        url: { type: 'string', format: 'uri' },
+      },
+      required: ['url'],
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'OpenAPI URL test completed',
+    schema: {
+      type: 'object',
+      properties: {
+        valid: { type: 'boolean' },
+        accessible: { type: 'boolean' },
+        spec: { type: 'object' },
+        error: { type: 'string' },
+        metadata: {
+          type: 'object',
+          properties: {
+            title: { type: 'string' },
+            version: { type: 'string' },
+            description: { type: 'string' },
+            endpoints: { type: 'number' },
+          },
+        },
+      },
+    },
+  })
+  testOpenApiUrl(@Body() body: { url: string }) {
+    return this.apisService.testOpenApiUrl(body.url);
+  }
 }

@@ -181,6 +181,15 @@ export class APIService {
         }
     }
 
+    async testOpenApiUrl(url: string): Promise<{ valid: boolean; spec?: any; error?: string }> {
+        try {
+            const response = await this.api.post('/apis/test-openapi-url', { url });
+            return response.data;
+        } catch (error) {
+            throw this.handleError(error);
+        }
+    }
+
     async updateApi(id: string, apiData: any): Promise<ApiData> {
         try {
             const response = await this.api.put(`/apis/${id}`, apiData);

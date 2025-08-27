@@ -1,36 +1,52 @@
 {
-  "name": "apilens",
+  "name": "apilens-vscode",
   "displayName": "APILens",
-  "description": "API monitoring and management directly in VS Code",
-  "version": "0.0.1",
+  "description": "Monitor and track API changes directly in VS Code",
+  "version": "1.0.0",
+  "publisher": "sidhiqali",
   "engines": {
-    "vscode": "^1.103.0"
+    "vscode": "^1.80.0"
   },
   "categories": [
-    "Other"
+    "Other",
+    "Debuggers",
+    "Testing"
   ],
   "keywords": [
     "api",
     "monitoring",
-    "swagger",
     "openapi",
-    "rest"
+    "swagger",
+    "changelog",
+    "tracking"
   ],
   "activationEvents": [],
-  "main": "./dist/extension.js",
+  "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "apilens.openDashboard",
-        "title": "Open Dashboard",
+        "command": "apilens.openPanel",
+        "title": "Open APILens",
         "category": "APILens",
-        "icon": "$(dashboard)"
+        "icon": "$(globe)"
       },
       {
-        "command": "apilens.addAPI",
+        "command": "apilens.refreshData",
+        "title": "Refresh Data",
+        "category": "APILens",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "apilens.addApi",
         "title": "Add API",
         "category": "APILens",
         "icon": "$(add)"
+      },
+      {
+        "command": "apilens.viewAnalytics",
+        "title": "View Analytics",
+        "category": "APILens",
+        "icon": "$(graph)"
       },
       {
         "command": "apilens.viewNotifications",
@@ -39,56 +55,158 @@
         "icon": "$(bell)"
       },
       {
-        "command": "apilens.openAnalytics",
-        "title": "Open Analytics",
+        "command": "apilens.viewChanges",
+        "title": "View Changes",
         "category": "APILens",
-        "icon": "$(graph)"
+        "icon": "$(git-compare)"
       },
       {
-        "command": "apilens.refreshAPIs",
-        "title": "Refresh APIs",
-        "category": "APILens",
-        "icon": "$(refresh)"
+        "command": "apilens.registerApiFromFile",
+        "title": "Register API with APILens",
+        "category": "APILens"
+      },
+      {
+        "command": "apilens.importApiSpec",
+        "title": "Import to APILens",
+        "category": "APILens"
+      },
+      {
+        "command": "apilens.validateOpenAPI",
+        "title": "Validate OpenAPI Spec",
+        "category": "APILens"
       }
     ],
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "apilens-explorer",
+          "id": "apilens",
           "title": "APILens",
-          "icon": "$(cloud)"
+          "icon": "$(globe)"
         }
       ]
     },
+    "views": {
+      "apilens": [
+        {
+          "id": "apilens.main",
+          "name": "APILens Dashboard",
+          "type": "webview"
+        }
+      ],
+      "explorer": [
+        {
+          "id": "apilens.apiDetail",
+          "name": "API Details",
+          "when": "apilens.hasApis"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "apilens.apiDetail",
+        "contents": "No API selected.\n[Open APILens](command:apilens.openPanel) to select an API for detailed view."
+      }
+    ],
     "menus": {
       "commandPalette": [
         {
-          "command": "apilens.openDashboard"
+          "command": "apilens.openPanel"
         },
         {
-          "command": "apilens.addAPI"
+          "command": "apilens.refreshData"
+        },
+        {
+          "command": "apilens.addApi"
+        },
+        {
+          "command": "apilens.viewAnalytics"
         },
         {
           "command": "apilens.viewNotifications"
         },
         {
-          "command": "apilens.openAnalytics"
+          "command": "apilens.viewChanges"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "apilens.registerApiFromFile",
+          "when": "resourceExtname =~ /\\.(json|yaml|yml)$/",
+          "group": "apilens@1"
+        },
+        {
+          "command": "apilens.importApiSpec",
+          "when": "resourceExtname =~ /\\.(json|yaml|yml)$/",
+          "group": "apilens@2"
+        },
+        {
+          "command": "apilens.validateOpenAPI",
+          "when": "resourceExtname =~ /\\.(json|yaml|yml)$/",
+          "group": "apilens@3"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "apilens.refreshData",
+          "when": "view == apilens.main",
+          "group": "navigation",
+          "icon": "$(refresh)"
         }
       ]
+    },
+    "configuration": {
+      "title": "APILens",
+      "properties": {
+        "apilens.apiUrl": {
+          "type": "string",
+          "default": "http://localhost:3000",
+          "description": "APILens backend URL"
+        },
+        "apilens.autoRefresh": {
+          "type": "boolean",
+          "default": true,
+          "description": "Auto refresh data every 30 seconds"
+        },
+        "apilens.refreshInterval": {
+          "type": "number",
+          "default": 30000,
+          "description": "Auto refresh interval in milliseconds"
+        },
+        "apilens.showNotifications": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show desktop notifications for API changes"
+        },
+        "apilens.enableRealtime": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable real-time updates via WebSocket"
+        }
+      }
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run package",
-    "compile": "webpack",
-    "watch": "webpack --watch",
-    "package": "webpack --mode production --devtool hidden-source-map"
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js",
+    "package": "vsce package"
   },
   "devDependencies": {
-    "@types/node": "22.x",
-    "@types/vscode": "^1.103.0",
-    "ts-loader": "^9.5.2",
-    "typescript": "^5.9.2",
-    "webpack": "^5.101.0",
-    "webpack-cli": "^6.0.1"
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "18.x",
+    "@types/vscode": "^1.80.0",
+    "@typescript-eslint/eslint-plugin": "^6.4.1",
+    "@typescript-eslint/parser": "^6.4.1",
+    "eslint": "^8.47.0",
+    "typescript": "^5.1.6",
+    "vsce": "^2.15.0"
+  },
+  "dependencies": {
+    "axios": "^1.11.0",
+    "js-yaml": "^4.1.0",
+    "socket.io-client": "^4.7.2"
   }
 }

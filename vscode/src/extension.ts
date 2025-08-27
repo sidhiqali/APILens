@@ -1,260 +1,180 @@
 import * as vscode from 'vscode';
+import { APILensWebviewProvider } from './providers/WebviewProvider';
+import { APIDetailViewProvider } from './providers/APIDetailViewProvider';
+import { APIService } from './services/APIService';
+import { WebSocketService } from './services/WebSocketService';
+import { StatusBarService } from './services/StatusBarService';
+import { FileSystemService } from './services/FileSystemService';
+import { FileContextMenuHandler } from './handlers/FileContextMenuHandler';
 
-class APILensPanel {
-	public static currentPanel: APILensPanel | undefined;
-	public static readonly viewType = 'apilens.dashboard';
-
-	private readonly _panel: vscode.WebviewPanel;
-	private _disposables: vscode.Disposable[] = [];
-
-	public static createOrShow(extensionUri: vscode.Uri) {
-		const column = vscode.window.activeTextEditor
-			? vscode.window.activeTextEditor.viewColumn
-			: undefined;
-
-		if (APILensPanel.currentPanel) {
-			APILensPanel.currentPanel._panel.reveal(column);
-			return;
-		}
-
-		const panel = vscode.window.createWebviewPanel(
-			APILensPanel.viewType,
-			'APILens Dashboard',
-			column || vscode.ViewColumn.One,
-			{
-				enableScripts: true,
-				retainContextWhenHidden: true,
-				localResourceRoots: [extensionUri]
-			}
-		);
-
-		APILensPanel.currentPanel = new APILensPanel(panel, extensionUri);
-	}
-
-	private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
-		this._panel = panel;
-
-		this._update();
-
-		this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
-
-		this._panel.webview.onDidReceiveMessage(
-			message => {
-				switch (message.command) {
-					case 'alert':
-						vscode.window.showInformationMessage(message.text);
-						return;
-					case 'error':
-						vscode.window.showErrorMessage(message.text);
-						return;
-				}
-			},
-			null,
-			this._disposables
-		);
-	}
-
-	public dispose() {
-		APILensPanel.currentPanel = undefined;
-
-		this._panel.dispose();
-
-		while (this._disposables.length) {
-			const x = this._disposables.pop();
-			if (x) {
-				x.dispose();
-			}
-		}
-	}
-
-	private _update() {
-		const webview = this._panel.webview;
-		this._panel.title = 'APILens Dashboard';
-		this._panel.webview.html = this._getHtmlForWebview(webview);
-	}
-
-	private _getHtmlForWebview(webview: vscode.Webview) {
-		return `<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>APILens Dashboard</title>
-	<style>
-		body {
-			margin: 0;
-			padding: 0;
-			width: 100%;
-			height: 100vh;
-			overflow: hidden;
-		}
-		
-		iframe {
-			width: 100%;
-			height: 100vh;
-			border: none;
-		}
-		
-		.loading {
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			height: 100vh;
-			font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-			color: var(--vscode-foreground);
-		}
-		
-		.error {
-			display: none;
-			flex-direction: column;
-			justify-content: center;
-			align-items: center;
-			height: 100vh;
-			font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-			color: var(--vscode-errorForeground);
-			text-align: center;
-			padding: 20px;
-		}
-		
-		.retry-button {
-			margin-top: 20px;
-			padding: 10px 20px;
-			background: var(--vscode-button-background);
-			color: var(--vscode-button-foreground);
-			border: none;
-			border-radius: 4px;
-			cursor: pointer;
-		}
-		
-		.retry-button:hover {
-			background: var(--vscode-button-hoverBackground);
-		}
-	</style>
-</head>
-<body>
-	<div id="loading" class="loading">
-		<div>Loading APILens Dashboard...</div>
-	</div>
-	
-	<div id="error" class="error">
-		<div>
-			<h3>Connection Error</h3>
-			<p>Unable to connect to APILens server at localhost:3001</p>
-			<p>Please ensure your APILens development server is running:</p>
-			<code>cd client && npm run dev</code>
-		</div>
-		<button class="retry-button" onclick="retryConnection()">Retry</button>
-	</div>
-	
-	<iframe 
-		id="apilens-frame"
-		src="http://localhost:3001"
-		style="display: none;"
-		onload="handleFrameLoad()"
-		onerror="handleFrameError()">
-	</iframe>
-
-	<script>
-		const vscode = acquireVsCodeApi();
-		let retryAttempts = 0;
-		const maxRetries = 3;
-
-		function handleFrameLoad() {
-			document.getElementById('loading').style.display = 'none';
-			document.getElementById('error').style.display = 'none';
-			document.getElementById('apilens-frame').style.display = 'block';
-			retryAttempts = 0;
-		}
-
-		function handleFrameError() {
-			document.getElementById('loading').style.display = 'none';
-			document.getElementById('apilens-frame').style.display = 'none';
-			document.getElementById('error').style.display = 'flex';
-		}
-
-		function retryConnection() {
-			if (retryAttempts < maxRetries) {
-				retryAttempts++;
-				document.getElementById('error').style.display = 'none';
-				document.getElementById('loading').style.display = 'flex';
-				
-				const frame = document.getElementById('apilens-frame');
-				frame.src = frame.src; // Reload iframe
-			} else {
-				vscode.postMessage({
-					command: 'error',
-					text: 'Failed to connect to APILens after multiple attempts. Please check if the server is running on localhost:3001'
-				});
-			}
-		}
-
-		setTimeout(() => {
-			const frame = document.getElementById('apilens-frame');
-			try {
-				if (frame.contentDocument === null && frame.style.display === 'none') {
-					handleFrameError();
-				}
-			} catch (e) {
-				if (frame.style.display === 'none') {
-					handleFrameLoad();
-				}
-			}
-		}, 5000);
-	</script>
-</body>
-</html>`;
-	}
-}
+let webviewProvider: APILensWebviewProvider;
+let apiDetailProvider: APIDetailViewProvider;
+let apiService: APIService;
+let webSocketService: WebSocketService;
+let statusBarService: StatusBarService;
+let fileSystemService: FileSystemService;
+let fileContextMenuHandler: FileContextMenuHandler;
 
 export function activate(context: vscode.ExtensionContext) {
-	const commands = [
-		vscode.commands.registerCommand('apilens.openDashboard', () => {
-			APILensPanel.createOrShow(context.extensionUri);
-		}),
+    console.log('APILens extension is now active!');
 
-		vscode.commands.registerCommand('apilens.openAnalytics', () => {
-			APILensPanel.createOrShow(context.extensionUri);
-			vscode.window.showInformationMessage('Dashboard opened - navigate to Analytics tab');
-		}),
+    // Initialize services
+    apiService = new APIService();
+    webSocketService = new WebSocketService(context, apiService);
+    statusBarService = new StatusBarService(context, apiService);
+    fileSystemService = new FileSystemService(context, apiService);
+    
+    // Initialize providers
+    webviewProvider = new APILensWebviewProvider(context, apiService);
+    apiDetailProvider = new APIDetailViewProvider(context, apiService);
+    
+    // Initialize handlers
+    fileContextMenuHandler = new FileContextMenuHandler(context, fileSystemService, apiService);
 
-		vscode.commands.registerCommand('apilens.viewNotifications', () => {
-			APILensPanel.createOrShow(context.extensionUri);
-			vscode.window.showInformationMessage('Dashboard opened - navigate to Notifications tab');
-		}),
+    // Register webview providers
+    const mainProvider = vscode.window.registerWebviewViewProvider(
+        'apilens.main',
+        webviewProvider,
+        {
+            webviewOptions: {
+                retainContextWhenHidden: true
+            }
+        }
+    );
 
-		vscode.commands.registerCommand('apilens.addAPI', () => {
-			APILensPanel.createOrShow(context.extensionUri);
-			vscode.window.showInformationMessage('Dashboard opened - use the Add API button');
-		}),
+    const apiDetailProviderDisposable = vscode.window.registerWebviewViewProvider(
+        'apilens.apiDetail',
+        apiDetailProvider,
+        {
+            webviewOptions: {
+                retainContextWhenHidden: true
+            }
+        }
+    );
 
-		vscode.commands.registerCommand('apilens.refreshAPIs', () => {
-			if (APILensPanel.currentPanel) {
-				APILensPanel.currentPanel.dispose();
-				APILensPanel.createOrShow(context.extensionUri);
-			} else {
-				APILensPanel.createOrShow(context.extensionUri);
-			}
-			vscode.window.showInformationMessage('APILens refreshed');
-		})
-	];
+    // Register commands
+    const openPanelCommand = vscode.commands.registerCommand('apilens.openPanel', () => {
+        webviewProvider.show();
+    });
 
-	context.subscriptions.push(...commands);
+    const refreshCommand = vscode.commands.registerCommand('apilens.refreshData', () => {
+        webviewProvider.refresh();
+        statusBarService.refresh();
+    });
 
-	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
-	statusBar.text = "$(cloud) APILens";
-	statusBar.tooltip = "Open APILens Dashboard";
-	statusBar.command = 'apilens.openDashboard';
-	statusBar.show();
-	context.subscriptions.push(statusBar);
+    const addApiCommand = vscode.commands.registerCommand('apilens.addApi', () => {
+        webviewProvider.navigateTo('/add-api');
+    });
 
-	vscode.window.showInformationMessage(
-		'APILens extension activated! Make sure your development server is running on localhost:3001',
-		'Open Dashboard'
-	).then(selection => {
-		if (selection === 'Open Dashboard') {
-			vscode.commands.executeCommand('apilens.openDashboard');
-		}
-	});
+    const viewAnalyticsCommand = vscode.commands.registerCommand('apilens.viewAnalytics', () => {
+        webviewProvider.navigateTo('/analytics');
+    });
+
+    const viewNotificationsCommand = vscode.commands.registerCommand('apilens.viewNotifications', () => {
+        webviewProvider.navigateTo('/notifications');
+    });
+
+    const viewChangesCommand = vscode.commands.registerCommand('apilens.viewChanges', () => {
+        webviewProvider.navigateTo('/changes');
+    });
+
+    // Start Phase 3 services
+    webSocketService.connect();
+    statusBarService.show();
+    fileSystemService.startWatching();
+
+    // Set up file watching for OpenAPI files
+    fileSystemService.watchOpenAPIFiles((file) => {
+        vscode.window.showInformationMessage(
+            `OpenAPI file detected: ${file.name}`,
+            'Import to APILens',
+            'Ignore'
+        ).then(selection => {
+            if (selection === 'Import to APILens') {
+                fileSystemService.createAPIFromFile(file);
+            }
+        });
+    });
+
+    // Set up WebSocket event handlers
+    webSocketService.on('api-change', (data) => {
+        webviewProvider.refresh();
+        statusBarService.refresh();
+        
+        if (vscode.workspace.getConfiguration('apilens').get('showNotifications', true)) {
+            vscode.window.showInformationMessage(
+                `API change detected: ${data.apiName}`,
+                'View Details'
+            ).then(selection => {
+                if (selection === 'View Details') {
+                    apiDetailProvider.showApiDetail(data.apiId);
+                }
+            });
+        }
+    });
+
+    webSocketService.on('api-health-change', (data) => {
+        statusBarService.refresh();
+        
+        if (data.status === 'unhealthy') {
+            vscode.window.showWarningMessage(
+                `API health issue: ${data.apiName} is now ${data.status}`,
+                'View Details'
+            ).then(selection => {
+                if (selection === 'View Details') {
+                    apiDetailProvider.showApiDetail(data.apiId);
+                }
+            });
+        }
+    });
+
+    // Update context based on APIs availability
+    apiService.getApis().then(apis => {
+        vscode.commands.executeCommand('setContext', 'apilens.hasApis', apis.length > 0);
+    }).catch(() => {
+        vscode.commands.executeCommand('setContext', 'apilens.hasApis', false);
+    });
+
+    context.subscriptions.push(
+        mainProvider,
+        apiDetailProviderDisposable,
+        openPanelCommand,
+        refreshCommand,
+        addApiCommand,
+        viewAnalyticsCommand,
+        viewNotificationsCommand,
+        viewChangesCommand
+    );
+
+    // Auto-refresh setup
+    const config = vscode.workspace.getConfiguration('apilens');
+    if (config.get('autoRefresh', true)) {
+        const refreshInterval = setInterval(() => {
+            webviewProvider.refresh();
+            statusBarService.refresh();
+        }, config.get('refreshInterval', 30000));
+
+        context.subscriptions.push({
+            dispose: () => clearInterval(refreshInterval)
+        });
+    }
+
+    console.log('APILens extension fully activated with all Phase 3 features!');
 }
 
-export function deactivate() {}
+export function deactivate() {
+    console.log('APILens extension is being deactivated');
+    
+    // Clean up services
+    if (webSocketService) {
+        webSocketService.disconnect();
+    }
+    
+    if (statusBarService) {
+        statusBarService.dispose();
+    }
+    
+    if (fileSystemService) {
+        fileSystemService.dispose();
+    }
+}

@@ -1960,6 +1960,301 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
                 flex-direction: column;
             }
         }
+        /* Modern Changes Page Styles */
+        .changes-container {
+            padding: 1.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .changes-header {
+            margin-bottom: 2rem;
+        }
+        
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .header-info h2 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.5rem;
+            color: var(--vscode-foreground);
+        }
+        
+        .header-info p {
+            margin: 0;
+            color: var(--vscode-descriptionForeground);
+            font-size: 0.9rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: var(--vscode-editor-background);
+            border: 1px solid var(--vscode-widget-border);
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: border-color 0.2s ease;
+        }
+        
+        .stat-card:hover {
+            border-color: var(--vscode-focusBorder);
+        }
+        
+        .stat-card.total {
+            border-color: var(--vscode-terminal-ansiBlue);
+        }
+        
+        .stat-card.showing {
+            border-color: var(--vscode-terminal-ansiGreen);
+        }
+        
+        .stat-card.page {
+            border-color: var(--vscode-terminal-ansiYellow);
+        }
+        
+        .stat-card.filtered {
+            border-color: var(--vscode-terminal-ansiMagenta);
+        }
+        
+        .stat-icon {
+            font-size: 1.2rem;
+            opacity: 0.8;
+        }
+        
+        .stat-content {
+            flex: 1;
+        }
+        
+        .stat-number {
+            display: block;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--vscode-foreground);
+            line-height: 1.2;
+        }
+        
+        .stat-label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--vscode-descriptionForeground);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .changes-filters {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .search-bar {
+            flex: 1;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--vscode-widget-border);
+            border-radius: 6px;
+            background: var(--vscode-input-background);
+            color: var(--vscode-input-foreground);
+            font-size: 0.9rem;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: var(--vscode-focusBorder);
+        }
+        
+        .filter-btn {
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--vscode-widget-border);
+            border-radius: 6px;
+            background: var(--vscode-button-secondaryBackground);
+            color: var(--vscode-button-secondaryForeground);
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+        
+        .filter-btn:hover {
+            background: var(--vscode-button-secondaryHoverBackground);
+        }
+        
+        .changes-content {
+            background: var(--vscode-editor-background);
+            border: 1px solid var(--vscode-widget-border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .changes-summary {
+            padding: 1rem 1.5rem;
+            background: var(--vscode-editor-background);
+            border-bottom: 1px solid var(--vscode-widget-border);
+            font-size: 0.9rem;
+            color: var(--vscode-descriptionForeground);
+        }
+        
+        .changes-list {
+            padding: 0;
+        }
+        
+        .change-card {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--vscode-widget-border);
+            transition: background-color 0.2s ease;
+        }
+        
+        .change-card:last-child {
+            border-bottom: none;
+        }
+        
+        .change-card:hover {
+            background: var(--vscode-list-hoverBackground);
+        }
+        
+        .change-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+        
+        .change-main-info {
+            flex: 1;
+        }
+        
+        .change-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .api-name {
+            font-weight: 600;
+            color: var(--vscode-foreground);
+            font-size: 1rem;
+        }
+        
+        .severity-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+        
+        .severity-badge.critical {
+            background: var(--vscode-errorBackground);
+            color: var(--vscode-errorForeground);
+        }
+        
+        .severity-badge.high {
+            background: rgba(255, 165, 0, 0.15);
+            color: #ff8c00;
+        }
+        
+        .severity-badge.low {
+            background: var(--vscode-terminal-ansiGreen);
+            color: var(--vscode-editor-background);
+        }
+        
+        .change-type-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .change-type-badge.breaking {
+            background: rgba(220, 38, 127, 0.15);
+            color: #dc267f;
+        }
+        
+        .change-type-badge.addition {
+            background: rgba(40, 167, 69, 0.15);
+            color: #28a745;
+        }
+        
+        .change-summary {
+            color: var(--vscode-descriptionForeground);
+            font-size: 0.9rem;
+        }
+        
+        .change-actions {
+            margin-left: 1rem;
+        }
+        
+        .btn-outline {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--vscode-widget-border);
+            border-radius: 6px;
+            background: transparent;
+            color: var(--vscode-foreground);
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-outline:hover {
+            background: var(--vscode-button-secondaryHoverBackground);
+            border-color: var(--vscode-focusBorder);
+        }
+        
+        .change-meta {
+            color: var(--vscode-descriptionForeground);
+            font-size: 0.85rem;
+        }
+        
+        .change-time {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .time-label {
+            font-weight: 500;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1.5rem;
+            color: var(--vscode-descriptionForeground);
+        }
+        
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        .empty-state-title {
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--vscode-foreground);
+        }
+        
+        .empty-state-subtitle {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
     </style>
 </head>
 <body>
@@ -2059,7 +2354,24 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
                 case 'apisData':
                     appData.apis = message.data;
                     if (currentTab === 'apis') {
-                        renderApis(message.data);
+                        renderApisList();
+                    }
+                    break;
+                case 'changelogsData':
+                    console.log('Received changelogs data:', message.data);
+                    // Handle paginated response - extract the changes array
+                    if (Array.isArray(message.data)) {
+                        appData.changelogs = message.data;
+                    } else if (message.data?.changes) {
+                        appData.changelogs = message.data.changes;
+                    } else if (message.data?.data) {
+                        appData.changelogs = message.data.data;
+                    } else {
+                        appData.changelogs = [];
+                    }
+                    console.log('Processed changelogs:', appData.changelogs);
+                    if (currentTab === 'changes') {
+                        renderChanges();
                     }
                     break;
                 case 'apiCreated':
@@ -2928,57 +3240,152 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
             document.getElementById('content-body').innerHTML = \`
                 <div class="changes-container">
                     <div class="changes-header">
-                        <div class="changes-filters">
-                            <select id="api-filter" class="filter-select">
-                                <option value="">All APIs</option>
-                                \${(appData.apis || []).map(api => \`
-                                    <option value="\${api._id || api.id}">\${api.apiName || api.name}</option>
-                                \`).join('')}
-                            </select>
-                            <select id="change-type-filter" class="filter-select">
-                                <option value="">All Changes</option>
-                                <option value="breaking">Breaking Changes</option>
-                                <option value="addition">Additions</option>
-                                <option value="modification">Modifications</option>
-                                <option value="deprecation">Deprecations</option>
-                                <option value="removal">Removals</option>
-                            </select>
-                            <select id="severity-filter" class="filter-select">
-                                <option value="">All Severity</option>
-                                <option value="critical">Critical</option>
-                                <option value="major">Major</option>
-                                <option value="minor">Minor</option>
-                                <option value="patch">Patch</option>
-                            </select>
-                            <input type="date" id="date-filter" class="filter-input">
+                        <div class="header-top">
+                            <div class="header-info">
+                                <h2>API Changes</h2>
+                                <p>Track all changes across your APIs with detailed history</p>
+                            </div>
+                            <div class="header-actions">
+                                <button class="btn-secondary" onclick="location.reload()">
+                                    🔄 Refresh
+                                </button>
+                            </div>
                         </div>
-                        <div class="changes-stats">
-                            <div class="stat-card">
-                                <span class="stat-number">\${(appData.changelogs || []).length}</span>
-                                <span class="stat-label">Total Changes</span>
+                        
+                        <div class="stats-grid">
+                            <div class="stat-card total">
+                                <div class="stat-icon">📊</div>
+                                <div class="stat-content">
+                                    <div class="stat-number">\${(appData.changelogs || []).length}</div>
+                                    <div class="stat-label">Total Changes</div>
+                                </div>
                             </div>
-                            <div class="stat-card">
-                                <span class="stat-number">\${(appData.changelogs || []).filter(c => c.severity === 'critical').length}</span>
-                                <span class="stat-label">Critical</span>
+                            <div class="stat-card showing">
+                                <div class="stat-icon">📋</div>
+                                <div class="stat-content">
+                                    <div class="stat-number">\${(appData.changelogs || []).length}</div>
+                                    <div class="stat-label">Showing</div>
+                                </div>
                             </div>
-                            <div class="stat-card">
-                                <span class="stat-number">\${(appData.changelogs || []).filter(c => c.type === 'breaking').length}</span>
-                                <span class="stat-label">Breaking</span>
+                            <div class="stat-card page">
+                                <div class="stat-icon">📄</div>
+                                <div class="stat-content">
+                                    <div class="stat-number">1 of 3</div>
+                                    <div class="stat-label">Page</div>
+                                </div>
+                            </div>
+                            <div class="stat-card filtered">
+                                <div class="stat-icon">🔍</div>
+                                <div class="stat-content">
+                                    <div class="stat-number">No</div>
+                                    <div class="stat-label">Filtered</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="changes-filters">
+                            <div class="search-bar">
+                                <input type="text" placeholder="Search changes, APIs, endpoints..." class="search-input">
+                            </div>
+                            <div class="filter-actions">
+                                <button class="filter-btn">🔽 Filters</button>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="changes-timeline">
-                        \${renderChangesTimeline(appData.changelogs || [])}
+                    <div class="changes-content">
+                        <div class="changes-summary">
+                            <span>\${(appData.changelogs || []).length} changes found</span>
+                        </div>
+                        <div class="changes-list">
+                            \${renderChangesCards(appData.changelogs || [])}
+                        </div>
                     </div>
                 </div>
             \`;
+        }
+        
+        function renderChangesCards(changes) {
+            if (!changes || changes.length === 0) {
+                return \`
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔄</div>
+                        <div class="empty-state-title">No changes detected yet</div>
+                        <div class="empty-state-subtitle">Changes will appear here when API modifications are detected</div>
+                    </div>
+                \`;
+            }
             
-            // Add event listeners
-            document.getElementById('api-filter').addEventListener('change', filterChanges);
-            document.getElementById('change-type-filter').addEventListener('change', filterChanges);
-            document.getElementById('severity-filter').addEventListener('change', filterChanges);
-            document.getElementById('date-filter').addEventListener('change', filterChanges);
+            return changes.map(change => {
+                const severityIcon = change.severity === 'critical' ? '⚠️' : 
+                                   change.severity === 'high' ? '🔶' : 
+                                   change.severity === 'low' ? '🟢' : '📝';
+                
+                const changeTypeClass = change.changeType || 'modification';
+                const changeTypeLabel = change.changeType === 'breaking' ? 'Breaking' :
+                                      change.changeType === 'addition' ? 'Addition' :
+                                      change.changeType === 'removal' ? 'Removal' :
+                                      change.changeType === 'deprecation' ? 'Deprecation' : 'Modification';
+                
+                return \`
+                    <div class="change-card">
+                        <div class="change-header">
+                            <div class="change-main-info">
+                                <div class="change-title">
+                                    <span class="api-name">\${change.apiName || 'Unknown API'}</span>
+                                    <span class="severity-badge \${change.severity || 'low'}">\${change.severity || 'low'}</span>
+                                    <span class="change-type-badge \${changeTypeClass}">\${changeTypeLabel}</span>
+                                </div>
+                                <div class="change-summary">
+                                    <span class="change-count">\${change.changesCount || 1} changes detected</span>
+                                </div>
+                            </div>
+                            <div class="change-actions">
+                                <button class="btn-outline">👁️ View Details</button>
+                            </div>
+                        </div>
+                        
+                        <div class="change-meta">
+                            <div class="change-time">
+                                <span class="time-label">\${formatTimeAgo(change.detectedAt || change.createdAt)}</span>
+                                <span class="time-date">\${formatDate(change.detectedAt || change.createdAt)}</span>
+                                <span class="change-details">\${getChangeDetails(change)}</span>
+                            </div>
+                        </div>
+                    </div>
+                \`;
+            }).join('');
+        }
+        
+        function formatTimeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffInMs = now - date;
+            const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+            
+            if (diffInDays === 0) return 'Today';
+            if (diffInDays === 1) return '1 day ago';
+            if (diffInDays < 30) return \`\${diffInDays} days ago\`;
+            return 'Over a month ago';
+        }
+        
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        function getChangeDetails(change) {
+            const details = [];
+            if (change.additions) details.push(\`\${change.additions} modifications\`);
+            if (change.modifications) details.push(\`\${change.modifications} modifications\`);
+            if (change.removals) details.push(\`\${change.removals} removals\`);
+            return details.join(', ') || 'Version updated';
         }
         
         function renderChangesTimeline(changes) {

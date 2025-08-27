@@ -1581,6 +1581,385 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
                 gap: 1rem;
             }
         }
+
+        /* APIs Section Styles */
+        .apis-container {
+            padding: 1rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .apis-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--vscode-editor-background);
+            border: 1px solid var(--vscode-widget-border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.2s ease;
+        }
+
+        .stat-card:hover {
+            border-color: var(--vscode-focusBorder);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-title {
+            font-size: 0.9rem;
+            color: var(--vscode-descriptionForeground);
+            font-weight: 500;
+        }
+
+        .stat-icon {
+            font-size: 1.2rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--vscode-foreground);
+        }
+
+        .stat-card-active .stat-value {
+            color: var(--vscode-terminal-ansiGreen);
+        }
+
+        .stat-card-inactive .stat-value {
+            color: var(--vscode-descriptionForeground);
+        }
+
+        .stat-card-issues .stat-value {
+            color: var(--vscode-errorForeground);
+        }
+
+        .apis-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .search-filter-section {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex: 1;
+        }
+
+        .search-box {
+            flex: 1;
+            max-width: 300px;
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .select-all-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--vscode-foreground);
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .apis-section {
+            margin-bottom: 2rem;
+        }
+
+        .section-header {
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--vscode-foreground);
+        }
+
+        .apis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .api-card {
+            background: var(--vscode-editor-background);
+            border: 1px solid var(--vscode-widget-border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .api-card:hover {
+            border-color: var(--vscode-focusBorder);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .api-card-header {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .api-card-select input {
+            margin: 0;
+        }
+
+        .api-card-title {
+            flex: 1;
+        }
+
+        .api-card-title h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.1rem;
+            color: var(--vscode-foreground);
+        }
+
+        .api-card-status {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .health-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .health-healthy {
+            background: rgba(0, 255, 0, 0.1);
+            color: var(--vscode-terminal-ansiGreen);
+            border: 1px solid rgba(0, 255, 0, 0.3);
+        }
+
+        .health-unhealthy {
+            background: rgba(255, 0, 0, 0.1);
+            color: var(--vscode-errorForeground);
+            border: 1px solid rgba(255, 0, 0, 0.3);
+        }
+
+        .health-checking {
+            background: rgba(255, 165, 0, 0.1);
+            color: var(--vscode-terminal-ansiYellow);
+            border: 1px solid rgba(255, 165, 0, 0.3);
+        }
+
+        .health-unknown {
+            background: rgba(128, 128, 128, 0.1);
+            color: var(--vscode-descriptionForeground);
+            border: 1px solid rgba(128, 128, 128, 0.3);
+        }
+
+        .check-interval {
+            font-size: 0.8rem;
+            color: var(--vscode-descriptionForeground);
+        }
+
+        .api-card-body {
+            margin-bottom: 1rem;
+        }
+
+        .api-description {
+            color: var(--vscode-descriptionForeground);
+            font-size: 0.9rem;
+            line-height: 1.4;
+            margin-bottom: 1rem;
+        }
+
+        .api-tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            background: var(--vscode-badge-background);
+            color: var(--vscode-badge-foreground);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .api-card-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            align-items: center;
+        }
+
+        .btn-action {
+            padding: 6px 12px;
+            border: 1px solid var(--vscode-button-border);
+            border-radius: 4px;
+            background: var(--vscode-button-secondaryBackground);
+            color: var(--vscode-button-secondaryForeground);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-action:hover {
+            background: var(--vscode-button-secondaryHoverBackground);
+        }
+
+        .btn-pause {
+            border-color: var(--vscode-errorForeground);
+            color: var(--vscode-errorForeground);
+        }
+
+        .btn-play {
+            border-color: var(--vscode-terminal-ansiGreen);
+            color: var(--vscode-terminal-ansiGreen);
+        }
+
+        .btn-check {
+            border-color: var(--vscode-terminal-ansiBlue);
+            color: var(--vscode-terminal-ansiBlue);
+        }
+
+        .api-card-menu {
+            position: relative;
+            margin-left: auto;
+        }
+
+        .btn-menu {
+            background: none;
+            border: none;
+            color: var(--vscode-descriptionForeground);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .btn-menu:hover {
+            background: var(--vscode-toolbar-hoverBackground);
+        }
+
+        .api-menu {
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: var(--vscode-menu-background);
+            border: 1px solid var(--vscode-menu-border);
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            min-width: 150px;
+            display: none;
+        }
+
+        .api-menu.active {
+            display: block;
+        }
+
+        .api-menu button {
+            display: block;
+            width: 100%;
+            padding: 8px 12px;
+            border: none;
+            background: none;
+            text-align: left;
+            color: var(--vscode-menu-foreground);
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .api-menu button:hover {
+            background: var(--vscode-menu-selectionBackground);
+        }
+
+        .api-menu button.danger {
+            color: var(--vscode-errorForeground);
+        }
+
+        .api-card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            border-top: 1px solid var(--vscode-widget-border);
+            font-size: 0.8rem;
+        }
+
+        .api-url a {
+            color: var(--vscode-textLink-foreground);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .api-url a:hover {
+            text-decoration: underline;
+        }
+
+        .external-link-icon {
+            opacity: 0.6;
+        }
+
+        .api-stats {
+            color: var(--vscode-descriptionForeground);
+        }
+
+        .empty-apis-section {
+            text-align: center;
+            padding: 2rem;
+            color: var(--vscode-descriptionForeground);
+        }
+
+        .empty-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        @media (max-width: 1200px) {
+            .apis-grid {
+                grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .apis-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .apis-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-filter-section {
+                flex-direction: column;
+            }
+        }
     </style>
 </head>
 <body>
@@ -2160,41 +2539,103 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
                 return;
             }
             
+            const activeApis = appData.apis.filter(api => api.isActive);
+            const inactiveApis = appData.apis.filter(api => !api.isActive);
+            const healthyApis = appData.apis.filter(api => api.healthStatus === 'healthy');
+            const issueApis = appData.apis.filter(api => api.healthStatus === 'unhealthy');
+            
             document.getElementById('content-body').innerHTML = \`
-                <div class="apis-management">
-                    <div class="apis-header">
-                        <div class="apis-controls">
-                            <div class="search-filter">
+                <div class="apis-container">
+                    <!-- Stats Cards -->
+                    <div class="apis-stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-card-header">
+                                <span class="stat-title">Total APIs</span>
+                                <span class="stat-icon">📊</span>
+                            </div>
+                            <div class="stat-value">\${appData.apis.length}</div>
+                        </div>
+                        <div class="stat-card stat-card-active">
+                            <div class="stat-card-header">
+                                <span class="stat-title">Active</span>
+                                <span class="stat-icon">▶️</span>
+                            </div>
+                            <div class="stat-value">\${activeApis.length}</div>
+                        </div>
+                        <div class="stat-card stat-card-inactive">
+                            <div class="stat-card-header">
+                                <span class="stat-title">Inactive</span>
+                                <span class="stat-icon">⏸️</span>
+                            </div>
+                            <div class="stat-value">\${inactiveApis.length}</div>
+                        </div>
+                        <div class="stat-card stat-card-issues">
+                            <div class="stat-card-header">
+                                <span class="stat-title">Issues</span>
+                                <span class="stat-icon">⚠️</span>
+                            </div>
+                            <div class="stat-value">\${issueApis.length}</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Controls -->
+                    <div class="apis-controls">
+                        <div class="search-filter-section">
+                            <div class="search-box">
                                 <input type="text" id="api-search" placeholder="Search APIs..." class="search-input">
+                            </div>
+                            <div class="filter-controls">
                                 <select id="status-filter" class="filter-select">
                                     <option value="">All Status</option>
                                     <option value="active">Active</option>
                                     <option value="inactive">Inactive</option>
                                 </select>
                                 <select id="health-filter" class="filter-select">
-                                    <option value="">All Health</option>
+                                    <option value="">Filters</option>
                                     <option value="healthy">Healthy</option>
                                     <option value="unhealthy">Unhealthy</option>
                                     <option value="checking">Checking</option>
                                     <option value="unknown">Unknown</option>
                                 </select>
                             </div>
-                            <div class="bulk-actions">
-                                <button class="btn-secondary" onclick="selectAllApis()">Select All</button>
-                                <button class="btn-secondary" onclick="bulkToggleStatus()">Toggle Status</button>
-                                <button class="btn-danger" onclick="bulkDeleteApis()">Delete Selected</button>
-                            </div>
                         </div>
-                        <div class="apis-stats">
-                            <span class="stat">Total: \${appData.apis.length}</span>
-                            <span class="stat">Active: \${appData.apis.filter(api => api.isActive).length}</span>
-                            <span class="stat">Healthy: \${appData.apis.filter(api => api.healthStatus === 'healthy').length}</span>
+                        <div class="bulk-actions">
+                            <label class="select-all-checkbox">
+                                <input type="checkbox" id="select-all-checkbox">
+                                <span>Select All</span>
+                            </label>
                         </div>
                     </div>
                     
-                    <div class="apis-table">
-                        \${renderApisTable(appData.apis)}
+                    <!-- APIs Section -->
+                    <div class="apis-section">
+                        <div class="section-header">
+                            <span class="section-title">Active APIs (\${activeApis.length})</span>
+                        </div>
+                        <div class="apis-grid" id="active-apis">
+                            \${renderApiCards(activeApis)}
+                        </div>
                     </div>
+                    
+                    \${inactiveApis.length > 0 ? \`
+                        <div class="apis-section">
+                            <div class="section-header">
+                                <span class="section-title">Inactive APIs (\${inactiveApis.length})</span>
+                            </div>
+                            <div class="apis-grid" id="inactive-apis">
+                                \${renderApiCards(inactiveApis)}
+                            </div>
+                        </div>
+                    \` : ''}
+                    
+                    \${appData.apis.length === 0 ? \`
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🔗</div>
+                            <h3>No APIs Found</h3>
+                            <p>Start monitoring your APIs by adding your first API endpoint.</p>
+                            <button class="btn-primary" onclick="switchTab('add-api')">Add Your First API</button>
+                        </div>
+                    \` : ''}
                 </div>
             \`;
             
@@ -2202,87 +2643,100 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
             document.getElementById('api-search').addEventListener('input', filterApis);
             document.getElementById('status-filter').addEventListener('change', filterApis);
             document.getElementById('health-filter').addEventListener('change', filterApis);
+            document.getElementById('select-all-checkbox').addEventListener('change', handleSelectAll);
+            
+            // Close menus when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.api-card-menu')) {
+                    document.querySelectorAll('.api-menu').forEach(menu => {
+                        menu.classList.remove('active');
+                    });
+                }
+            });
         }
         
-        function renderApisTable(apis) {
+        function renderApiCards(apis) {
             if (!apis || apis.length === 0) {
                 return \`
-                    <div class="empty-state">
-                        <div class="empty-state-icon">🔗</div>
-                        <div>No APIs found</div>
-                        <button class="btn-primary" onclick="switchTab('add-api')" style="margin-top: 1rem;">Add Your First API</button>
+                    <div class="empty-apis-section">
+                        <div class="empty-icon">�</div>
+                        <p>No APIs in this section</p>
                     </div>
                 \`;
             }
             
-            return \`
-                <table class="apis-table-content">
-                    <thead>
-                        <tr>
-                            <th><input type="checkbox" id="select-all-checkbox"></th>
-                            <th>Name</th>
-                            <th>URL</th>
-                            <th>Type</th>
-                            <th>Status</th>
-                            <th>Health</th>
-                            <th>Last Checked</th>
-                            <th>Changes</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        \${apis.map(api => \`
-                            <tr data-api-id="\${api._id || api.id}">
-                                <td><input type="checkbox" class="api-checkbox" value="\${api._id || api.id}"></td>
-                                <td>
-                                    <div class="api-name">
-                                        <strong>\${api.apiName || api.name || 'Unnamed API'}</strong>
-                                        \${api.description ? \`<div class="api-description">\${api.description}</div>\` : ''}
-                                        \${api.tags && api.tags.length ? \`<div class="api-tags">\${api.tags.map(tag => \`<span class="tag">\${tag}</span>\`).join('')}</div>\` : ''}
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="api-url">
-                                        <a href="\${api.openApiUrl || api.url}" target="_blank" title="Open in new tab">
-                                            \${(api.openApiUrl || api.url || '').substring(0, 50)}...
-                                        </a>
-                                    </div>
-                                </td>
-                                <td><span class="api-type">\${api.type || 'REST'}</span></td>
-                                <td>
-                                    <span class="status-badge \${api.isActive ? 'status-active' : 'status-inactive'}">
-                                        \${api.isActive ? 'Active' : 'Inactive'}
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="health-badge health-\${api.healthStatus || 'unknown'}">
-                                        \${getHealthIcon(api.healthStatus)} \${(api.healthStatus || 'unknown').charAt(0).toUpperCase() + (api.healthStatus || 'unknown').slice(1)}
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="last-checked">
-                                        \${api.lastChecked ? formatDate(api.lastChecked) : 'Never'}
-                                        \${api.checkFrequency ? \`<div class="check-frequency">Every \${api.checkFrequency}</div>\` : ''}
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="change-count">\${api.changeCount || 0}</span>
-                                </td>
-                                <td>
-                                    <div class="api-actions">
-                                        <button class="btn-icon" onclick="toggleApiStatus('\${api._id || api.id}')" title="Toggle Status">
-                                            \${api.isActive ? '⏸️' : '▶️'}
-                                        </button>
-                                        <button class="btn-icon" onclick="checkApiNow('\${api._id || api.id}')" title="Check Now">🔄</button>
-                                        <button class="btn-icon" onclick="viewApiDetails('\${api._id || api.id}')" title="View Details">👁️</button>
-                                        <button class="btn-icon btn-danger" onclick="deleteApi('\${api._id || api.id}')" title="Delete">🗑️</button>
-                                    </div>
-                                </td>
-                            </tr>
-                        \`).join('')}
-                    </tbody>
-                </table>
-            \`;
+            return apis.map(api => \`
+                <div class="api-card" data-api-id="\${api._id || api.id}">
+                    <div class="api-card-header">
+                        <div class="api-card-select">
+                            <input type="checkbox" class="api-checkbox" value="\${api._id || api.id}">
+                        </div>
+                        <div class="api-card-title">
+                            <h3>\${api.apiName || api.name || 'Unnamed API'}</h3>
+                            <div class="api-card-status">
+                                <span class="health-badge health-\${api.healthStatus || 'unknown'}">
+                                    \${getHealthIcon(api.healthStatus)} \${api.healthStatus || 'unknown'}
+                                </span>
+                                <span class="check-interval">Check: \${getCheckInterval(api.checkFrequency)}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="api-card-body">
+                        <div class="api-description">
+                            \${api.description || 'Multi-channel notification and delivery system'}
+                        </div>
+                        
+                        \${api.tags && api.tags.length ? \`
+                            <div class="api-tags">
+                                \${api.tags.map(tag => \`<span class="tag">\${tag}</span>\`).join('')}
+                            </div>
+                        \` : \`
+                            <div class="api-tags">
+                                <span class="tag">\${api.type || 'REST'}</span>
+                                <span class="tag">v\${api.version || '1.0'}</span>
+                                <span class="tag">demo</span>
+                            </div>
+                        \`}
+                    </div>
+                    
+                    <div class="api-card-actions">
+                        <button class="btn-action \${api.isActive ? 'btn-pause' : 'btn-play'}" 
+                                onclick="toggleApiStatus('\${api._id || api.id}')" 
+                                title="\${api.isActive ? 'Pause' : 'Resume'} API monitoring">
+                            \${api.isActive ? '⏸️ Pause' : '▶️ Resume'}
+                        </button>
+                        <button class="btn-action btn-check" 
+                                onclick="checkApiNow('\${api._id || api.id}')" 
+                                title="Check API now">
+                            🔄 Check Now
+                        </button>
+                        <div class="api-card-menu">
+                            <button class="btn-menu" onclick="toggleApiMenu('\${api._id || api.id}')">⋯</button>
+                            <div class="api-menu" id="menu-\${api._id || api.id}">
+                                <button onclick="viewApiDetails('\${api._id || api.id}')">👁️ View Details</button>
+                                <button onclick="editApi('\${api._id || api.id}')">✏️ Edit</button>
+                                <button onclick="duplicateApi('\${api._id || api.id}')">📋 Duplicate</button>
+                                <button onclick="deleteApi('\${api._id || api.id}')" class="danger">🗑️ Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="api-card-footer">
+                        <div class="api-url">
+                            <a href="\${api.openApiUrl || api.url}" target="_blank" title="Open API documentation">
+                                \${shortenUrl(api.openApiUrl || api.url || '')}
+                                <span class="external-link-icon">🔗</span>
+                            </a>
+                        </div>
+                        <div class="api-stats">
+                            <span class="last-check">
+                                Last: \${api.lastChecked ? formatRelativeTime(api.lastChecked) : 'Never'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            \`).join('');
         }
         
         function getHealthIcon(status) {
@@ -2292,6 +2746,74 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
                 case 'checking': return '⏳';
                 case 'unknown': default: return '❓';
             }
+        }
+        
+        function getCheckInterval(frequency) {
+            switch(frequency) {
+                case '5m': return '5m';
+                case '15m': return '15m';
+                case '1h': return '1h';
+                case '6h': return '6h';
+                case '1d': return '1d';
+                default: return '1h';
+            }
+        }
+        
+        function shortenUrl(url) {
+            if (!url) return '';
+            try {
+                const urlObj = new URL(url);
+                return urlObj.hostname + urlObj.pathname;
+            } catch {
+                return url.substring(0, 40) + (url.length > 40 ? '...' : '');
+            }
+        }
+        
+        function formatRelativeTime(dateString) {
+            try {
+                const date = new Date(dateString);
+                const now = new Date();
+                const diffMs = now.getTime() - date.getTime();
+                const diffMins = Math.floor(diffMs / 60000);
+                const diffHours = Math.floor(diffMins / 60);
+                const diffDays = Math.floor(diffHours / 24);
+                
+                if (diffMins < 1) return 'Just now';
+                if (diffMins < 60) return \`\${diffMins}m ago\`;
+                if (diffHours < 24) return \`\${diffHours}h ago\`;
+                if (diffDays < 7) return \`\${diffDays}d ago\`;
+                return date.toLocaleDateString();
+            } catch {
+                return 'Unknown';
+            }
+        }
+        
+        function toggleApiMenu(apiId) {
+            const menu = document.getElementById(\`menu-\${apiId}\`);
+            const allMenus = document.querySelectorAll('.api-menu');
+            
+            // Close all other menus
+            allMenus.forEach(m => {
+                if (m !== menu) m.classList.remove('active');
+            });
+            
+            // Toggle current menu
+            menu.classList.toggle('active');
+        }
+        
+        function handleSelectAll(event) {
+            const checkboxes = document.querySelectorAll('.api-checkbox');
+            checkboxes.forEach(cb => cb.checked = event.target.checked);
+        }
+        
+        function editApi(apiId) {
+            // Future implementation
+            vscode.postMessage({ type: 'editApi', id: apiId });
+        }
+        
+        function duplicateApi(apiId) {
+            // Future implementation
+            vscode.postMessage({ type: 'duplicateApi', id: apiId });
         }
         
         function formatDate(dateString) {
@@ -2308,15 +2830,16 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
             const statusFilter = document.getElementById('status-filter').value;
             const healthFilter = document.getElementById('health-filter').value;
             
-            const rows = document.querySelectorAll('.apis-table-content tbody tr');
-            rows.forEach(row => {
-                const apiData = appData.apis.find(api => (api._id || api.id) === row.dataset.apiId);
+            const cards = document.querySelectorAll('.api-card');
+            cards.forEach(card => {
+                const apiData = appData.apis.find(api => (api._id || api.id) === card.dataset.apiId);
                 if (!apiData) return;
                 
                 const matchesSearch = !searchTerm || 
                     (apiData.apiName || apiData.name || '').toLowerCase().includes(searchTerm) ||
                     (apiData.description || '').toLowerCase().includes(searchTerm) ||
-                    (apiData.openApiUrl || apiData.url || '').toLowerCase().includes(searchTerm);
+                    (apiData.openApiUrl || apiData.url || '').toLowerCase().includes(searchTerm) ||
+                    (apiData.tags || []).some(tag => tag.toLowerCase().includes(searchTerm));
                 
                 const matchesStatus = !statusFilter || 
                     (statusFilter === 'active' && apiData.isActive) ||
@@ -2324,8 +2847,26 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
                 
                 const matchesHealth = !healthFilter || apiData.healthStatus === healthFilter;
                 
-                row.style.display = matchesSearch && matchesStatus && matchesHealth ? '' : 'none';
+                card.style.display = matchesSearch && matchesStatus && matchesHealth ? '' : 'none';
             });
+            
+            // Update section counts
+            updateSectionCounts();
+        }
+        
+        function updateSectionCounts() {
+            const activeSection = document.querySelector('.section-title');
+            if (activeSection) {
+                const visibleActiveCards = document.querySelectorAll('#active-apis .api-card:not([style*="display: none"])').length;
+                const visibleInactiveCards = document.querySelectorAll('#inactive-apis .api-card:not([style*="display: none"])').length;
+                
+                activeSection.textContent = \`Active APIs (\${visibleActiveCards})\`;
+                
+                const inactiveSection = document.querySelector('.apis-section:last-child .section-title');
+                if (inactiveSection && inactiveSection.textContent.includes('Inactive')) {
+                    inactiveSection.textContent = \`Inactive APIs (\${visibleInactiveCards})\`;
+                }
+            }
         }
         
         function toggleApiStatus(apiId) {

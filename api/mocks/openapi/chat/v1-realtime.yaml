@@ -1,0 +1,499 @@
+openapi: 3.0.3
+info:
+  title: Real-time Chat API
+  version: "1.0.0"
+  description: |
+    WebSocket-based real-time messaging API experiencing critical connection storms
+    and message flooding issues. This API demonstrates high-load scenarios including
+    memory leaks, auto-scaling events, and connection limit breaches.
+  contact:
+    name: Real-time Infrastructure Team
+    email: realtime@company.com
+  x-api-status: critical-overload
+  x-performance-issues:
+    - "CRITICAL: 10,000+ concurrent connections causing memory leak"
+    - "SCALING: Auto-scaling threshold exceeded (500% CPU)"
+    - "FLOODING: Message flooding detected from bot traffic"
+    - "CONNECTION: WebSocket handshake failures at 23%"
+
+servers:
+  - url: http://localhost:4107
+    description: Real-time chat server under heavy load
+
+paths:
+  /health:
+    get:
+      summary: Real-time service health check
+      description: |
+        Health status showing connection storm and scaling issues.
+        Currently experiencing critical overload conditions.
+      responses:
+        "503":
+          description: Service overloaded - connection storms detected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RealtimeHealthStatus'
+              examples:
+                connection_storm:
+                  summary: Connection storm overload
+                  value:
+                    status: "error"
+                    timestamp: "2025-08-29T10:30:00Z"
+                    service: "Real-time Chat API"
+                    version: "v1.0.0"
+                    error: "Connection limit exceeded - 10,247 concurrent WebSocket connections"
+                    severity: "critical"
+                    loadLevel: "overloaded"
+                    activeConnections: 10247
+                    connectionLimit: 10000
+                    checks:
+                      websocket_pool: "exhausted"
+                      memory: "leak_detected"
+                      cpu: "500_percent"
+                      message_queue: "flooded"
+                memory_leak:
+                  summary: Memory leak in connection pool
+                  value:
+                    status: "error"
+                    timestamp: "2025-08-29T10:30:00Z"
+                    service: "Real-time Chat API"
+                    version: "v1.0.0"
+                    error: "Memory leak detected in WebSocket connection pool"
+                    severity: "critical"
+                    memoryUsage: "97%"
+                    memoryLeak: "connection_pool"
+
+  /ws/connect:
+    get:
+      summary: WebSocket connection endpoint
+      description: |
+        Establish WebSocket connection for real-time messaging.
+        WARNING: Experiencing high connection failure rates due to overload.
+      parameters:
+        - in: query
+          name: room
+          schema:
+            type: string
+          description: Chat room identifier
+          example: "general"
+        - in: query
+          name: user
+          schema:
+            type: string
+          description: User identifier
+          example: "user123"
+      responses:
+        "503":
+          description: Service overloaded - cannot accept new connections
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectionError'
+              examples:
+                connection_limit:
+                  summary: Connection limit exceeded
+                  value:
+                    error: "connection_limit_exceeded"
+                    message: "Maximum concurrent connections (10,000) exceeded"
+                    code: "WS_CONNECTION_LIMIT"
+                    timestamp: "2025-08-29T10:30:00Z"
+                    severity: "critical"
+                    currentConnections: 10247
+                    waitTime: "2-5 minutes"
+                    retryAfter: 300
+        "500":
+          description: WebSocket handshake failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectionError'
+              examples:
+                handshake_failure:
+                  summary: WebSocket handshake timeout
+                  value:
+                    error: "handshake_timeout"
+                    message: "WebSocket handshake failed due to server overload"
+                    code: "WS_HANDSHAKE_TIMEOUT"
+                    timestamp: "2025-08-29T10:30:00Z"
+                    severity: "major"
+                    handshakeTime: "15000ms"
+                    failureRate: "23%"
+
+  /api/rooms:
+    get:
+      summary: List chat rooms
+      description: |
+        Get list of available chat rooms. Performance severely degraded
+        due to database connection pool exhaustion.
+      responses:
+        "200":
+          description: Chat rooms list (with performance warnings)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomsList'
+        "503":
+          description: Database connection pool exhausted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatabaseError'
+              examples:
+                pool_exhausted:
+                  summary: Database connection pool exhausted
+                  value:
+                    error: "database_pool_exhausted"
+                    message: "All 500 database connections in use"
+                    code: "DB_POOL_FULL"
+                    timestamp: "2025-08-29T10:30:00Z"
+                    severity: "critical"
+                    activeConnections: 500
+                    maxConnections: 500
+                    queuedRequests: 1247
+
+  /api/rooms/{roomId}/messages:
+    get:
+      summary: Get chat messages
+      description: |
+        Retrieve messages from chat room. CRITICAL: Message queue overflow
+        causing data loss and severe lag.
+      parameters:
+        - in: path
+          name: roomId
+          required: true
+          schema:
+            type: string
+          example: "general"
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 50
+            maximum: 100
+          description: "WARNING: Limit >50 may cause timeout"
+      responses:
+        "200":
+          description: Chat messages (with queue overflow warnings)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessagesList'
+        "504":
+          description: Message queue timeout
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueueError'
+              examples:
+                queue_overflow:
+                  summary: Message queue overflow
+                  value:
+                    error: "message_queue_overflow"
+                    message: "Message queue overflow - 50MB backlog, data loss possible"
+                    code: "QUEUE_OVERFLOW"
+                    timestamp: "2025-08-29T10:30:00Z"
+                    severity: "critical"
+                    queueSize: "50MB"
+                    backlogMessages: 250000
+                    dataLossRisk: "high"
+
+    post:
+      summary: Send chat message
+      description: |
+        Send a message to chat room. RATE LIMITED: Bot traffic flooding
+        detected, strict rate limiting in effect.
+      parameters:
+        - in: path
+          name: roomId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendMessageRequest'
+      responses:
+        "429":
+          description: Rate limited - message flooding protection
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitError'
+              examples:
+                bot_traffic:
+                  summary: Bot traffic detected - rate limited
+                  value:
+                    error: "rate_limit_exceeded"
+                    message: "Bot traffic detected - rate limited to 1 message/second"
+                    code: "BOT_PROTECTION"
+                    timestamp: "2025-08-29T10:30:00Z"
+                    severity: "major"
+                    botScore: 85
+                    rateLimit: "1 message/second"
+                    retryAfter: 60
+        "503":
+          description: Message delivery failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliveryError'
+              examples:
+                delivery_failure:
+                  summary: Message delivery system overloaded
+                  value:
+                    error: "delivery_system_overloaded"
+                    message: "Message delivery system cannot handle current load"
+                    code: "DELIVERY_OVERLOAD"
+                    timestamp: "2025-08-29T10:30:00Z"
+                    severity: "critical"
+                    deliveryRate: "45%"
+                    failedDeliveries: 12500
+
+components:
+  schemas:
+    RealtimeHealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy, error]
+        timestamp:
+          type: string
+          format: date-time
+        service:
+          type: string
+        version:
+          type: string
+        error:
+          type: string
+        severity:
+          type: string
+          enum: [info, minor, major, critical]
+        loadLevel:
+          type: string
+          enum: [normal, high, critical, overloaded]
+        activeConnections:
+          type: integer
+          description: Current WebSocket connections
+        connectionLimit:
+          type: integer
+          description: Maximum allowed connections
+        memoryUsage:
+          type: string
+          description: Memory usage percentage
+        memoryLeak:
+          type: string
+          description: Detected memory leak source
+        checks:
+          type: object
+          properties:
+            websocket_pool:
+              type: string
+              enum: [ok, high, exhausted]
+            memory:
+              type: string
+              enum: [normal, high, leak_detected]
+            cpu:
+              type: string
+              enum: [normal, high, 500_percent]
+            message_queue:
+              type: string
+              enum: [normal, backed_up, flooded]
+        realtimeMetrics:
+          type: object
+          properties:
+            messagesPerSecond:
+              type: integer
+            connectionHandshakeFailureRate:
+              type: string
+            averageMessageLatency:
+              type: string
+            autoScalingEvents:
+              type: integer
+      required:
+        - status
+        - timestamp
+        - service
+        - loadLevel
+
+    ConnectionError:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        code:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        severity:
+          type: string
+        currentConnections:
+          type: integer
+        waitTime:
+          type: string
+        retryAfter:
+          type: integer
+        handshakeTime:
+          type: string
+        failureRate:
+          type: string
+
+    DatabaseError:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        code:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        severity:
+          type: string
+        activeConnections:
+          type: integer
+        maxConnections:
+          type: integer
+        queuedRequests:
+          type: integer
+
+    QueueError:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        code:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        severity:
+          type: string
+        queueSize:
+          type: string
+        backlogMessages:
+          type: integer
+        dataLossRisk:
+          type: string
+          enum: [low, medium, high]
+
+    RateLimitError:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        code:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        severity:
+          type: string
+        botScore:
+          type: integer
+          description: Bot detection score (0-100)
+        rateLimit:
+          type: string
+        retryAfter:
+          type: integer
+
+    DeliveryError:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        code:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        severity:
+          type: string
+        deliveryRate:
+          type: string
+          description: Current message delivery success rate
+        failedDeliveries:
+          type: integer
+
+    RoomsList:
+      type: object
+      properties:
+        rooms:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              activeUsers:
+                type: integer
+              messageRate:
+                type: string
+                description: Messages per minute
+        performanceWarnings:
+          type: array
+          items:
+            type: string
+          example:
+            - "Database response time degraded (2.5s average)"
+            - "Connection pool at 98% capacity"
+            - "Message queue backing up"
+
+    MessagesList:
+      type: object
+      properties:
+        messages:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              user:
+                type: string
+              content:
+                type: string
+              timestamp:
+                type: string
+                format: date-time
+              delivered:
+                type: boolean
+        queueStatus:
+          type: object
+          properties:
+            backlogSize:
+              type: string
+            processingDelay:
+              type: string
+            dataLossRisk:
+              type: string
+
+    SendMessageRequest:
+      type: object
+      properties:
+        content:
+          type: string
+          maxLength: 1000
+          description: Message content (limited due to overload)
+        user:
+          type: string
+          description: User identifier
+      required:
+        - content
+        - user

@@ -1,0 +1,121 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Payment Processing API",
+    "version": "1.0.0",
+    "description": "Financial transactions - MAJOR PAYMENT FAILURES"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:4102",
+      "description": "Development server"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health check endpoint",
+        "responses": {
+          "200": {
+            "description": "Service is healthy"
+          },
+          "500": {
+            "description": "Service is unhealthy"
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "User authentication (BROKEN)",
+        "responses": {
+          "500": {
+            "description": "Internal server error - system failure"
+          },
+          "503": {
+            "description": "Service unavailable"
+          }
+        }
+      }
+    },
+    "/users": {
+      "get": {
+        "summary": "Get users (FAILING)",
+        "responses": {
+          "500": {
+            "description": "Database connection failed"
+          },
+          "504": {
+            "description": "Gateway timeout"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "CRITICAL",
+              "HIGH",
+              "MEDIUM",
+              "LOW",
+              "INFO"
+            ]
+          }
+        }
+      },
+      "SystemFailure": {
+        "type": "object",
+        "properties": {
+          "errorType": {
+            "type": "string",
+            "enum": [
+              "OUTAGE",
+              "SECURITY_BREACH",
+              "DATA_LOSS"
+            ]
+          },
+          "impact": {
+            "type": "string"
+          },
+          "estimatedRecovery": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "responses": {
+      "500": {
+        "description": "Internal server error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "503": {
+        "description": "Service unavailable - critical system failure",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/SystemFailure"
+            }
+          }
+        }
+      }
+    }
+  }
+}

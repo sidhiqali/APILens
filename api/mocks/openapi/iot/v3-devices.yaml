@@ -1,0 +1,1034 @@
+openapi: 3.0.3
+info:
+  title: IoT Device Management API
+  version: "3.2.1"
+  description: |
+    Enterprise IoT platform experiencing critical connectivity storms and device failures.
+    This API demonstrates IoT-specific production issues including massive device disconnections,
+    firmware update failures, telemetry data loss, and edge gateway overloads.
+  contact:
+    name: IoT Platform Team
+    email: iot-ops@company.com
+  x-api-status: connectivity-crisis
+  x-iot-issues:
+    - "CRITICAL: 15,000+ devices disconnected in connectivity storm"
+    - "FIRMWARE: 67% firmware update failure rate"
+    - "TELEMETRY: 2.3M data points lost in last hour"
+    - "EDGE: 12/20 edge gateways unreachable"
+    - "NETWORK: Cellular connectivity degraded 89%"
+
+servers:
+  - url: http://localhost:4111
+    description: IoT platform during connectivity crisis
+
+paths:
+  /health:
+    get:
+      summary: IoT platform health check
+      description: |
+        Comprehensive health status for IoT platform showing critical connectivity issues,
+        massive device failures, and edge infrastructure problems.
+      responses:
+        "503":
+          description: Critical IoT platform failures detected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IoTHealthStatus'
+              examples:
+                connectivity_storm:
+                  summary: Massive device connectivity storm
+                  value:
+                    status: "error"
+                    timestamp: "2025-08-29T10:30:00Z"
+                    service: "IoT Device Management API"
+                    version: "v3.2.1"
+                    error: "Connectivity storm: 15,247 devices disconnected simultaneously"
+                    severity: "critical"
+                    iotSystemStatus: "connectivity_crisis"
+                    connectedDevices: 34753
+                    totalDevices: 50000
+                    disconnectionRate: "30.5%"
+                    checks:
+                      device_connectivity: "mass_disconnection"
+                      edge_gateways: "multiple_failures"
+                      telemetry_pipeline: "data_loss"
+                      firmware_updates: "high_failure_rate"
+                      cellular_network: "severely_degraded"
+                edge_gateway_failure:
+                  summary: Multiple edge gateway failures
+                  value:
+                    status: "error"
+                    timestamp: "2025-08-29T10:30:00Z"
+                    service: "IoT Device Management API"
+                    version: "v3.2.1"
+                    error: "Edge gateway cascade failure: 12/20 gateways unreachable"
+                    severity: "critical"
+                    edgeGatewayStatus: "cascade_failure"
+                    failedGateways: 12
+                    totalGateways: 20
+                    affectedDevices: 15000
+
+  /api/devices:
+    get:
+      summary: List IoT devices
+      description: |
+        Get list of IoT devices with connectivity status.
+        WARNING: Mass disconnection event in progress.
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [connected, disconnected, maintenance, error]
+          description: Filter by device status
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 100
+            maximum: 1000
+      responses:
+        "200":
+          description: Device list with connectivity warnings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DevicesList'
+        "503":
+          description: Device registry overloaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceRegistryError'
+              examples:
+                registry_overload:
+                  summary: Device registry overwhelmed by status updates
+                  value:
+                    error: "device_registry_overloaded"
+                    message: "Registry overwhelmed by 15K simultaneous status updates"
+                    code: "REGISTRY_OVERLOAD"
+                    timestamp: "2025-08-29T10:30:00Z"
+                    severity: "critical"
+                    statusUpdateBacklog: 15247
+                    registryResponseTime: "8.5s"
+                    normalResponseTime: "200ms"
+
+  /api/devices/{deviceId}:
+    get:
+      summary: Get device details
+      description: |
+        Get detailed information about specific IoT device.
+        PERFORMANCE WARNING: Device lookups severely degraded.
+      parameters:
+        - in: path
+          name: deviceId
+          required: true
+          schema:
+            type: string
+          example: "sensor-temp-001"
+      responses:
+        "200":
+          description: Device details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceDetails'
+        "404":
+          description: Device not found or disconnected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceNotFoundError'
+        "504":
+          description: Device lookup timeout
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceLookupError'
+
+  /api/devices/{deviceId}/telemetry:
+    get:
+      summary: Get device telemetry data
+      description: |
+        Retrieve telemetry data from IoT device.
+        CRITICAL: 2.3M data points lost due to pipeline failures.
+      parameters:
+        - in: path
+          name: deviceId
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: from
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: to
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: metrics
+          schema:
+            type: array
+            items:
+              type: string
+          description: Specific metrics to retrieve
+      responses:
+        "200":
+          description: Telemetry data with data loss warnings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TelemetryData'
+        "503":
+          description: Telemetry pipeline failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TelemetryError'
+              examples:
+                data_loss:
+                  summary: Massive telemetry data loss
+                  value:
+                    error: "telemetry_data_loss"
+                    message: "Telemetry pipeline failure: 2.3M data points lost in last hour"
+                    code: "TELEMETRY_PIPELINE_FAILURE"
+                    timestamp: "2025-08-29T10:30:00Z"
+                    severity: "critical"
+                    dataPointsLost: 2300000
+                    timeWindow: "1 hour"
+                    dataLossPercentage: "78%"
+                    pipelineStatus: "degraded"
+
+    post:
+      summary: Send telemetry data
+      description: |
+        Send telemetry data from IoT device.
+        DROPPING DATA: Pipeline overloaded, data being dropped.
+      parameters:
+        - in: path
+          name: deviceId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TelemetryUpload'
+      responses:
+        "202":
+          description: Telemetry accepted (with warnings)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TelemetryResponse'
+        "503":
+          description: Telemetry pipeline overloaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TelemetryOverloadError'
+              examples:
+                pipeline_overload:
+                  summary: Telemetry ingestion pipeline overloaded
+                  value:
+                    error: "telemetry_ingestion_overloaded"
+                    message: "Telemetry pipeline at 340% capacity - dropping incoming data"
+                    code: "INGESTION_OVERLOAD"
+                    timestamp: "2025-08-29T10:30:00Z"
+                    severity: "critical"
+                    pipelineCapacity: "340%"
+                    dataDropRate: "60%"
+                    backlogSize: "45GB"
+                    estimatedDataLoss: "high"
+
+  /api/devices/{deviceId}/firmware:
+    post:
+      summary: Update device firmware
+      description: |
+        Initiate firmware update for IoT device.
+        FAILING: 67% firmware update failure rate due to connectivity issues.
+      parameters:
+        - in: path
+          name: deviceId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FirmwareUpdateRequest'
+      responses:
+        "202":
+          description: Firmware update initiated (with warnings)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirmwareUpdateResponse'
+        "503":
+          description: Firmware update service degraded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirmwareUpdateError'
+              examples:
+                update_failure:
+                  summary: High firmware update failure rate
+                  value:
+                    error: "firmware_update_degraded"
+                    message: "Firmware update service degraded: 67% failure rate"
+                    code: "FIRMWARE_UPDATE_FAILING"
+                    timestamp: "2025-08-29T10:30:00Z"
+                    severity: "major"
+                    failureRate: "67%"
+                    recentFailures: 134
+                    totalAttempts: 200
+                    commonFailures:
+                      - "Device connectivity lost during update"
+                      - "Download timeout (cellular network issues)"
+                      - "Update verification failed"
+
+  /api/devices/{deviceId}/commands:
+    post:
+      summary: Send command to device
+      description: |
+        Send control command to IoT device.
+        UNRELIABLE: Command delivery failing due to connectivity issues.
+      parameters:
+        - in: path
+          name: deviceId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceCommand'
+      responses:
+        "200":
+          description: Command sent (delivery not guaranteed)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandResponse'
+        "503":
+          description: Command delivery service degraded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandDeliveryError'
+              examples:
+                delivery_failure:
+                  summary: Command delivery unreliable
+                  value:
+                    error: "command_delivery_unreliable"
+                    message: "Command delivery degraded: 45% failure rate due to connectivity"
+                    code: "COMMAND_DELIVERY_DEGRADED"
+                    timestamp: "2025-08-29T10:30:00Z"
+                    severity: "major"
+                    deliverySuccessRate: "55%"
+                    failedCommands: 450
+                    timeoutRate: "30%"
+                    avgDeliveryTime: "8.5s"
+
+  /api/gateways:
+    get:
+      summary: List edge gateways
+      description: |
+        Get status of edge gateways.
+        CRITICAL: Multiple gateway failures creating device orphans.
+      responses:
+        "200":
+          description: Gateway status list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GatewaysList'
+        "503":
+          description: Gateway management service degraded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GatewayError'
+              examples:
+                cascade_failure:
+                  summary: Edge gateway cascade failure
+                  value:
+                    error: "gateway_cascade_failure"
+                    message: "Cascade failure: 12/20 edge gateways unreachable"
+                    code: "GATEWAY_CASCADE_FAILURE"
+                    timestamp: "2025-08-29T10:30:00Z"
+                    severity: "critical"
+                    failedGateways: 12
+                    totalGateways: 20
+                    orphanedDevices: 15000
+                    cascadeEffect: "spreading"
+
+  /api/network/status:
+    get:
+      summary: Network connectivity status
+      description: |
+        Get network connectivity status across different providers.
+        DEGRADED: Cellular network severely impacted.
+      responses:
+        "200":
+          description: Network status with degradation warnings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetworkStatus'
+        "503":
+          description: Network monitoring system degraded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetworkError'
+
+components:
+  schemas:
+    IoTHealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy, error]
+        timestamp:
+          type: string
+          format: date-time
+        service:
+          type: string
+        version:
+          type: string
+        error:
+          type: string
+        severity:
+          type: string
+          enum: [info, minor, major, critical]
+        iotSystemStatus:
+          type: string
+          enum: [optimal, degraded, connectivity_issues, connectivity_crisis]
+        connectedDevices:
+          type: integer
+        totalDevices:
+          type: integer
+        disconnectionRate:
+          type: string
+        edgeGatewayStatus:
+          type: string
+          enum: [operational, degraded, cascade_failure]
+        failedGateways:
+          type: integer
+        totalGateways:
+          type: integer
+        affectedDevices:
+          type: integer
+        checks:
+          type: object
+          properties:
+            device_connectivity:
+              type: string
+              enum: [stable, unstable, mass_disconnection]
+            edge_gateways:
+              type: string
+              enum: [operational, degraded, multiple_failures]
+            telemetry_pipeline:
+              type: string
+              enum: [flowing, backed_up, data_loss]
+            firmware_updates:
+              type: string
+              enum: [stable, degraded, high_failure_rate]
+            cellular_network:
+              type: string
+              enum: [good, degraded, severely_degraded]
+        iotMetrics:
+          type: object
+          properties:
+            deviceConnectivityRate:
+              type: string
+            telemetryDataRate:
+              type: string
+            firmwareUpdateSuccessRate:
+              type: string
+            edgeGatewayUptime:
+              type: string
+            networkLatency:
+              type: string
+
+    DevicesList:
+      type: object
+      properties:
+        devices:
+          type: array
+          items:
+            type: object
+            properties:
+              deviceId:
+                type: string
+              deviceType:
+                type: string
+              status:
+                type: string
+                enum: [connected, disconnected, maintenance, error, unknown]
+              lastSeen:
+                type: string
+                format: date-time
+              connectivity:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    enum: [cellular, wifi, ethernet, lora]
+                  signalStrength:
+                    type: string
+                  latency:
+                    type: string
+              firmwareVersion:
+                type: string
+              batteryLevel:
+                type: string
+              warnings:
+                type: array
+                items:
+                  type: string
+        connectivityAlerts:
+          type: array
+          items:
+            type: string
+          example:
+            - "15,247 devices disconnected in last 10 minutes"
+            - "Edge gateway failures causing device orphaning"
+            - "Cellular network degradation affecting 89% of devices"
+        summary:
+          type: object
+          properties:
+            totalDevices:
+              type: integer
+            connectedDevices:
+              type: integer
+            disconnectedDevices:
+              type: integer
+            connectivityRate:
+              type: string
+
+    DeviceRegistryError:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        code:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        severity:
+          type: string
+        statusUpdateBacklog:
+          type: integer
+        registryResponseTime:
+          type: string
+        normalResponseTime:
+          type: string
+
+    DeviceDetails:
+      type: object
+      properties:
+        deviceId:
+          type: string
+        deviceType:
+          type: string
+        manufacturer:
+          type: string
+        model:
+          type: string
+        status:
+          type: string
+        location:
+          type: object
+          properties:
+            latitude:
+              type: number
+            longitude:
+              type: number
+            description:
+              type: string
+        connectivity:
+          type: object
+          properties:
+            type:
+              type: string
+            status:
+              type: string
+            signalStrength:
+              type: string
+            lastConnected:
+              type: string
+              format: date-time
+        firmware:
+          type: object
+          properties:
+            currentVersion:
+              type: string
+            availableVersion:
+              type: string
+            lastUpdated:
+              type: string
+              format: date-time
+        telemetry:
+          type: object
+          properties:
+            lastDataPoint:
+              type: string
+              format: date-time
+            dataRate:
+              type: string
+            metrics:
+              type: array
+              items:
+                type: string
+        warnings:
+          type: array
+          items:
+            type: string
+          example:
+            - "Device disconnected 47 minutes ago"
+            - "Firmware version outdated (security risk)"
+            - "Battery level critically low"
+
+    DeviceNotFoundError:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        code:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        severity:
+          type: string
+        possibleReasons:
+          type: array
+          items:
+            type: string
+          example:
+            - "Device disconnected during connectivity storm"
+            - "Edge gateway failure orphaned device"
+            - "Device ID changed after firmware update"
+
+    DeviceLookupError:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        code:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        severity:
+          type: string
+        lookupTime:
+          type: string
+        timeoutThreshold:
+          type: string
+
+    TelemetryData:
+      type: object
+      properties:
+        deviceId:
+          type: string
+        timeRange:
+          type: object
+          properties:
+            from:
+              type: string
+              format: date-time
+            to:
+              type: string
+              format: date-time
+        dataPoints:
+          type: array
+          items:
+            type: object
+            properties:
+              timestamp:
+                type: string
+                format: date-time
+              metrics:
+                type: object
+        dataQuality:
+          type: object
+          properties:
+            completeness:
+              type: string
+            expectedPoints:
+              type: integer
+            actualPoints:
+              type: integer
+            missingPoints:
+              type: integer
+            dataLossPercentage:
+              type: string
+        warnings:
+          type: array
+          items:
+            type: string
+          example:
+            - "78% data loss in requested time range"
+            - "Telemetry pipeline experiencing failures"
+            - "Data quality degraded due to connectivity issues"
+
+    TelemetryError:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        code:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        severity:
+          type: string
+        dataPointsLost:
+          type: integer
+        timeWindow:
+          type: string
+        dataLossPercentage:
+          type: string
+        pipelineStatus:
+          type: string
+
+    TelemetryUpload:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        metrics:
+          type: object
+          description: Device-specific telemetry metrics
+        deviceInfo:
+          type: object
+          properties:
+            firmware:
+              type: string
+            batteryLevel:
+              type: number
+            signalStrength:
+              type: string
+      required:
+        - timestamp
+        - metrics
+
+    TelemetryResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [accepted, queued, dropped]
+        messageId:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        warnings:
+          type: array
+          items:
+            type: string
+          example:
+            - "Telemetry pipeline at high capacity - delivery delayed"
+            - "Data quality may be affected by processing backlog"
+
+    TelemetryOverloadError:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        code:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        severity:
+          type: string
+        pipelineCapacity:
+          type: string
+        dataDropRate:
+          type: string
+        backlogSize:
+          type: string
+        estimatedDataLoss:
+          type: string
+          enum: [low, medium, high, critical]
+
+    FirmwareUpdateRequest:
+      type: object
+      properties:
+        firmwareVersion:
+          type: string
+        updateMethod:
+          type: string
+          enum: [ota, staged, forced]
+          default: ota
+        priority:
+          type: string
+          enum: [low, normal, high, critical]
+          default: normal
+        scheduleTime:
+          type: string
+          format: date-time
+          description: Optional scheduled update time
+      required:
+        - firmwareVersion
+
+    FirmwareUpdateResponse:
+      type: object
+      properties:
+        updateId:
+          type: string
+        status:
+          type: string
+          enum: [scheduled, downloading, installing, completed, failed]
+        estimatedDuration:
+          type: string
+        warnings:
+          type: array
+          items:
+            type: string
+          example:
+            - "Firmware update failure rate currently at 67%"
+            - "Cellular network issues may cause download failures"
+            - "Device connectivity unstable - update may fail"
+
+    FirmwareUpdateError:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        code:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        severity:
+          type: string
+        failureRate:
+          type: string
+        recentFailures:
+          type: integer
+        totalAttempts:
+          type: integer
+        commonFailures:
+          type: array
+          items:
+            type: string
+
+    DeviceCommand:
+      type: object
+      properties:
+        command:
+          type: string
+        parameters:
+          type: object
+        timeout:
+          type: integer
+          description: Command timeout in seconds
+          default: 30
+        priority:
+          type: string
+          enum: [low, normal, high, emergency]
+          default: normal
+      required:
+        - command
+
+    CommandResponse:
+      type: object
+      properties:
+        commandId:
+          type: string
+        status:
+          type: string
+          enum: [sent, delivered, acknowledged, failed, timeout]
+        timestamp:
+          type: string
+          format: date-time
+        deliveryTime:
+          type: string
+        warnings:
+          type: array
+          items:
+            type: string
+          example:
+            - "Command delivery success rate currently 55%"
+            - "High network latency may cause timeouts"
+
+    CommandDeliveryError:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        code:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        severity:
+          type: string
+        deliverySuccessRate:
+          type: string
+        failedCommands:
+          type: integer
+        timeoutRate:
+          type: string
+        avgDeliveryTime:
+          type: string
+
+    GatewaysList:
+      type: object
+      properties:
+        gateways:
+          type: array
+          items:
+            type: object
+            properties:
+              gatewayId:
+                type: string
+              location:
+                type: string
+              status:
+                type: string
+                enum: [online, offline, degraded, maintenance]
+              connectedDevices:
+                type: integer
+              lastSeen:
+                type: string
+                format: date-time
+              networkType:
+                type: string
+              uptime:
+                type: string
+              issues:
+                type: array
+                items:
+                  type: string
+        criticalAlerts:
+          type: array
+          items:
+            type: string
+          example:
+            - "Gateway cascade failure in progress"
+            - "15,000 devices orphaned by gateway failures"
+            - "Network partition detected in east region"
+
+    GatewayError:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        code:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        severity:
+          type: string
+        failedGateways:
+          type: integer
+        totalGateways:
+          type: integer
+        orphanedDevices:
+          type: integer
+        cascadeEffect:
+          type: string
+          enum: [contained, spreading, critical]
+
+    NetworkStatus:
+      type: object
+      properties:
+        overall:
+          type: string
+          enum: [good, degraded, poor, critical]
+        providers:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              type:
+                type: string
+                enum: [cellular, wifi, ethernet, satellite]
+              status:
+                type: string
+                enum: [operational, degraded, outage]
+              coverage:
+                type: string
+              latency:
+                type: string
+              reliability:
+                type: string
+              affectedDevices:
+                type: integer
+        incidents:
+          type: array
+          items:
+            type: object
+            properties:
+              provider:
+                type: string
+              type:
+                type: string
+              severity:
+                type: string
+              description:
+                type: string
+              startTime:
+                type: string
+                format: date-time
+              estimatedResolution:
+                type: string
+              affectedRegions:
+                type: array
+                items:
+                  type: string
+
+    NetworkError:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        code:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        severity:
+          type: string

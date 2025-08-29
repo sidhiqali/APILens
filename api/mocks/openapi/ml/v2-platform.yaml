@@ -1,0 +1,683 @@
+openapi: 3.0.3
+info:
+  title: Machine Learning Platform API
+  version: "2.1.0"
+  description: |
+    Enterprise ML platform experiencing critical model drift and GPU resource exhaustion.
+    This API showcases ML-specific production issues including model performance degradation,
+    GPU memory leaks, training pipeline failures, and inference latency spikes.
+  contact:
+    name: ML Platform Team
+    email: ml-ops@company.com
+  x-api-status: model-drift-critical
+  x-ml-issues:
+    - "CRITICAL: Model accuracy degraded 15% due to data drift"
+    - "GPU: 12/16 GPUs failed with memory exhaustion"
+    - "TRAINING: Pipeline failures at 34% rate"
+    - "INFERENCE: Latency spikes to 8.5s (SLA: 200ms)"
+    - "MODEL: Version rollback required for prod stability"
+
+servers:
+  - url: http://localhost:4109
+    description: ML platform under model drift crisis
+
+paths:
+  /health:
+    get:
+      summary: ML platform health check
+      description: |
+        Comprehensive health status for ML platform showing critical model drift
+        and infrastructure failures across training and inference pipelines.
+      responses:
+        "503":
+          description: Critical ML platform failures detected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MLHealthStatus'
+              examples:
+                model_drift_critical:
+                  summary: Critical model drift detected
+                  value:
+                    status: "error"
+                    timestamp: "2025-08-29T10:30:00Z"
+                    service: "ML Platform API"
+                    version: "v2.1.0"
+                    error: "Critical model drift: accuracy dropped 15% below threshold"
+                    severity: "critical"
+                    mlSystemStatus: "degraded"
+                    modelDriftScore: 0.85
+                    accuracyDrop: "15%"
+                    checks:
+                      model_performance: "critical_drift"
+                      gpu_cluster: "resource_exhaustion"
+                      training_pipeline: "failing"
+                      inference_service: "latency_breach"
+                      data_quality: "distribution_shift"
+                gpu_exhaustion:
+                  summary: GPU resource exhaustion
+                  value:
+                    status: "error"
+                    timestamp: "2025-08-29T10:30:00Z"
+                    service: "ML Platform API"
+                    version: "v2.1.0"
+                    error: "GPU cluster exhaustion: 12/16 GPUs failed with OOM"
+                    severity: "critical"
+                    gpuStatus: "resource_exhausted"
+                    failedGpus: 12
+                    totalGpus: 16
+                    gpuMemoryUsage: "97%"
+
+  /api/models:
+    get:
+      summary: List available ML models
+      description: |
+        Get list of available models with performance metrics.
+        WARNING: Multiple models showing critical performance degradation.
+      responses:
+        "200":
+          description: Models list with performance warnings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelsList'
+        "503":
+          description: Model registry service degraded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelRegistryError'
+
+  /api/models/{modelId}/predict:
+    post:
+      summary: Make model predictions
+      description: |
+        Generate predictions using specified model.
+        CRITICAL WARNING: Inference latency exceeding SLA by 4250%.
+      parameters:
+        - in: path
+          name: modelId
+          required: true
+          schema:
+            type: string
+          example: "sentiment-classifier-v2"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PredictionRequest'
+      responses:
+        "200":
+          description: Prediction results (with performance warnings)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PredictionResponse'
+        "504":
+          description: Inference timeout due to GPU overload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InferenceError'
+              examples:
+                inference_timeout:
+                  summary: GPU overload causing inference timeout
+                  value:
+                    error: "inference_timeout"
+                    message: "Model inference timeout: 8.5s exceeds 200ms SLA"
+                    code: "GPU_OVERLOAD_TIMEOUT"
+                    timestamp: "2025-08-29T10:30:00Z"
+                    severity: "critical"
+                    inferenceTime: "8500ms"
+                    slaTarget: "200ms"
+                    slaBreachPercentage: "4250%"
+                    gpuQueueLength: 47
+        "503":
+          description: Model degraded performance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelDriftError'
+              examples:
+                model_drift:
+                  summary: Model performance degraded due to drift
+                  value:
+                    error: "model_performance_degraded"
+                    message: "Model accuracy dropped 15% - drift detected"
+                    code: "MODEL_DRIFT_CRITICAL"
+                    timestamp: "2025-08-29T10:30:00Z"
+                    severity: "critical"
+                    currentAccuracy: "85%"
+                    baselineAccuracy: "100%"
+                    driftScore: 0.85
+                    confidenceLevel: "low"
+
+  /api/models/{modelId}/training:
+    post:
+      summary: Start model training
+      description: |
+        Initiate training for specified model.
+        FAILING: 34% training pipeline failure rate due to GPU issues.
+      parameters:
+        - in: path
+          name: modelId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrainingRequest'
+      responses:
+        "202":
+          description: Training started (with resource warnings)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrainingResponse'
+        "503":
+          description: Training infrastructure overloaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrainingError'
+              examples:
+                gpu_unavailable:
+                  summary: No GPU resources available for training
+                  value:
+                    error: "gpu_resources_unavailable"
+                    message: "All GPU nodes exhausted or failed - cannot start training"
+                    code: "GPU_CLUSTER_FULL"
+                    timestamp: "2025-08-29T10:30:00Z"
+                    severity: "critical"
+                    availableGpus: 0
+                    totalGpus: 16
+                    queuedJobs: 23
+                    estimatedWait: "2-4 hours"
+                pipeline_failure:
+                  summary: Training pipeline experiencing high failure rate
+                  value:
+                    error: "training_pipeline_unstable"
+                    message: "Training pipeline failure rate at 34% - infrastructure issues"
+                    code: "PIPELINE_INSTABILITY"
+                    timestamp: "2025-08-29T10:30:00Z"
+                    severity: "major"
+                    failureRate: "34%"
+                    recentFailures: 17
+                    totalAttempts: 50
+
+  /api/models/{modelId}/training/{jobId}:
+    get:
+      summary: Get training job status
+      description: |
+        Monitor training job progress.
+        HIGH FAILURE RATE: Many jobs failing due to GPU memory issues.
+      parameters:
+        - in: path
+          name: modelId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: jobId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Training job status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrainingStatus'
+        "500":
+          description: Training job failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrainingJobError'
+              examples:
+                gpu_oom:
+                  summary: Training failed - GPU out of memory
+                  value:
+                    error: "training_job_failed"
+                    message: "Training job crashed: GPU out of memory during batch processing"
+                    code: "GPU_OOM_TRAINING"
+                    timestamp: "2025-08-29T10:30:00Z"
+                    severity: "major"
+                    failureReason: "gpu_out_of_memory"
+                    epochsCompleted: 3
+                    totalEpochs: 10
+                    lastCheckpoint: "epoch_3_batch_1847"
+
+  /api/data/quality:
+    get:
+      summary: Data quality metrics
+      description: |
+        Get data quality status and drift detection metrics.
+        CRITICAL: Significant data distribution shift detected.
+      responses:
+        "200":
+          description: Data quality metrics with drift warnings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataQualityMetrics'
+        "503":
+          description: Data quality system degraded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataQualityError'
+              examples:
+                distribution_shift:
+                  summary: Critical data distribution shift detected
+                  value:
+                    error: "data_distribution_shift"
+                    message: "Critical distribution shift: input data diverged 45% from training distribution"
+                    code: "DATA_DRIFT_CRITICAL"
+                    timestamp: "2025-08-29T10:30:00Z"
+                    severity: "critical"
+                    driftPercentage: "45%"
+                    distributionShift: "high"
+                    dataQualityScore: 0.34
+                    affectedFeatures: ["text_length", "sentiment_score", "language_detection"]
+
+components:
+  schemas:
+    MLHealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy, error]
+        timestamp:
+          type: string
+          format: date-time
+        service:
+          type: string
+        version:
+          type: string
+        error:
+          type: string
+        severity:
+          type: string
+          enum: [info, minor, major, critical]
+        mlSystemStatus:
+          type: string
+          enum: [optimal, degraded, critical, failing]
+        modelDriftScore:
+          type: number
+          format: float
+          description: Model drift score (0-1, >0.7 is critical)
+        accuracyDrop:
+          type: string
+          description: Percentage drop in model accuracy
+        gpuStatus:
+          type: string
+          enum: [available, high_usage, resource_exhausted]
+        failedGpus:
+          type: integer
+        totalGpus:
+          type: integer
+        gpuMemoryUsage:
+          type: string
+        checks:
+          type: object
+          properties:
+            model_performance:
+              type: string
+              enum: [good, degraded, critical_drift]
+            gpu_cluster:
+              type: string
+              enum: [available, high_usage, resource_exhaustion]
+            training_pipeline:
+              type: string
+              enum: [stable, unstable, failing]
+            inference_service:
+              type: string
+              enum: [normal, slow, latency_breach]
+            data_quality:
+              type: string
+              enum: [good, degraded, distribution_shift]
+        mlMetrics:
+          type: object
+          properties:
+            averageInferenceLatency:
+              type: string
+            trainingJobSuccessRate:
+              type: string
+            modelAccuracyTrend:
+              type: string
+            gpuUtilization:
+              type: string
+            dataQualityScore:
+              type: number
+
+    ModelsList:
+      type: object
+      properties:
+        models:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              version:
+                type: string
+              status:
+                type: string
+                enum: [healthy, degraded, critical, failing]
+              accuracy:
+                type: string
+              driftScore:
+                type: number
+              lastTrained:
+                type: string
+                format: date-time
+              performanceIssues:
+                type: array
+                items:
+                  type: string
+        performanceAlerts:
+          type: array
+          items:
+            type: string
+          example:
+            - "3 models showing critical drift (>15% accuracy drop)"
+            - "GPU cluster at 97% capacity - training queue backing up"
+            - "Inference latency SLA breached on 5 models"
+
+    ModelRegistryError:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        code:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        severity:
+          type: string
+
+    PredictionRequest:
+      type: object
+      properties:
+        input:
+          type: object
+          description: Input data for prediction (varies by model)
+        options:
+          type: object
+          properties:
+            timeout:
+              type: integer
+              description: Request timeout in milliseconds
+              default: 5000
+              maximum: 30000
+      required:
+        - input
+
+    PredictionResponse:
+      type: object
+      properties:
+        prediction:
+          type: object
+          description: Model prediction results
+        confidence:
+          type: number
+          format: float
+          description: Prediction confidence score
+        inferenceTime:
+          type: string
+          description: Time taken for inference
+        modelVersion:
+          type: string
+        warnings:
+          type: array
+          items:
+            type: string
+          example:
+            - "Model showing signs of drift - confidence may be unreliable"
+            - "Inference time 4.2s exceeds recommended 200ms threshold"
+
+    InferenceError:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        code:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        severity:
+          type: string
+        inferenceTime:
+          type: string
+        slaTarget:
+          type: string
+        slaBreachPercentage:
+          type: string
+        gpuQueueLength:
+          type: integer
+
+    ModelDriftError:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        code:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        severity:
+          type: string
+        currentAccuracy:
+          type: string
+        baselineAccuracy:
+          type: string
+        driftScore:
+          type: number
+        confidenceLevel:
+          type: string
+          enum: [high, medium, low]
+
+    TrainingRequest:
+      type: object
+      properties:
+        datasetId:
+          type: string
+        hyperparameters:
+          type: object
+        resourceRequirements:
+          type: object
+          properties:
+            gpuCount:
+              type: integer
+              default: 1
+              maximum: 4
+            memoryGb:
+              type: integer
+              default: 16
+      required:
+        - datasetId
+
+    TrainingResponse:
+      type: object
+      properties:
+        jobId:
+          type: string
+        status:
+          type: string
+          enum: [queued, running, completed, failed]
+        estimatedDuration:
+          type: string
+        resourcesAllocated:
+          type: object
+        warnings:
+          type: array
+          items:
+            type: string
+          example:
+            - "GPU resources limited - job queued for 2-4 hours"
+            - "Training pipeline experiencing 34% failure rate"
+
+    TrainingError:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        code:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        severity:
+          type: string
+        availableGpus:
+          type: integer
+        totalGpus:
+          type: integer
+        queuedJobs:
+          type: integer
+        estimatedWait:
+          type: string
+        failureRate:
+          type: string
+        recentFailures:
+          type: integer
+        totalAttempts:
+          type: integer
+
+    TrainingStatus:
+      type: object
+      properties:
+        jobId:
+          type: string
+        status:
+          type: string
+          enum: [queued, running, completed, failed, cancelled]
+        progress:
+          type: object
+          properties:
+            currentEpoch:
+              type: integer
+            totalEpochs:
+              type: integer
+            currentLoss:
+              type: number
+            accuracy:
+              type: number
+        resourceUsage:
+          type: object
+          properties:
+            gpuUtilization:
+              type: string
+            memoryUsage:
+              type: string
+        warnings:
+          type: array
+          items:
+            type: string
+
+    TrainingJobError:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        code:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        severity:
+          type: string
+        failureReason:
+          type: string
+        epochsCompleted:
+          type: integer
+        totalEpochs:
+          type: integer
+        lastCheckpoint:
+          type: string
+
+    DataQualityMetrics:
+      type: object
+      properties:
+        overallScore:
+          type: number
+          format: float
+          description: Overall data quality score (0-1)
+        driftDetection:
+          type: object
+          properties:
+            distributionShift:
+              type: string
+              enum: [none, low, medium, high, critical]
+            driftPercentage:
+              type: string
+            affectedFeatures:
+              type: array
+              items:
+                type: string
+        qualityChecks:
+          type: object
+          properties:
+            completeness:
+              type: string
+            validity:
+              type: string
+            consistency:
+              type: string
+            accuracy:
+              type: string
+        criticalIssues:
+          type: array
+          items:
+            type: string
+          example:
+            - "45% distribution shift detected in input features"
+            - "Data completeness dropped to 67% (threshold: 95%)"
+
+    DataQualityError:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        code:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        severity:
+          type: string
+        driftPercentage:
+          type: string
+        distributionShift:
+          type: string
+        dataQualityScore:
+          type: number
+        affectedFeatures:
+          type: array
+          items:
+            type: string

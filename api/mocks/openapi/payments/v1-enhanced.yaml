@@ -1,0 +1,467 @@
+openapi: 3.0.3
+info:
+  title: Payment Processing API
+  version: "1.0.0"
+  description: |
+    Financial payment processing API experiencing critical security vulnerabilities
+    and PCI DSS compliance issues. This API demonstrates various security-related
+    failures, performance issues, and compliance violations.
+  contact:
+    name: Security & Compliance Team
+    email: security@fintech.com
+  x-api-status: critical-security
+  x-security-issues:
+    - "CRITICAL: CVE-2024-1234 vulnerability in payment validation"
+    - "PCI-DSS: Weak encryption algorithm detected"
+    - "BREAKING: Authentication changed from API key to JWT"
+    - "URGENT: Brute force attacks detected"
+
+servers:
+  - url: http://localhost:4103
+    description: Mock payment server with security issues
+
+security:
+  - ApiKeyAuth: []
+
+paths:
+  /health:
+    get:
+      summary: Payment service health check
+      description: |
+        Health status showing security vulnerabilities and compliance issues.
+        Currently experiencing critical security threats.
+      responses:
+        "503":
+          description: Service unhealthy - security vulnerabilities detected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecurityHealthStatus'
+              examples:
+                security_critical:
+                  summary: Critical security vulnerability
+                  value:
+                    status: "error"
+                    timestamp: "2025-08-29T10:30:00Z"
+                    service: "Payment Processing API"
+                    version: "v1.0.0"
+                    error: "CVE-2024-1234: Critical vulnerability in payment validation logic"
+                    severity: "critical"
+                    securityLevel: "compromised"
+                    compliance: "pci_dss_violation"
+                    checks:
+                      encryption: "weak_algorithm"
+                      authentication: "brute_force_detected"
+                      pci_compliance: "failed"
+                      vulnerability_scan: "critical_issues_found"
+                pci_violation:
+                  summary: PCI DSS compliance violation
+                  value:
+                    status: "unhealthy"
+                    timestamp: "2025-08-29T10:30:00Z"
+                    service: "Payment Processing API"
+                    version: "v1.0.0"
+                    error: "PCI DSS compliance violation - weak encryption detected"
+                    severity: "major"
+                    securityLevel: "at_risk"
+                    compliance: "pci_dss_violation"
+
+  /payments:
+    post:
+      summary: Process payment
+      description: |
+        Process a payment transaction. SECURITY WARNING: Experiencing high rates
+        of fraudulent transactions and authentication bypass attempts.
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePaymentRequest'
+            example:
+              amount: 2999
+              currency: "USD"
+              cardNumber: "4111111111111111"  # Demo card - security risk in real API
+              cvv: "123"                     # Should never be in API spec
+              description: "Order #12345"
+              customerEmail: "customer@example.com"
+      responses:
+        "503":
+          description: Service unavailable - security lockdown
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecurityErrorResponse'
+              examples:
+                security_lockdown:
+                  summary: Security lockdown activated
+                  value:
+                    error: "security_lockdown"
+                    message: "Payment processing temporarily disabled due to security incident"
+                    code: "SECURITY_INCIDENT_LOCKDOWN"
+                    timestamp: "2025-08-29T10:30:00Z"
+                    severity: "critical"
+                    incident_id: "SEC-2025-001"
+                    estimated_resolution: "2025-08-29T16:00:00Z"
+        "401":
+          description: Authentication failure - API key compromised
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecurityErrorResponse'
+              examples:
+                compromised_key:
+                  summary: API key potentially compromised
+                  value:
+                    error: "authentication_failed"
+                    message: "API key flagged as potentially compromised"
+                    code: "COMPROMISED_API_KEY"
+                    timestamp: "2025-08-29T10:30:00Z"
+                    severity: "major"
+                    action_required: "Generate new API key immediately"
+        "429":
+          description: Rate limited - brute force protection
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecurityErrorResponse'
+              examples:
+                brute_force:
+                  summary: Brute force attack detected
+                  value:
+                    error: "rate_limit_exceeded"
+                    message: "Brute force attack detected - account temporarily locked"
+                    code: "BRUTE_FORCE_PROTECTION"
+                    timestamp: "2025-08-29T10:30:00Z"
+                    severity: "major"
+                    failed_attempts: 127
+                    lockout_duration: 3600
+        "500":
+          description: Internal error - encryption service failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecurityErrorResponse'
+              examples:
+                encryption_failure:
+                  summary: Encryption service failure
+                  value:
+                    error: "encryption_service_failure"
+                    message: "Payment encryption service unavailable"
+                    code: "ENCRYPTION_SERVICE_DOWN"
+                    timestamp: "2025-08-29T10:30:00Z"
+                    severity: "critical"
+                    impact: "Cannot process secure payments"
+
+  /payments/{paymentId}:
+    get:
+      summary: Get payment details
+      description: |
+        Retrieve payment information. WARNING: Experiencing data leakage issues
+        and unauthorized access attempts.
+      parameters:
+        - in: path
+          name: paymentId
+          required: true
+          schema:
+            type: string
+          example: "pay_123456"
+      responses:
+        "200":
+          description: Payment details (with security warnings)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentDetailsInsecure'
+        "403":
+          description: Access denied - suspicious activity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecurityErrorResponse'
+              examples:
+                suspicious_access:
+                  summary: Suspicious access pattern detected
+                  value:
+                    error: "access_denied"
+                    message: "Suspicious access pattern detected for payment data"
+                    code: "SUSPICIOUS_ACCESS_PATTERN"
+                    timestamp: "2025-08-29T10:30:00Z"
+                    severity: "major"
+                    risk_score: 85
+                    blocked_reason: "Unusual geographic access pattern"
+        "500":
+          description: Data integrity failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecurityErrorResponse'
+              examples:
+                data_corruption:
+                  summary: Payment data corruption detected
+                  value:
+                    error: "data_integrity_failure"
+                    message: "Payment data corruption detected - possible security breach"
+                    code: "DATA_CORRUPTION_DETECTED"
+                    timestamp: "2025-08-29T10:30:00Z"
+                    severity: "critical"
+                    affected_records: 1547
+
+  /payments/{paymentId}/refund:
+    post:
+      summary: Process refund
+      description: |
+        Process payment refund. CRITICAL: Refund service experiencing 
+        authorization bypass vulnerabilities.
+      parameters:
+        - in: path
+          name: paymentId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefundRequest'
+      responses:
+        "503":
+          description: Refund service compromised
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecurityErrorResponse'
+              examples:
+                service_compromised:
+                  summary: Refund service security breach
+                  value:
+                    error: "service_compromised"
+                    message: "Refund service temporarily disabled due to security breach"
+                    code: "REFUND_SERVICE_BREACH"
+                    timestamp: "2025-08-29T10:30:00Z"
+                    severity: "critical"
+                    breach_details: "Unauthorized refund attempts detected"
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: |
+        API key authentication. WARNING: Multiple compromised keys detected.
+        BREAKING CHANGE: Will be replaced with JWT authentication in v2.
+
+  schemas:
+    SecurityHealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy, error]
+        timestamp:
+          type: string
+          format: date-time
+        service:
+          type: string
+        version:
+          type: string
+        error:
+          type: string
+        severity:
+          type: string
+          enum: [info, minor, major, critical]
+        securityLevel:
+          type: string
+          enum: [secure, at_risk, compromised]
+          description: Current security assessment level
+        compliance:
+          type: string
+          enum: [compliant, violation, pci_dss_violation]
+          description: Compliance status
+        checks:
+          type: object
+          properties:
+            encryption:
+              type: string
+              enum: [strong, weak_algorithm, failed]
+            authentication:
+              type: string
+              enum: [secure, brute_force_detected, compromised]
+            pci_compliance:
+              type: string
+              enum: [compliant, failed, under_review]
+            vulnerability_scan:
+              type: string
+              enum: [clean, issues_found, critical_issues_found]
+        securityMetrics:
+          type: object
+          properties:
+            failedAuthAttempts:
+              type: integer
+              description: Failed authentication attempts in last hour
+            suspiciousTransactions:
+              type: integer
+              description: Flagged suspicious transactions
+            vulnerabilityCount:
+              type: integer
+              description: Active security vulnerabilities
+            complianceScore:
+              type: number
+              description: PCI DSS compliance score (0-100)
+      required:
+        - status
+        - timestamp
+        - service
+        - securityLevel
+        - compliance
+
+    CreatePaymentRequest:
+      type: object
+      description: |
+        SECURITY WARNING: This schema contains sensitive fields that should
+        never be exposed in production APIs.
+      properties:
+        amount:
+          type: integer
+          minimum: 1
+          description: Payment amount in cents
+        currency:
+          type: string
+          enum: [USD, EUR, GBP]
+        cardNumber:
+          type: string
+          description: "SECURITY RISK: Credit card number should NEVER be in API spec"
+          example: "4111111111111111"
+          x-security-risk: "PCI DSS violation - card data exposure"
+        cvv:
+          type: string
+          description: "CRITICAL: CVV should NEVER be in API documentation"
+          example: "123"
+          x-security-risk: "Critical PCI DSS violation"
+        description:
+          type: string
+        customerEmail:
+          type: string
+          format: email
+      required:
+        - amount
+        - currency
+        - cardNumber
+        - cvv
+
+    PaymentDetailsInsecure:
+      type: object
+      description: |
+        SECURITY CONCERN: Payment response exposing sensitive data
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum: [pending, succeeded, failed, cancelled, disputed]
+        amount:
+          type: integer
+        currency:
+          type: string
+        maskedCardNumber:
+          type: string
+          description: "Should be properly masked"
+          example: "4111********1111"
+        securityFlags:
+          type: object
+          description: Security-related flags and warnings
+          properties:
+            riskScore:
+              type: integer
+              description: Transaction risk score (0-100)
+            fraudChecks:
+              type: array
+              items:
+                type: string
+              example: ["velocity_check_failed", "geolocation_mismatch"]
+            complianceWarnings:
+              type: array
+              items:
+                type: string
+              example: ["pci_dss_violation", "data_retention_exceeded"]
+        createdAt:
+          type: string
+          format: date-time
+        lastSecurityEvent:
+          type: object
+          properties:
+            timestamp:
+              type: string
+              format: date-time
+            event:
+              type: string
+            severity:
+              type: string
+
+    RefundRequest:
+      type: object
+      properties:
+        amount:
+          type: integer
+          description: Refund amount in cents (optional - defaults to full amount)
+        reason:
+          type: string
+          enum: [customer_request, fraud, dispute, error]
+        notes:
+          type: string
+      required:
+        - reason
+
+    SecurityErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        code:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        severity:
+          type: string
+          enum: [info, minor, major, critical]
+        incident_id:
+          type: string
+          description: Security incident identifier
+        action_required:
+          type: string
+          description: Required action to resolve
+        estimated_resolution:
+          type: string
+          format: date-time
+          description: Estimated resolution time
+        failed_attempts:
+          type: integer
+          description: Number of failed attempts
+        lockout_duration:
+          type: integer
+          description: Lockout duration in seconds
+        risk_score:
+          type: integer
+          description: Risk assessment score
+        blocked_reason:
+          type: string
+          description: Reason for blocking access
+        affected_records:
+          type: integer
+          description: Number of affected records
+        breach_details:
+          type: string
+          description: Details about security breach
+      required:
+        - error
+        - message
+        - code
+        - timestamp
+        - severity

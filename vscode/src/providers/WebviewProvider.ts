@@ -2358,7 +2358,6 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
                     }
                     break;
                 case 'changelogsData':
-                    console.log('Received changelogs data:', message.data);
                     // Handle paginated response - extract the changes array
                     if (Array.isArray(message.data)) {
                         appData.changelogs = message.data;
@@ -2369,7 +2368,6 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
                     } else {
                         appData.changelogs = [];
                     }
-                    console.log('Processed changelogs:', appData.changelogs);
                     if (currentTab === 'changes') {
                         renderChanges();
                     }

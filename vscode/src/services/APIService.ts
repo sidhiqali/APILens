@@ -29,6 +29,10 @@ export interface DashboardStats {
     unreadNotifications: number;
 }
 
+/**
+ * APIService handles all communication with the APILens backend API.
+ * Provides methods for authentication, API management, and dashboard data.
+ */
 export class APIService {
     private api: AxiosInstance;
     private context: vscode.ExtensionContext | null = null;

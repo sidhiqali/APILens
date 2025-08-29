@@ -26,7 +26,6 @@ export class WebSocketService {
         const enableRealtime = config.get('enableRealtime', true);
         
         if (!enableRealtime) {
-            console.log('Real-time features disabled by configuration');
             return;
         }
 
@@ -36,7 +35,6 @@ export class WebSocketService {
             // Get auth token for WebSocket connection
             const token = await this.apiService.getStoredToken();
             if (!token) {
-                console.log('No auth token available for WebSocket connection');
                 return;
             }
 
@@ -48,11 +46,11 @@ export class WebSocketService {
             });
 
             this.socket.on('connect', () => {
-                console.log('Connected to APILens WebSocket server');
+                // Connection established
             });
 
             this.socket.on('disconnect', () => {
-                console.log('Disconnected from APILens WebSocket server');
+                // Connection closed
             });
 
             this.socket.on('api-change', (data: WebSocketEventData) => {

@@ -16,7 +16,6 @@ let fileSystemService: FileSystemService;
 let fileContextMenuHandler: FileContextMenuHandler;
 
 export function activate(context: vscode.ExtensionContext) {
-    console.log('APILens extension is now active!');
 
     // Initialize services
     apiService = new APIService();
@@ -159,11 +158,9 @@ export function activate(context: vscode.ExtensionContext) {
         });
     }
 
-    console.log('APILens extension fully activated with all Phase 3 features!');
 }
 
 export function deactivate() {
-    console.log('APILens extension is being deactivated');
     
     // Clean up services
     if (webSocketService) {

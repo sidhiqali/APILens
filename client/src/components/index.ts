@@ -49,3 +49,5 @@ export {
   HealthScoreCard,
   MetricsHeatmap,
 } from './analytics';
+
+export { HealthIssuesExpander } from './HealthIssuesExpander';

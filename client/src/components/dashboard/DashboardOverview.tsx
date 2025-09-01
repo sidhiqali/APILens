@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { AlertTriangle, CheckCircle, Clock, TrendingUp } from 'lucide-react';
 import {
   useDashboardOverview,
@@ -21,6 +22,7 @@ interface DashboardOverviewProps {
 const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   className = '',
 }) => {
+  const router = useRouter();
   const {
     data: overviewData,
     isLoading: overviewLoading,
@@ -61,7 +63,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           the page.
         </p>
         <button
-          onClick={() => window.location.reload()}
+          onClick={() => router.refresh()}
           className="px-4 py-2 text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700"
         >
           Refresh Dashboard

@@ -12,6 +12,7 @@ import {
   Clock,
 } from 'lucide-react';
 import type { Notification } from '@/services/notification.service';
+import { useRouter } from 'next/navigation';
 
 interface NotificationToastProps {
   notification: Notification;
@@ -37,9 +38,11 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
     }
   };
 
+  const router = useRouter();
+
   const handleClick = () => {
     if (notification.apiId) {
-      window.location.href = `/apis/${notification.apiId}?notification=${notification._id}`;
+      router.push(`/apis/${notification.apiId}?notification=${notification._id}`);
     }
     onDismiss?.();
   };

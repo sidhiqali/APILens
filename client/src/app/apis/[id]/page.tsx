@@ -14,6 +14,7 @@ import {
   useGetApiChanges,
   useGetApiIssues,
 } from '@/hooks/useChangelog';
+import { HealthIssuesExpander } from '@/components';
 import {
   Activity,
   AlertTriangle,
@@ -27,6 +28,8 @@ import {
   TrendingUp,
   Loader2,
 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import logger from '@/utils/logger';
 
 interface Props {
   params: Promise<{
@@ -78,25 +81,10 @@ const ApiDetailPage = ({ params }: Props) => {
             changesSection.classList.remove('ring-2', 'ring-blue-500', 'ring-opacity-50');
           }, 3000);
         }
-        
-        const banner = document.createElement('div');
-        banner.className = 'fixed top-4 right-4 bg-blue-100 border border-blue-300 text-blue-800 px-4 py-2 rounded-lg shadow-lg z-50';
-        banner.innerHTML = `
-          <div class="flex items-center space-x-2">
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
-            </svg>
-            <span>Viewing API details from notification</span>
-            <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-blue-600 hover:text-blue-800">×</button>
-          </div>
-        `;
-        document.body.appendChild(banner);
-        
-        setTimeout(() => {
-          if (banner.parentElement) {
-            banner.remove();
-          }
-        }, 5000);
+        toast('Viewing API details from notification', {
+          position: 'top-right',
+          duration: 3000,
+        });
       }, 500);
     }
     
@@ -132,7 +120,7 @@ const ApiDetailPage = ({ params }: Props) => {
       await deleteApiMutation.mutateAsync(id);
       router.push('/apis');
     } catch (error) {
-      console.error('Failed to delete API:', error);
+      logger.error('Failed to delete API:', error);
     }
   };
 
@@ -140,7 +128,7 @@ const ApiDetailPage = ({ params }: Props) => {
     try {
       await toggleStatusMutation.mutateAsync(id);
     } catch (error) {
-      console.error('Failed to toggle API status:', error);
+      logger.error('Failed to toggle API status:', error);
     }
   };
 
@@ -148,7 +136,7 @@ const ApiDetailPage = ({ params }: Props) => {
     try {
       await checkApiMutation.mutateAsync(id);
     } catch (error) {
-      console.error('Failed to check API:', error);
+      logger.error('Failed to check API:', error);
     }
   };
 
@@ -205,7 +193,7 @@ const ApiDetailPage = ({ params }: Props) => {
                 API Not Found
               </h2>
               <p className="mb-4 text-gray-600">
-                The API you're looking for doesn't exist or you don't have
+                The API you&apos;re looking for doesn&apos;t exist or you don&apos;t have
                 access to it.
               </p>
               <button
@@ -505,6 +493,11 @@ const ApiDetailPage = ({ params }: Props) => {
                         </p>
                       </div>
                     )}
+
+                    <HealthIssuesExpander 
+                      apiId={id} 
+                      healthStatus={api.healthStatus} 
+                    />
                   </div>
                 </div>
 

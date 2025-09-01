@@ -230,8 +230,8 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
     }
   };
 
-  const handleBrush = (domain: any) => {
-    console.log('Brush domain:', domain);
+  const handleBrush = (_domain: any) => {
+    // Intentionally silent in production; enable if needed for debugging
   };
 
   const resetZoom = () => {

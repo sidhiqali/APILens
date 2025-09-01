@@ -306,6 +306,29 @@ class ApiService {
   }> {
     return await apiClient.post(`${this.baseUrl}/validate-url`, { url });
   }
+
+  async getApiHealthIssues(id: string): Promise<{
+    apiId: string;
+    apiName: string;
+    healthStatus: string;
+    issueCount: number;
+    issues: Array<{
+      type: string;
+      severity: string;
+      title: string;
+      description: string;
+      suggestion?: string;
+      affectedEndpoints?: string[];
+      relatedChanges?: Array<{
+        date: string;
+        changeType: string;
+        description: string;
+      }>;
+    }>;
+    lastChecked: string;
+  }> {
+    return await apiClient.get(`${this.baseUrl}/${id}/health-issues`);
+  }
 }
 
 export const apiService = new ApiService();

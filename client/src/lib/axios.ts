@@ -1,5 +1,6 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { toast } from 'react-hot-toast';
+import logger from '@/utils/logger';
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
@@ -34,10 +35,9 @@ api.interceptors.response.use(
       if (
         typeof window !== 'undefined' &&
         !window.location.pathname.includes('/login') &&
-        !window.location.pathname.includes('/register') &&
-        !window.location.pathname.includes('/')
+        !window.location.pathname.includes('/register')
       ) {
-        console.log('Session expired, redirecting to login');
+        logger.log('Session expired, redirecting to login');
         window.location.href = '/login';
       }
 
@@ -46,7 +46,7 @@ api.interceptors.response.use(
 
     if (error.response) {
       const { status, data } = error.response;
-      const errorData = data as any;
+      const errorData = data as unknown as Record<string, any> | undefined;
 
       switch (status) {
         case 400:
@@ -59,13 +59,16 @@ api.interceptors.response.use(
           toast.error('Resource not found');
           break;
         case 422:
-          if (errorData?.errors) {
-            Object.values(errorData.errors).forEach((error: any) => {
-              toast.error(error.message);
-            });
-          } else {
-            toast.error(errorData?.message || 'Validation error');
+          if (errorData && typeof errorData === 'object' && 'errors' in errorData) {
+            const errs = (errorData as any).errors;
+            if (errs && typeof errs === 'object') {
+              Object.values(errs).forEach((e: any) => {
+                if (e?.message) toast.error(e.message);
+              });
+              break;
+            }
           }
+          toast.error((errorData as any)?.message || 'Validation error');
           break;
         case 429:
           toast.error('Too many requests. Please try again later.');

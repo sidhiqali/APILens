@@ -1,4 +1,5 @@
 import { io, Socket } from 'socket.io-client';
+import logger from '@/utils/logger';
 
 export interface SocketEvents {
   'api-change': (data: {
@@ -44,7 +45,7 @@ class SocketService {
     }
 
     const socketUrl =
-      process.env.NEXT_PUBLIC_SOCKET_URL ||
+      process.env.NEXT_PUBLIC_WS_URL ||
       process.env.NEXT_PUBLIC_API_URL ||
       'http://localhost:3000';
 
@@ -58,15 +59,15 @@ class SocketService {
     });
 
     this.socket.on('connect', () => {
-      console.log('🔌 Socket connected:', this.socket?.id);
+      logger.log('🔌 Socket connected:', this.socket?.id);
     });
 
     this.socket.on('disconnect', (reason) => {
-      console.log('🔌 Socket disconnected:', reason);
+      logger.log('🔌 Socket disconnected:', reason);
     });
 
     this.socket.on('connect_error', (error) => {
-      console.error('🔌 Socket connection error:', error);
+      logger.error('🔌 Socket connection error:', error);
     });
 
     this.setupEventListeners();
@@ -121,7 +122,7 @@ class SocketService {
         try {
           (callback as any)(data);
         } catch (error) {
-          console.error(`Error in socket event listener for ${event}:`, error);
+          logger.error(`Error in socket event listener for ${event}:`, error);
         }
       });
     }

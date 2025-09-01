@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import logger from '@/utils/logger';
 import { useRouter } from 'next/navigation';
 import {
   Bell,
@@ -43,7 +44,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
         router.push(`/apis/${notification.apiId}?notification=${notification._id}`);
       }
     } catch (error) {
-      console.error('Error handling notification click:', error);
+      logger.error('Error handling notification click:', error);
     }
   };
 

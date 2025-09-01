@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   Menu,
@@ -28,6 +28,7 @@ import {
 } from '@/hooks/useNotifications';
 import { useWebSocket } from '@/providers/WebSocketProvider';
 import { clsx } from 'clsx';
+import logger from '@/utils/logger';
 
 interface TopBarProps {
   onMenuToggle: () => void;
@@ -43,6 +44,7 @@ const TopBar: React.FC<TopBarProps> = ({
   className = '',
 }) => {
   const pathname = usePathname();
+  const router = useRouter();
   const { user, logout } = useAuth();
   const { subscribe } = useWebSocket();
   
@@ -85,12 +87,12 @@ const TopBar: React.FC<TopBarProps> = ({
       }
 
       if (notification.apiId) {
-        window.location.href = `/apis/${notification.apiId}?notification=${notification._id}`;
+        router.push(`/apis/${notification.apiId}?notification=${notification._id}`);
       }
       
       setShowNotifications(false);
     } catch (error) {
-      console.error('Error handling notification click:', error);
+      logger.error('Error handling notification click:', error);
     }
   };
 
@@ -98,7 +100,7 @@ const TopBar: React.FC<TopBarProps> = ({
     try {
       await markAllAsReadMutation.mutateAsync();
     } catch (error) {
-      console.error('Error marking all as read:', error);
+      logger.error('Error marking all as read:', error);
     }
   };
 
@@ -107,7 +109,7 @@ const TopBar: React.FC<TopBarProps> = ({
     try {
       await deleteNotificationMutation.mutateAsync(notificationId);
     } catch (error) {
-      console.error('Error deleting notification:', error);
+      logger.error('Error deleting notification:', error);
     }
   };
 
@@ -169,7 +171,7 @@ const TopBar: React.FC<TopBarProps> = ({
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      window.location.href = `/search?q=${encodeURIComponent(searchQuery)}`;
+      router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
     }
   };
 

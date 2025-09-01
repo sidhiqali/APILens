@@ -132,8 +132,8 @@ const APIsPageContent = () => {
     }
   };
 
-  const handleBulkAction = async (action: string) => {
-    console.log(`Bulk ${action} for APIs:`, selectedApis);
+  const handleBulkAction = async (_action: string) => {
+    // TODO: Implement bulk actions; avoid noisy logs in production
   };
 
   const allTags = Array.from(new Set(apis.flatMap(api => api.tags || [])));

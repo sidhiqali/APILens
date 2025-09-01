@@ -7,4 +7,4 @@ export { default as ComparisonView } from './ComparisonView';
 export { default as HealthScoreCard } from './HealthScoreCard';
 export { default as MetricsHeatmap } from './MetricsHeatmap';
 
-export type {} from './types';
+// Types file not present; removing stray export.

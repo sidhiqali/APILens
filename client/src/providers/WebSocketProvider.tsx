@@ -11,6 +11,7 @@ import React, {
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from '@/store/auth';
 import { toast } from 'react-hot-toast';
+import logger from '@/utils/logger';
 
 interface WebSocketContextType {
   socket: Socket | null;
@@ -72,7 +73,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
       });
 
       newSocket.on('connect', () => {
-        console.log('WebSocket connected');
+        logger.log('WebSocket connected');
         setIsConnected(true);
         setIsConnecting(false);
         setConnectionError(null);
@@ -95,7 +96,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
       });
 
       newSocket.on('connect_error', (error) => {
-        console.error('WebSocket connection error:', error);
+        logger.error('WebSocket connection error:', error);
         setIsConnected(false);
         setIsConnecting(false);
         setConnectionError(error.message || 'Connection failed');
@@ -111,7 +112,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
       });
 
       newSocket.on('disconnect', (reason) => {
-        console.log('WebSocket disconnected:', reason);
+        logger.log('WebSocket disconnected:', reason);
         setIsConnected(false);
 
         if (reason === 'io server disconnect') {
@@ -122,7 +123,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
       });
 
       newSocket.on('auth_error', (error) => {
-        console.error('WebSocket auth error:', error);
+        logger.error('WebSocket auth error:', error);
         setConnectionError('Authentication failed');
         setIsConnected(false);
         setIsConnecting(false);
@@ -134,7 +135,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
       });
 
       newSocket.on('rate_limit', (data) => {
-        console.warn('WebSocket rate limit:', data);
+        logger.warn('WebSocket rate limit:', data);
         toast.error('Too many requests. Please slow down.', {
           duration: 3000,
           position: 'bottom-right',
@@ -143,7 +144,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 
       setSocket(newSocket);
     } catch (error) {
-      console.error('Failed to create WebSocket connection:', error);
+      logger.error('Failed to create WebSocket connection:', error);
       setIsConnecting(false);
       setConnectionError('Failed to initialize connection');
     }
@@ -153,7 +154,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     setConnectionAttempts((prev) => prev + 1);
 
     reconnectTimeoutRef.current = setTimeout(() => {
-      console.log(
+      logger.log(
         `Attempting to reconnect... (${connectionAttempts + 1}/${maxReconnectAttempts})`
       );
       connect();
@@ -186,7 +187,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
       if (socket?.connected) {
         socket.emit(event, data);
       } else {
-        console.warn('Cannot emit event: WebSocket not connected');
+        logger.warn('Cannot emit event: WebSocket not connected');
       }
     },
     [socket]

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Plus,
   Play,
@@ -16,20 +17,21 @@ interface QuickActionsProps {
 
 const QuickActions: React.FC<QuickActionsProps> = ({ className = '' }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const router = useRouter();
 
   const quickActions = [
     {
       label: 'Add API',
       icon: Plus,
       color: 'bg-blue-600 hover:bg-blue-700 text-white',
-      action: () => (window.location.href = '/add-api'),
+      action: () => router.push('/add-api'),
     },
     {
       label: 'Refresh All',
       icon: RefreshCw,
       color: 'bg-green-600 hover:bg-green-700 text-white',
       action: () => {
-        window.location.reload();
+        router.refresh();
       },
     },
   ];
@@ -39,20 +41,20 @@ const QuickActions: React.FC<QuickActionsProps> = ({ className = '' }) => {
       label: 'Pause All Monitoring',
       icon: Pause,
       action: () => {
-        console.log('Pause all monitoring');
+        // TODO: implement pause all monitoring
       },
     },
     {
       label: 'Resume All Monitoring',
       icon: Play,
       action: () => {
-        console.log('Resume all monitoring');
+        // TODO: implement resume all monitoring
       },
     },
     {
       label: 'Dashboard Settings',
       icon: Settings,
-      action: () => (window.location.href = '/settings'),
+      action: () => router.push('/settings'),
     },
   ];
 

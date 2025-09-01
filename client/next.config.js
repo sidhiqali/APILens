@@ -6,37 +6,8 @@ const nextConfig = {
   images: {
     domains: [],
   },
-  env: {
-    CUSTOM_KEY: process.env.CUSTOM_KEY,
-  },
-  async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/:path*`,
-      },
-    ];
-  },
-  async headers() {
-    return [
-      {
-        source: '/api/:path*',
-        headers: [
-          { key: 'Access-Control-Allow-Credentials', value: 'true' },
-          { key: 'Access-Control-Allow-Origin', value: '*' },
-          {
-            key: 'Access-Control-Allow-Methods',
-            value: 'GET,OPTIONS,PATCH,DELETE,POST,PUT',
-          },
-          {
-            key: 'Access-Control-Allow-Headers',
-            value:
-              'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization',
-          },
-        ],
-      },
-    ];
-  },
+  // No rewrites needed; client uses NEXT_PUBLIC_API_URL directly
+  // Note: CORS should be handled by the API server. Removing broad headers here.
 };
 
 module.exports = nextConfig;

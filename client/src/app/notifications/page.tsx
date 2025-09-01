@@ -26,6 +26,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { clsx } from 'clsx';
+import logger from '@/utils/logger';
 
 type SeverityFilter = 'all' | 'critical' | 'high' | 'medium' | 'low';
 type TypeFilter = 'all' | 'api_change' | 'api_error' | 'api_recovered' | 'system';
@@ -98,10 +99,10 @@ const NotificationsPage = () => {
       if (apiId) {
         router.push(`/apis/${apiId}?notification=${notification._id}`);
       } else {
-        console.log('No apiId found for notification:', notification);
+        logger.warn('No apiId found for notification:', notification);
       }
     } catch (error) {
-      console.error('Error handling notification click:', error);
+      logger.error('Error handling notification click:', error);
     }
   };
 
@@ -109,7 +110,7 @@ const NotificationsPage = () => {
     try {
       await markAllAsReadMutation.mutateAsync();
     } catch (error) {
-      console.error('Error marking all as read:', error);
+      logger.error('Error marking all as read:', error);
     }
   };
 
@@ -118,7 +119,7 @@ const NotificationsPage = () => {
     try {
       await deleteNotificationMutation.mutateAsync(notificationId);
     } catch (error) {
-      console.error('Error deleting notification:', error);
+      logger.error('Error deleting notification:', error);
     }
   };
 

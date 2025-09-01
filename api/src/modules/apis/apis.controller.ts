@@ -242,7 +242,13 @@ export class ApisController {
   @ApiResponse({ status: 403, description: 'Access denied' })
   @ApiResponse({ status: 404, description: 'API not found' })
   async changelog(@Param('id') id: string) {
-    return this.changelogModel.find({ apiId: id }).sort({ timestamp: -1 });
+    return this.changelogModel
+      .find({ apiId: id })
+      .select('_id apiId version timestamp changes summary')
+      .sort({ timestamp: -1 })
+      .limit(50)
+      .lean()
+      .maxTimeMS(10000);
   }
 
   @Get(':id/changes')
@@ -299,6 +305,35 @@ export class ApisController {
       limit ? parseInt(limit, 10) : 20,
     );
     return changes;
+  }
+
+  @Get(':id/health-issues')
+  @ApiOperation({
+    summary: 'Get detailed API health issues',
+    description:
+      'Retrieve detailed information about API health problems and recent changes causing issues.',
+  })
+  @ApiParam({ name: 'id', description: 'API ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Health issues retrieved successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        apiId: { type: 'string' },
+        apiName: { type: 'string' },
+        healthStatus: { type: 'string' },
+        issueCount: { type: 'number' },
+        issues: { type: 'array' },
+        lastChecked: { type: 'string' },
+      },
+    },
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Access denied' })
+  @ApiResponse({ status: 404, description: 'API not found' })
+  async getApiHealthIssues(@Param('id') id: string, @Request() req) {
+    return this.apisService.getApiHealthIssues(id, req.user.userId);
   }
 
   @Get(':id/snapshots')

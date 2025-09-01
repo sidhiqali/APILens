@@ -10,6 +10,7 @@ import React, {
 import { useQueryClient } from '@tanstack/react-query';
 import { useWebSocket, useWebSocketEvent } from './WebSocketProvider';
 import { toast } from 'react-hot-toast';
+import logger from '@/utils/logger';
 
 export interface RealtimeAPIUpdate {
   apiId: string;
@@ -134,7 +135,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({
     queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     queryClient.invalidateQueries({ queryKey: ['apis'] });
 
-    console.log('Real-time API update:', update);
+    logger.log('Real-time API update:', update);
   });
 
   useWebSocketEvent(
@@ -169,7 +170,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({
 
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
 
-      console.log('Real-time notification:', notification);
+      logger.log('Real-time notification:', notification);
     }
   );
 
@@ -189,7 +190,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({
     queryClient.invalidateQueries({ queryKey: ['changelogs'] });
     queryClient.invalidateQueries({ queryKey: ['apis', change.apiId] });
 
-    console.log('Real-time API change:', change);
+    logger.log('Real-time API change:', change);
   });
 
   useWebSocketEvent('metrics:update', (metrics: RealtimeMetrics) => {
@@ -206,7 +207,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({
       })
     );
 
-    console.log('Real-time metrics update:', metrics);
+    logger.log('Real-time metrics update:', metrics);
   });
 
   const subscribeToAPI = useCallback(

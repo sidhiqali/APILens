@@ -17,56 +17,8 @@ export const useGetApiChanges = (apiId: string) => {
     return useQuery({
         queryKey: ['apiChanges', apiId],
         queryFn: async () => {
-            try {
-                const { data } = await api.get(`/apis/${apiId}/changes`);
-                return data;
-            } catch (error) {
-                console.log('Using mock change data for', apiId);
-                
-                const mockChanges = [
-                    {
-                        id: `${apiId}-change-1`,
-                        type: 'Schema Update',
-                        description: 'Added new optional field "metadata" to User object',
-                        breaking: false,
-                        timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-                        details: [
-                            'Added metadata field to /users response',
-                            'Field is optional and backwards compatible',
-                            'Updated documentation'
-                        ],
-                        affectedEndpoints: ['/users', '/users/{id}']
-                    },
-                    {
-                        id: `${apiId}-change-2`,
-                        type: 'Breaking Change',
-                        description: 'Renamed field "username" to "handle" in User object',
-                        breaking: true,
-                        timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-                        details: [
-                            'Field "username" has been deprecated',
-                            'New field "handle" replaces "username"',
-                            'Migration guide available in documentation'
-                        ],
-                        affectedEndpoints: ['/users', '/users/{id}', '/auth/login']
-                    },
-                    {
-                        id: `${apiId}-change-3`,
-                        type: 'New Endpoint',
-                        description: 'Added new health check endpoint',
-                        breaking: false,
-                        timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-                        details: [
-                            'New /health endpoint for service monitoring',
-                            'Returns service status and version info',
-                            'Available for all environments'
-                        ],
-                        affectedEndpoints: ['/health']
-                    }
-                ];
-                
-                return mockChanges;
-            }
+            const { data } = await api.get(`/apis/${apiId}/changes`);
+            return data;
         },
         enabled: !!apiId,
     });

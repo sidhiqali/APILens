@@ -436,7 +436,11 @@ export class ChangeDetectorService {
     userId: string,
     limit: number = 20,
   ): Promise<any[]> {
-    const api = await this.apiModel.findById(apiId);
+    const api = await this.apiModel
+      .findById(apiId)
+      .select('_id userId')
+      .lean()
+      .maxTimeMS(5000);
     if (!api) {
       throw new NotFoundException('API not found');
     }
@@ -446,8 +450,10 @@ export class ChangeDetectorService {
 
     return await this.apiChangeModel
       .find({ apiId: new Types.ObjectId(apiId) })
+      .select('_id apiId changeType severity detectedAt summary changes')
       .sort({ detectedAt: -1 })
       .limit(limit)
-      .lean();
+      .lean()
+      .maxTimeMS(10000);
   }
 }

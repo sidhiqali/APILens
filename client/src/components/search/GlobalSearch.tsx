@@ -15,6 +15,7 @@ import {
   Filter,
 } from 'lucide-react';
 import { clsx } from 'clsx';
+import logger from '@/utils/logger';
 
 interface SearchResult {
   id: string;
@@ -151,7 +152,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
         const searchResults = await performSearch(query);
         setResults(searchResults);
       } catch (error) {
-        console.error('Search error:', error);
+        logger.error('Search error:', error);
         setResults([]);
       } finally {
         setIsLoading(false);

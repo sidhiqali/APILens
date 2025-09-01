@@ -24,7 +24,7 @@ export class Api extends Document {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true, index: true })
   userId: Types.ObjectId;
 
-  @Prop({ default: '1h' }) // 5m, 15m, 1h, 6h, 1d
+  @Prop({ default: '1h' })
   checkFrequency: string;
 
   @Prop({ default: true, index: true })
@@ -33,7 +33,7 @@ export class Api extends Document {
   @Prop({ type: [String], default: [], index: true })
   tags: string[];
 
-  @Prop({ default: 'unknown', index: true }) // healthy, unhealthy, checking, error
+  @Prop({ default: 'unknown', index: true })
   healthStatus: string;
 
   @Prop()

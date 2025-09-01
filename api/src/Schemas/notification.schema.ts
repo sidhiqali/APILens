@@ -40,7 +40,7 @@ export class Notification extends Document {
   metadata: any;
 
   @Prop({ default: [] })
-  channels: string[]; // ['email', 'webhook', 'in-app']
+  channels: string[];
 
   @Prop({ default: [] })
   deliveryStatus: {
@@ -52,18 +52,8 @@ export class Notification extends Document {
 }
 
 export const NotificationSchema = SchemaFactory.createForClass(Notification);
-
-// Most important - User's unread notifications
 NotificationSchema.index({ userId: 1, read: 1, createdAt: -1 });
-
-// Critical notifications across system
 NotificationSchema.index({ severity: 1, read: 1, createdAt: -1 });
-
-// API-specific notifications
 NotificationSchema.index({ apiId: 1, createdAt: -1 });
-
-// Notification type filtering
 NotificationSchema.index({ type: 1, createdAt: -1 });
-
-// User's notifications by severity (critical first)
 NotificationSchema.index({ userId: 1, severity: 1, createdAt: -1 });

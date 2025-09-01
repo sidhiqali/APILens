@@ -1,4 +1,3 @@
-// api/src/health/health.controller.ts
 import { Controller, Get } from '@nestjs/common';
 import {
   HealthCheckService,
@@ -100,18 +99,15 @@ export class HealthController {
   @HealthCheck()
   check() {
     return this.health.check([
-      // Database health check
       () => this.db.pingCheck('database'),
 
-      // Memory health checks
-      () => this.memory.checkHeap('memory_heap', 150 * 1024 * 1024), // 150MB
-      () => this.memory.checkRSS('memory_rss', 300 * 1024 * 1024), // 300MB
+      () => this.memory.checkHeap('memory_heap', 150 * 1024 * 1024),
+      () => this.memory.checkRSS('memory_rss', 300 * 1024 * 1024),
 
-      // Disk health check
       () =>
         this.disk.checkStorage('storage', {
           path: '/',
-          thresholdPercent: 0.9, // 90%
+          thresholdPercent: 0.9,
         }),
     ]);
   }

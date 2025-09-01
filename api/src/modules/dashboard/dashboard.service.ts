@@ -44,11 +44,9 @@ export class DashboardService {
   async getDashboardStats(userId: string): Promise<DashboardStatsDto> {
     const userObjectId = new Types.ObjectId(userId);
 
-    // Date ranges for filtering
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-    // API Statistics
     const [totalApis, activeApis, healthyApis, unhealthyApis] =
       await Promise.all([
         this.apiModel.countDocuments({ userId: userObjectId }),
@@ -63,13 +61,11 @@ export class DashboardService {
         }),
       ]);
 
-    // Get user's API IDs for filtering changes and notifications
     const userApis = await this.apiModel
       .find({ userId: userObjectId }, '_id')
       .lean();
     const apiIds = userApis.map((api: any) => api._id);
 
-    // Change Statistics
     const [totalChanges, recentChanges, breakingChanges, nonBreakingChanges] =
       await Promise.all([
         this.apiChangeModel.countDocuments({ apiId: { $in: apiIds } }),
@@ -89,13 +85,11 @@ export class DashboardService {
         }),
       ]);
 
-    // Critical Issues: APIs with error status OR high change count (same as issues page)
     const criticalIssues = await this.apiModel.countDocuments({
       userId: userObjectId,
       $or: [{ healthStatus: 'error' }, { changeCount: { $gt: 5 } }],
     });
 
-    // Notification Statistics
     const [totalNotifications, unreadNotifications, recentNotifications] =
       await Promise.all([
         this.notificationModel.countDocuments({ userId: userObjectId }),
@@ -109,7 +103,6 @@ export class DashboardService {
         }),
       ]);
 
-    // Most Active API
     const mostActiveApiResult = await this.apiModel
       .findOne({ userId: userObjectId })
       .sort({ changeCount: -1 })
@@ -124,7 +117,6 @@ export class DashboardService {
         }
       : null;
 
-    // Health Statistics
     const healthStats = await this.apiModel.aggregate([
       { $match: { userId: userObjectId, isActive: true } },
       {
@@ -155,7 +147,7 @@ export class DashboardService {
       healthyApis,
       unhealthyApis,
       totalChanges,
-      criticalIssues, // Use the new calculation
+      criticalIssues,
       recentChanges,
       breakingChanges,
       nonBreakingChanges,
@@ -174,7 +166,6 @@ export class DashboardService {
   ): Promise<RecentActivityDto[]> {
     const userObjectId = new Types.ObjectId(userId);
 
-    // Get user's API IDs and create mapping
     const userApis = await this.apiModel
       .find({ userId: userObjectId }, '_id apiName')
       .lean();
@@ -183,14 +174,12 @@ export class DashboardService {
       userApis.map((api: any) => [api._id.toString(), api.apiName]),
     );
 
-    // Get recent changes
     const recentChanges = await this.apiChangeModel
       .find({ apiId: { $in: apiIds } })
       .sort({ detectedAt: -1 })
       .limit(limit)
       .lean();
 
-    // Get recent notifications
     const recentNotifications = await this.notificationModel
       .find({ userId: userObjectId })
       .sort({ createdAt: -1 })
@@ -199,7 +188,6 @@ export class DashboardService {
 
     const activities: RecentActivityDto[] = [];
 
-    // Add API changes
     recentChanges.forEach((change: any) => {
       const apiId = change.apiId.toString();
       activities.push({
@@ -214,7 +202,6 @@ export class DashboardService {
       });
     });
 
-    // Add notifications
     recentNotifications.forEach((notification: any) => {
       const apiId = notification.apiId?.toString();
       activities.push({
@@ -229,7 +216,6 @@ export class DashboardService {
       });
     });
 
-    // Sort by timestamp and return limited results
     return activities
       .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
       .slice(0, limit);
@@ -260,7 +246,6 @@ export class DashboardService {
   ): Promise<RecentActivityDto[]> {
     const userObjectId = new Types.ObjectId(userId);
 
-    // Get user's API IDs and create mapping
     const userApis = await this.apiModel
       .find({ userId: userObjectId }, '_id apiName')
       .lean();
@@ -271,7 +256,6 @@ export class DashboardService {
 
     const criticalAlerts: RecentActivityDto[] = [];
 
-    // Get critical API changes
     const criticalChanges = await this.apiChangeModel
       .find({
         apiId: { $in: apiIds },
@@ -295,7 +279,6 @@ export class DashboardService {
       });
     });
 
-    // Get unhealthy APIs
     const unhealthyApis = await this.apiModel
       .find({
         userId: userObjectId,
@@ -331,7 +314,6 @@ export class DashboardService {
     const userObjectId = new Types.ObjectId(userId);
     const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
-    // Get user's API IDs
     const userApis = await this.apiModel
       .find({ userId: userObjectId }, '_id')
       .lean();

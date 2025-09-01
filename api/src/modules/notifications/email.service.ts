@@ -1,4 +1,3 @@
-// api/src/modules/notifications/email.service.ts
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
@@ -38,25 +37,6 @@ export class EmailService {
       this.logger.log(`To: ${data.to}`);
       this.logger.log(`Subject: ${data.subject}`);
       this.logger.log(`Content:\n${emailContent}`);
-
-      // TODO: Implement actual email sending
-      // Example with nodemailer:
-      /*
-      const transporter = nodemailer.createTransporter({
-        service: 'gmail', // or your email service
-        auth: {
-          user: this.configService.get('EMAIL_USER'),
-          pass: this.configService.get('EMAIL_PASS'),
-        },
-      });
-
-      await transporter.sendMail({
-        from: this.configService.get('EMAIL_FROM'),
-        to: data.to,
-        subject: data.subject,
-        html: emailContent,
-      });
-      */
     } catch (error) {
       this.logger.error(
         `Failed to send change notification email: ${error.message}`,
@@ -73,8 +53,6 @@ export class EmailService {
       this.logger.log(`To: ${data.to}`);
       this.logger.log(`Subject: ${data.subject}`);
       this.logger.log(`Verification URL: ${data.verificationUrl}`);
-
-      // TODO: Implement actual email sending
     } catch (error) {
       this.logger.error(`Failed to send verification email: ${error.message}`);
       throw error;
@@ -89,8 +67,6 @@ export class EmailService {
       this.logger.log(`To: ${data.to}`);
       this.logger.log(`Subject: ${data.subject}`);
       this.logger.log(`Reset URL: ${data.resetUrl}`);
-
-      // TODO: Implement actual email sending
     } catch (error) {
       this.logger.error(
         `Failed to send password reset email: ${error.message}`,
@@ -106,8 +82,6 @@ export class EmailService {
       this.logger.log(`📧 Welcome Email`);
       this.logger.log(`To: ${to}`);
       this.logger.log(`Subject: Welcome to API Lens!`);
-
-      // TODO: Implement actual email sending
     } catch (error) {
       this.logger.error(`Failed to send welcome email: ${error.message}`);
       throw error;

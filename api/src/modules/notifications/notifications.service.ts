@@ -1,4 +1,3 @@
-// src/modules/notifications/notifications.service.ts
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -52,11 +51,9 @@ export class NotificationsService {
         return;
       }
 
-      // Determine severity based on changes
       const severity = this.determineSeverity(changes);
       const isBreaking = changes.some((c) => c.changeType === 'removed');
 
-      // Check user preferences
       if (!this.shouldNotifyUser(user, severity, isBreaking)) {
         this.logger.log(
           `User preferences skip notification for API ${api.apiName}`,
@@ -78,7 +75,7 @@ export class NotificationsService {
           changesCount: changes.length,
           newVersion,
           breakingChanges: isBreaking,
-          changes: changes.slice(0, 5), // Limit to first 5 changes
+          changes: changes.slice(0, 5),
         },
         channels: this.getNotificationChannels(user, severity),
       };
@@ -145,7 +142,6 @@ export class NotificationsService {
     data: NotificationCreateDto,
   ): Promise<void> {
     try {
-      // Create notification record
       const notification = await this.notificationModel.create({
         userId: new Types.ObjectId(data.userId),
         apiId: data.apiId ? new Types.ObjectId(data.apiId) : undefined,
@@ -162,7 +158,6 @@ export class NotificationsService {
         })),
       });
 
-      // Send real-time notification via WebSocket
       this.notificationsGateway.broadcastNotification(data.userId, {
         id: (notification._id as any).toString(),
         userId: data.userId,
@@ -175,7 +170,6 @@ export class NotificationsService {
         createdAt: new Date().toISOString(),
       });
 
-      // Send notifications through different channels
       for (const channel of data.channels || ['in-app']) {
         try {
           await this.sendNotificationToChannel(notification, channel, data);
@@ -184,7 +178,6 @@ export class NotificationsService {
             `Failed to send notification via ${channel}: ${error.message}`,
           );
 
-          // Update delivery status
           await this.updateDeliveryStatus(
             (notification._id as any).toString(),
             channel,
@@ -215,7 +208,6 @@ export class NotificationsService {
         break;
 
       case 'in-app':
-        // In-app notifications are already stored in database
         await this.updateDeliveryStatus(
           notification._id.toString(),
           channel,
@@ -251,8 +243,6 @@ export class NotificationsService {
   }
 
   private async sendWebhookNotification(notification: any): Promise<void> {
-    // Implement webhook sending logic
-    // This would send HTTP POST to user's configured webhook URLs
     this.logger.log('Webhook notification sent (implementation needed)');
 
     await this.updateDeliveryStatus(
@@ -283,7 +273,6 @@ export class NotificationsService {
     );
   }
 
-  // User-facing methods
   async getUserNotifications(
     userId: string,
     options: {
@@ -301,7 +290,7 @@ export class NotificationsService {
     const limit = options.limit || 50;
     const offset = options.offset || 0;
     const page = Math.floor(offset / limit) + 1;
-    
+
     const query: any = { userId: new Types.ObjectId(userId) };
 
     if (options.unreadOnly) {
@@ -403,7 +392,6 @@ export class NotificationsService {
     };
   }
 
-  // Helper methods
   private determineSeverity(
     changes: ChangeDetail[],
   ): 'low' | 'medium' | 'high' | 'critical' {
@@ -458,7 +446,6 @@ export class NotificationsService {
       channels.push('email');
     }
 
-    // Add webhook for high severity
     if (severity === 'high' || severity === 'critical') {
       channels.push('webhook');
     }

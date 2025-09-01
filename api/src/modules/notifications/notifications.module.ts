@@ -22,6 +22,6 @@ import { WebSocketModule } from '../websocket/websocket.module';
   ],
   controllers: [NotificationsController],
   providers: [NotificationsService, EmailService],
-  exports: [NotificationsService], // Export for use in scheduler
+  exports: [NotificationsService],
 })
 export class NotificationsModule {}

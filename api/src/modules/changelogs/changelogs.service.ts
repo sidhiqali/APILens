@@ -32,7 +32,6 @@ export class ChangelogsService {
   ): Promise<PaginatedChanges> {
     const userObjectId = new Types.ObjectId(userId);
 
-    // Get user's API IDs
     const userApis = await this.apiModel
       .find({ userId: userObjectId }, '_id apiName')
       .lean();
@@ -41,10 +40,8 @@ export class ChangelogsService {
       userApis.map((api: any) => [api._id.toString(), api.apiName]),
     );
 
-    // Build query filters
     const query: any = { apiId: { $in: apiIds } };
 
-    // Apply filters
     if (params.severity) {
       query.severity = params.severity;
     }
@@ -60,7 +57,6 @@ export class ChangelogsService {
       query.detectedAt = { $gte: startDate };
     }
 
-    // Search filter
     if (params.search) {
       const searchRegex = new RegExp(params.search, 'i');
       query.$or = [
@@ -70,13 +66,10 @@ export class ChangelogsService {
       ];
     }
 
-    // Calculate pagination
     const skip = (params.page - 1) * params.limit;
 
-    // Get total count
     const total = await this.apiChangeModel.countDocuments(query);
 
-    // Get changes with pagination
     const changes = await this.apiChangeModel
       .find(query)
       .sort({ detectedAt: -1 })
@@ -84,7 +77,6 @@ export class ChangelogsService {
       .limit(params.limit)
       .lean();
 
-    // Format changes with API names
     const formattedChanges = changes.map((change: any) => ({
       ...change,
       id: change._id.toString(),

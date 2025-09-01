@@ -1,4 +1,3 @@
-// api/src/modules/apis/apis.controller.ts
 import {
   Controller,
   Post,
@@ -375,7 +374,7 @@ export class ApisController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Access denied' })
   @ApiResponse({ status: 404, description: 'API not found' })
-  async checkNow(@Param('id') id: string, @Request() req) {
+  async checkNow(@Param('id') id: string) {
     const result = await this.apisService.checkApiForChanges(id);
     return {
       message: 'API check completed',
@@ -401,7 +400,7 @@ export class ApisController {
     },
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async checkAllApis(@Request() req) {
+  async checkAllApis() {
     const result = await this.smartSchedulerService.triggerImmediateCheck();
     return result;
   }

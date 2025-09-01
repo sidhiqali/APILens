@@ -1,18 +1,12 @@
-// OpenAPI 3.0+ Specification Types
 export interface OpenAPISpec {
-  // Required fields
-  openapi: string; // e.g., "3.0.0", "3.1.0"
+  openapi: string;
   info: InfoObject;
   paths: PathsObject;
-
-  // Optional fields
   servers?: ServerObject[];
   components?: ComponentsObject;
   security?: SecurityRequirementObject[];
   tags?: TagObject[];
   externalDocs?: ExternalDocumentationObject;
-
-  // Allow additional properties for extensions (x-*)
   [key: string]: any;
 }
 
@@ -181,7 +175,6 @@ export interface ReferenceObject {
 }
 
 export interface SchemaObject {
-  // JSON Schema properties
   title?: string;
   multipleOf?: number;
   maximum?: number;
@@ -206,24 +199,14 @@ export interface SchemaObject {
     | 'number'
     | 'string'
     | 'integer';
-
-  // Schema composition
   allOf?: (SchemaObject | ReferenceObject)[];
   oneOf?: (SchemaObject | ReferenceObject)[];
   anyOf?: (SchemaObject | ReferenceObject)[];
   not?: SchemaObject | ReferenceObject;
-
-  // Object properties
   properties?: Record<string, SchemaObject | ReferenceObject>;
   additionalProperties?: boolean | SchemaObject | ReferenceObject;
-
-  // Array properties
   items?: SchemaObject | ReferenceObject;
-
-  // String properties
   format?: string;
-
-  // Common properties
   description?: string;
   default?: any;
   nullable?: boolean;
@@ -233,10 +216,7 @@ export interface SchemaObject {
   externalDocs?: ExternalDocumentationObject;
   deprecated?: boolean;
   xml?: XmlObject;
-
-  // OpenAPI-specific
   discriminator?: DiscriminatorObject;
-
   [key: string]: any;
 }
 
@@ -271,12 +251,12 @@ export interface ComponentsObject {
 export interface SecuritySchemeObject {
   type: 'apiKey' | 'http' | 'oauth2' | 'openIdConnect';
   description?: string;
-  name?: string; // For apiKey
-  in?: 'query' | 'header' | 'cookie'; // For apiKey
-  scheme?: string; // For http
-  bearerFormat?: string; // For http with bearer
-  flows?: OAuthFlowsObject; // For oauth2
-  openIdConnectUrl?: string; // For openIdConnect
+  name?: string;
+  in?: 'query' | 'header' | 'cookie';
+  scheme?: string;
+  bearerFormat?: string;
+  flows?: OAuthFlowsObject;
+  openIdConnectUrl?: string;
   [key: string]: any;
 }
 
@@ -306,7 +286,6 @@ export interface ExternalDocumentationObject {
   [key: string]: any;
 }
 
-// Utility types for your application
 export type HttpMethod =
   | 'get'
   | 'post'

@@ -32,7 +32,6 @@ export class WebSocketService {
         const apiUrl = config.get('apiUrl', 'http://localhost:3000');
         
         try {
-            // Get auth token for WebSocket connection
             const token = await this.apiService.getStoredToken();
             if (!token) {
                 return;
@@ -45,13 +44,9 @@ export class WebSocketService {
                 transports: ['websocket', 'polling']
             });
 
-            this.socket.on('connect', () => {
-                // Connection established
-            });
+            this.socket.on('connect', () => {});
 
-            this.socket.on('disconnect', () => {
-                // Connection closed
-            });
+            this.socket.on('disconnect', () => {});
 
             this.socket.on('api-change', (data: WebSocketEventData) => {
                 this.emit('api-change', data);

@@ -29,10 +29,6 @@ export interface DashboardStats {
     unreadNotifications: number;
 }
 
-/**
- * APIService handles all communication with the APILens backend API.
- * Provides methods for authentication, API management, and dashboard data.
- */
 export class APIService {
     private api: AxiosInstance;
     private context: vscode.ExtensionContext | null = null;
@@ -58,7 +54,7 @@ export class APIService {
     }
 
     private setupInterceptors() {
-        // Request interceptor to add authorization header if we have a stored token
+        // Attach token if available
         this.api.interceptors.request.use(
             async (config) => {
                 const token = await this.getStoredToken();
@@ -82,11 +78,9 @@ export class APIService {
         );
     }
 
-    // Auth methods
     async login(email: string, password: string): Promise<AuthResponse> {
         try {
             const response = await this.api.post('/auth/login', { email, password });
-            // Store both user data and token for header-based auth
             await this.storeAuth(response.data);
             return response.data;
         } catch (error) {
@@ -98,7 +92,7 @@ export class APIService {
         try {
             await this.api.post('/auth/logout');
         } catch (error) {
-            // Continue with logout even if API call fails
+            // ignore
         } finally {
             await this.clearAuth();
         }
@@ -122,7 +116,6 @@ export class APIService {
         }
     }
 
-    // Dashboard methods
     async getDashboardStats(): Promise<DashboardStats> {
         try {
             const response = await this.api.get('/dashboard/stats');
@@ -152,7 +145,6 @@ export class APIService {
         }
     }
 
-    // API management methods
     async getApis(params?: {
         page?: number;
         limit?: number;
@@ -227,7 +219,6 @@ export class APIService {
         }
     }
 
-    // Analytics methods
     async getAnalytics(params?: {
         startDate?: string;
         endDate?: string;
@@ -241,7 +232,6 @@ export class APIService {
         }
     }
 
-    // Changelog methods
     async getChangelogs(params?: {
         page?: number;
         limit?: number;
@@ -265,7 +255,6 @@ export class APIService {
         }
     }
 
-    // Notifications methods
     async getNotifications(params?: {
         page?: number;
         limit?: number;
@@ -301,7 +290,6 @@ export class APIService {
         }
     }
 
-    // Settings methods
     async getUserSettings(): Promise<any> {
         try {
             const response = await this.api.get('/auth/profile');
@@ -320,7 +308,6 @@ export class APIService {
         }
     }
 
-    // Storage methods
     private async storeAuth(authData: any): Promise<void> {
         if (this.context) {
             await this.context.globalState.update('apilens.user', authData.user);
@@ -355,7 +342,6 @@ export class APIService {
         if (this.context) {
             const stored = this.context.globalState.get('apilens.isAuthenticated', false);
             if (stored) {
-                // Validate with server
                 return await this.validateSession();
             }
         }

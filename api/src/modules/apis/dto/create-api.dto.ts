@@ -1,4 +1,3 @@
-// api/src/modules/apis/dto/create-api.dto.ts
 import { IsString, IsOptional, IsArray, IsIn } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 

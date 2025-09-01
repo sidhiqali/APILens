@@ -28,7 +28,6 @@ export class FileSystemService {
         const openApiFiles: OpenAPIFile[] = [];
 
         for (const folder of workspaceFolders) {
-            // Look for OpenAPI/Swagger files
             const patterns = [
                 '**/swagger.{json,yaml,yml}',
                 '**/openapi.{json,yaml,yml}',
@@ -50,7 +49,6 @@ export class FileSystemService {
                         const content = await vscode.workspace.fs.readFile(file);
                         const textContent = Buffer.from(content).toString('utf8');
                         
-                        // Basic validation that it's an OpenAPI spec
                         if (this.isOpenAPISpec(textContent)) {
                             openApiFiles.push({
                                 path: file.fsPath,
@@ -73,7 +71,6 @@ export class FileSystemService {
             const parsed = JSON.parse(content);
             return !!(parsed.openapi || parsed.swagger);
         } catch {
-            // Try YAML
             return content.includes('openapi:') || content.includes('swagger:');
         }
     }
@@ -84,7 +81,6 @@ export class FileSystemService {
             return;
         }
 
-        // Clean up existing watchers
         this.watchers.forEach(watcher => watcher.dispose());
         this.watchers = [];
 
@@ -198,12 +194,9 @@ export class FileSystemService {
         return selected?.file;
     }
 
-    /**
-     * Start watching for OpenAPI files
-     */
     startWatching(): void {
         this.watchOpenAPIFiles(() => {
-            // Default handler - will be overridden in extension.ts
+            
         });
     }
 
@@ -212,9 +205,6 @@ export class FileSystemService {
         this.watchers = [];
     }
 
-    /**
-     * Validate OpenAPI specification content
-     */
     async validateOpenAPISpec(content: string): Promise<{
         isValid: boolean;
         errors?: string[];
@@ -223,11 +213,9 @@ export class FileSystemService {
         try {
             let spec;
             
-            // Try parsing as JSON first
             try {
                 spec = JSON.parse(content);
             } catch {
-                // If JSON fails, try YAML
                 try {
                     const yaml = require('js-yaml');
                     spec = yaml.load(content);
@@ -241,12 +229,10 @@ export class FileSystemService {
 
             const errors: string[] = [];
 
-            // Check for OpenAPI/Swagger version
             if (!spec.openapi && !spec.swagger) {
                 errors.push('Missing OpenAPI/Swagger version field');
             }
 
-            // Check for required info object
             if (!spec.info) {
                 errors.push('Missing required "info" object');
             } else {
@@ -258,7 +244,6 @@ export class FileSystemService {
                 }
             }
 
-            // Check for paths (optional warning)
             if (!spec.paths || Object.keys(spec.paths).length === 0) {
                 errors.push('No API paths defined (this may be intentional for some specs)');
             }

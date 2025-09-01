@@ -112,36 +112,6 @@ export class UserService {
     return toSafeUser(user);
   }
 
-  // async updateProfile(
-  //   userId: string,
-  //   updateData: UpdateProfileDto,
-  // ): Promise<IUser> {
-  //   const user = await this.userModel.findById(userId);
-  //   if (!user) {
-  //     throw new NotFoundException('User not found');
-  //   }
-
-  //   // Check if email is being changed and if it already exists
-  //   if (updateData.email && updateData.email !== user.email) {
-  //     const existingUser = await this.findByEmail(updateData.email);
-  //     if (existingUser) {
-  //       throw new ConflictException('Email already in use');
-  //     }
-
-  //     // If email is changed, require re-verification
-  //     updateData.isEmailVerified = false;
-  //     // You might want to send a new verification email here
-  //   }
-
-  //   const updatedUser = await this.userModel.findByIdAndUpdate(
-  //     userId,
-  //     updateData,
-  //     { new: true },
-  //   );
-
-  //   return toSafeUser(updatedUser);
-  // }
-
   async updateNotificationPreferences(
     userId: string,
     preferences: NotificationPreferencesDto,
@@ -183,7 +153,6 @@ export class UserService {
     });
   }
 
-  // Admin methods
   async getAllUsers(
     page: number = 1,
     limit: number = 10,

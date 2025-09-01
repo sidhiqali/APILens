@@ -1,4 +1,3 @@
-// api/src/modules/auth/dto/request.dto.ts
 import { IsEmail, IsString, MinLength, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 

@@ -1,4 +1,3 @@
-// api/src/config/configuration.ts
 export default (): Record<string, any> => ({
   port: parseInt(process.env.PORT || '3000', 10),
 
@@ -48,7 +47,7 @@ export default (): Record<string, any> => ({
     maxRetries: parseInt(process.env.MAX_RETRIES || '3', 10),
     requestTimeout: parseInt(process.env.REQUEST_TIMEOUT || '10000', 10),
     batchSize: parseInt(process.env.BATCH_SIZE || '10', 10),
-    rateLimitWindow: parseInt(process.env.RATE_LIMIT_WINDOW || '900000', 10), // 15 minutes
+    rateLimitWindow: parseInt(process.env.RATE_LIMIT_WINDOW || '900000', 10),
     rateLimitMax: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
   },
 
@@ -65,18 +64,18 @@ export default (): Record<string, any> => ({
     bcryptRounds: parseInt(process.env.BCRYPT_ROUNDS || '12', 10),
     tokenLength: parseInt(process.env.TOKEN_LENGTH || '32', 10),
     maxLoginAttempts: parseInt(process.env.MAX_LOGIN_ATTEMPTS || '5', 10),
-    lockoutDuration: parseInt(process.env.LOCKOUT_DURATION || '900000', 10), // 15 minutes
+    lockoutDuration: parseInt(process.env.LOCKOUT_DURATION || '900000', 10),
   },
 
   storage: {
     maxSnapshotRetention: parseInt(
       process.env.MAX_SNAPSHOT_RETENTION || '30',
       10,
-    ), // days
+    ),
     maxChangelogRetention: parseInt(
       process.env.MAX_CHANGELOG_RETENTION || '90',
       10,
-    ), // days
+    ),
     compressionEnabled: process.env.COMPRESSION_ENABLED === 'true',
   },
 
@@ -104,7 +103,6 @@ export default (): Record<string, any> => ({
   },
 });
 
-// Environment validation schema
 export const configValidationSchema = {
   NODE_ENV: {
     choices: ['development', 'production', 'test'],

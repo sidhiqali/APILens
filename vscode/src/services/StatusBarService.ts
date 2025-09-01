@@ -35,7 +35,6 @@ export class StatusBarService {
             await this.updateStats();
             this.statusBarItem.show();
             
-            // Start auto-update
             this.startAutoUpdate();
             
         } catch (error) {
@@ -82,7 +81,7 @@ export class StatusBarService {
         
         this.updateInterval = setInterval(async () => {
             await this.updateStats();
-        }, 60000); // Update every minute
+        }, 60000);
     }
 
     private stopAutoUpdate(): void {
@@ -100,9 +99,6 @@ export class StatusBarService {
         }
     }
 
-    /**
-     * Refresh status bar data
-     */
     async refresh(): Promise<void> {
         await this.updateStats();
     }

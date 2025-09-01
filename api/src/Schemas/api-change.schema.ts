@@ -51,25 +51,13 @@ export class ApiChange extends Document {
   summary: string;
 
   @Prop({ default: 0 })
-  impactScore: number; // 0-100 based on severity and change type
+  impactScore: number;
 }
 
 export const ApiChangeSchema = SchemaFactory.createForClass(ApiChange);
-
-// Most important - Recent changes by API
 ApiChangeSchema.index({ apiId: 1, detectedAt: -1 });
-
-//  Dashboard - Unacknowledged changes by API
 ApiChangeSchema.index({ apiId: 1, acknowledged: 1 });
-
-//  Alerts - Critical unacknowledged changes
 ApiChangeSchema.index({ severity: 1, acknowledged: 1 });
-
-//  Analytics - Breaking changes timeline
 ApiChangeSchema.index({ changeType: 1, detectedAt: -1 });
-
-// Prioritization - High impact changes
 ApiChangeSchema.index({ impactScore: -1, detectedAt: -1 });
-
-//  User workflow - Changes acknowledged by specific user
 ApiChangeSchema.index({ acknowledgedBy: 1, acknowledgedAt: -1 });

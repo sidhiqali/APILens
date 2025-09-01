@@ -13,7 +13,6 @@ export class FileContextMenuHandler {
     }
 
     private registerCommands() {
-        // Command to register API from OpenAPI file
         const registerApiCommand = vscode.commands.registerCommand(
             'apilens.registerApiFromFile',
             async (uri: vscode.Uri) => {
@@ -21,7 +20,6 @@ export class FileContextMenuHandler {
             }
         );
 
-        // Command to import API to workspace
         const importApiCommand = vscode.commands.registerCommand(
             'apilens.importApiSpec',
             async (uri: vscode.Uri) => {
@@ -29,7 +27,6 @@ export class FileContextMenuHandler {
             }
         );
 
-        // Command to validate OpenAPI spec
         const validateCommand = vscode.commands.registerCommand(
             'apilens.validateOpenAPI',
             async (uri: vscode.Uri) => {
@@ -48,7 +45,6 @@ export class FileContextMenuHandler {
                 return;
             }
 
-            // Show progress
             await vscode.window.withProgress({
                 location: vscode.ProgressLocation.Notification,
                 title: 'Registering API from file...',
@@ -66,7 +62,6 @@ export class FileContextMenuHandler {
                     spec = JSON.parse(fileContent);
                 } catch {
                     try {
-                        // If JSON fails, try YAML
                         const yaml = require('js-yaml');
                         spec = yaml.load(fileContent);
                     } catch {
@@ -76,12 +71,10 @@ export class FileContextMenuHandler {
 
                 progress.report({ increment: 60, message: 'Validating specification...' });
 
-                // Validate basic OpenAPI structure
                 if (!spec.openapi && !spec.swagger) {
                     throw new Error('Not a valid OpenAPI/Swagger specification');
                 }
 
-                // Extract API information
                 const apiData = {
                     apiName: spec.info?.title || path.basename(uri.fsPath, path.extname(uri.fsPath)),
                     description: spec.info?.description || '',
@@ -94,7 +87,6 @@ export class FileContextMenuHandler {
 
                 progress.report({ increment: 80, message: 'Creating API...' });
 
-                // Register with APILens backend
                 const result = await this.apiService.createApi(apiData);
 
                 progress.report({ increment: 100, message: 'Complete!' });
@@ -116,7 +108,6 @@ export class FileContextMenuHandler {
 
     private async importApiSpec(uri: vscode.Uri) {
         try {
-            // Ask user where to import the spec
             const options: vscode.QuickPickItem[] = [
                 {
                     label: 'Create New API',
@@ -191,7 +182,6 @@ export class FileContextMenuHandler {
                 spec = yaml.load(fileContent);
             }
 
-            // Update the API
             const updateData = {
                 version: spec.info?.version || '1.0.0',
                 description: spec.info?.description || '',
@@ -220,7 +210,6 @@ export class FileContextMenuHandler {
                 spec = yaml.load(fileContent);
             }
 
-            // Create a preview webview
             const panel = vscode.window.createWebviewPanel(
                 'apiPreview',
                 `API Preview: ${spec.info?.title || 'Unknown'}`,

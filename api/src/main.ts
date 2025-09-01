@@ -1,4 +1,3 @@
-// api/src/main.ts
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -11,7 +10,6 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Security middleware
   app.use(
     helmet({
       crossOriginEmbedderPolicy: false,
@@ -23,22 +21,19 @@ async function bootstrap() {
     }),
   );
 
-  // CORS configuration
   app.enableCors({
     origin: [
       process.env.FRONTEND_URL || 'http://localhost:3001',
       'vscode-webview://*',
-      'http://localhost:3000'
+      'http://localhost:3000',
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
   });
 
-  // Cookie parser
   app.use(cookieParser());
 
-  // Global validation pipe
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -50,13 +45,10 @@ async function bootstrap() {
     }),
   );
 
-  // Global exception filter
   app.useGlobalFilters(new AllExceptionsFilter());
 
-  // Global interceptor for logging
   app.useGlobalInterceptors(new LoggingInterceptor());
 
-  // Swagger configuration
   const config = new DocumentBuilder()
     .setTitle('API Lens - API Change Tracking Service')
     .setDescription(
@@ -99,7 +91,6 @@ async function bootstrap() {
     operationIdFactory: (controllerKey: string, methodKey: string) => methodKey,
   });
 
-  // Customize Swagger UI
   SwaggerModule.setup('api/docs', app, document, {
     swaggerOptions: {
       persistAuthorization: true,
@@ -119,7 +110,6 @@ async function bootstrap() {
     ],
   });
 
-  // Health check endpoint
   app.getHttpAdapter().get('/health', (req, res) => {
     res.json({
       status: 'ok',

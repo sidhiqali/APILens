@@ -36,20 +36,22 @@ export class AllExceptionsFilter implements ExceptionFilter {
     } else if (exception instanceof MongoError) {
       status = HttpStatus.BAD_REQUEST;
 
-      // Handle MongoDB specific errors
       switch (exception.code) {
-        case 11000: // Duplicate key error
+        case 11000: {
           const field = Object.keys((exception as any).keyPattern || {})[0];
           message = `${field} already exists`;
           error = 'Duplicate Entry';
           break;
-        case 121: // Document validation failure
+        }
+        case 121: {
           message = 'Document validation failed';
           error = 'Validation Error';
           break;
-        default:
+        }
+        default: {
           message = 'Database operation failed';
           error = 'Database Error';
+        }
       }
     } else if (exception instanceof Error) {
       status = HttpStatus.INTERNAL_SERVER_ERROR;
@@ -61,8 +63,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       error = 'Unknown Error';
     }
 
-    // Log the error
-    const errorLog = {
+    const logContext = {
       statusCode: status,
       timestamp: new Date().toISOString(),
       path: request.url,
@@ -80,11 +81,13 @@ export class AllExceptionsFilter implements ExceptionFilter {
       );
     } else {
       this.logger.warn(
-        `${request.method} ${request.url} - ${status} - ${message}`,
+        `${request.method} ${request.url} - ${status} - ${
+          typeof message === 'string' ? message : JSON.stringify(message)
+        }`,
+        JSON.stringify(logContext),
       );
     }
 
-    // Send error response
     response.status(status).json({
       statusCode: status,
       timestamp: new Date().toISOString(),

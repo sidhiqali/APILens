@@ -1,4 +1,3 @@
-// src/modules/apis/change-detector.service.ts
 import {
   Injectable,
   Logger,
@@ -38,28 +37,22 @@ export class ChangeDetectorService {
     let changeType: 'breaking' | 'non-breaking' | 'deprecation' | 'addition' =
       'non-breaking';
 
-    // 1. Version changes
     const versionChanges = this.detectVersionChanges(oldSpec, newSpec);
     changes.push(...versionChanges);
 
-    // 2. Path changes (endpoints)
     const pathChanges = this.detectPathChanges(oldSpec, newSpec);
     changes.push(...pathChanges);
 
-    // 3. Schema changes
     const schemaChanges = this.detectSchemaChanges(oldSpec, newSpec);
     changes.push(...schemaChanges);
 
-    // 4. Security changes
     const securityChanges = this.detectSecurityChanges(oldSpec, newSpec);
     changes.push(...securityChanges);
 
-    // Determine overall severity and change type
     const analysis = this.analyzeChanges(changes);
     severity = analysis.severity;
     changeType = analysis.changeType;
 
-    // Save changes if any detected
     if (changes.length > 0) {
       await this.saveApiChange(
         apiId,
@@ -125,7 +118,6 @@ export class ChangeDetectorService {
     const oldPaths = Object.keys(oldSpec.paths || {});
     const newPaths = Object.keys(newSpec.paths || {});
 
-    // Removed paths (breaking change)
     const removedPaths = oldPaths.filter((path) => !newPaths.includes(path));
     removedPaths.forEach((path) => {
       changes.push({
@@ -136,7 +128,6 @@ export class ChangeDetectorService {
       });
     });
 
-    // Added paths (non-breaking)
     const addedPaths = newPaths.filter((path) => !oldPaths.includes(path));
     addedPaths.forEach((path) => {
       changes.push({
@@ -147,7 +138,6 @@ export class ChangeDetectorService {
       });
     });
 
-    // Modified paths
     const commonPaths = oldPaths.filter((path) => newPaths.includes(path));
     commonPaths.forEach((path) => {
       const methodChanges = this.detectMethodChanges(
@@ -182,7 +172,6 @@ export class ChangeDetectorService {
       const newMethod = newPath[method];
 
       if (oldMethod && !newMethod) {
-        // Method removed (breaking)
         changes.push({
           path: `paths.${pathName}.${method}`,
           changeType: 'removed',
@@ -190,7 +179,6 @@ export class ChangeDetectorService {
           description: `HTTP method ${method.toUpperCase()} removed from ${pathName}`,
         });
       } else if (!oldMethod && newMethod) {
-        // Method added (non-breaking)
         changes.push({
           path: `paths.${pathName}.${method}`,
           changeType: 'added',
@@ -198,7 +186,6 @@ export class ChangeDetectorService {
           description: `HTTP method ${method.toUpperCase()} added to ${pathName}`,
         });
       } else if (oldMethod && newMethod) {
-        // Method modified - check parameters, responses, etc.
         const paramChanges = this.detectParameterChanges(
           oldMethod.parameters || [],
           newMethod.parameters || [],
@@ -225,7 +212,6 @@ export class ChangeDetectorService {
   ): ChangeDetail[] {
     const changes: ChangeDetail[] = [];
 
-    // Check for removed required parameters (breaking)
     oldParams.forEach((oldParam) => {
       if (oldParam.required) {
         const stillExists = newParams.find(
@@ -242,7 +228,6 @@ export class ChangeDetectorService {
       }
     });
 
-    // Check for new required parameters (breaking)
     newParams.forEach((newParam) => {
       if (newParam.required) {
         const existedBefore = oldParams.find(
@@ -271,7 +256,6 @@ export class ChangeDetectorService {
     const oldCodes = Object.keys(oldResponses);
     const newCodes = Object.keys(newResponses);
 
-    // Removed response codes
     const removedCodes = oldCodes.filter((code) => !newCodes.includes(code));
     removedCodes.forEach((code) => {
       changes.push({
@@ -282,7 +266,6 @@ export class ChangeDetectorService {
       });
     });
 
-    // Added response codes
     const addedCodes = newCodes.filter((code) => !oldCodes.includes(code));
     addedCodes.forEach((code) => {
       changes.push({
@@ -307,7 +290,6 @@ export class ChangeDetectorService {
     const oldSchemaNames = Object.keys(oldSchemas);
     const newSchemaNames = Object.keys(newSchemas);
 
-    // Removed schemas
     const removedSchemas = oldSchemaNames.filter(
       (name) => !newSchemaNames.includes(name),
     );
@@ -320,7 +302,6 @@ export class ChangeDetectorService {
       });
     });
 
-    // Added schemas
     const addedSchemas = newSchemaNames.filter(
       (name) => !oldSchemaNames.includes(name),
     );
@@ -342,7 +323,6 @@ export class ChangeDetectorService {
   ): ChangeDetail[] {
     const changes: ChangeDetail[] = [];
 
-    // Compare security requirements
     const oldSecurity = JSON.stringify(oldSpec.security || []);
     const newSecurity = JSON.stringify(newSpec.security || []);
 
@@ -441,7 +421,6 @@ export class ChangeDetectorService {
     const severityScores = { low: 10, medium: 30, high: 60, critical: 100 };
     const baseScore = severityScores[severity];
 
-    // Add points based on change types
     const removalCount = changes.filter(
       (c) => c.changeType === 'removed',
     ).length;
@@ -457,7 +436,6 @@ export class ChangeDetectorService {
     userId: string,
     limit: number = 20,
   ): Promise<any[]> {
-    // Verify user ownership
     const api = await this.apiModel.findById(apiId);
     if (!api) {
       throw new NotFoundException('API not found');

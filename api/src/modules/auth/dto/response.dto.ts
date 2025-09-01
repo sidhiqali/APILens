@@ -1,4 +1,3 @@
-// api/src/modules/auth/dto/response.dto.ts
 import { Exclude } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { IUser } from 'src/types/user.type';

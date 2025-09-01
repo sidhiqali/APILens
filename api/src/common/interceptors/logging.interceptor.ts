@@ -22,7 +22,6 @@ export class LoggingInterceptor implements NestInterceptor {
 
     const now = Date.now();
 
-    // Don't log sensitive routes
     const skipLogging = ['/health', '/api/docs', '/favicon.ico'].some((path) =>
       url.includes(path),
     );
@@ -31,7 +30,6 @@ export class LoggingInterceptor implements NestInterceptor {
       return next.handle();
     }
 
-    // Log incoming request
     const requestLog = {
       method,
       url,

@@ -4,7 +4,6 @@ import { ApisController } from './apis.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Api, ApiSchema } from 'src/Schemas/api.schema';
 import { Changelog, ChangelogSchema } from 'src/Schemas/changelog-schema';
-// import { ApiRefreshScheduler } from './api-refresh.schedulter';
 import { ApiChange, ApiChangeSchema } from 'src/Schemas/api-change.schema';
 import {
   ApiSnapshot,

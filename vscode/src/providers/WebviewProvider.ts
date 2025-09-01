@@ -2264,8 +2264,8 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
             <div class="login-box">
                 <h2>APILens Login</h2>
                 <div id="error" class="error"></div>
-                <input id="email" type="email" placeholder="Email" autocomplete="username" value="sidhiq@gmail.com" />
-                <input id="password" type="password" placeholder="Password" autocomplete="current-password" value="alialiali" />
+                <input id="email" type="email" placeholder="Email" autocomplete="username" />
+                <input id="password" type="password" placeholder="Password" autocomplete="current-password" />
                 <button id="loginBtn">Login</button>
             </div>
         </div>

@@ -58,7 +58,7 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(password, 12);
     const emailVerificationToken = this.generateToken();
-    const emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    const emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     const userData: CreateUserData = {
       email,
@@ -99,7 +99,7 @@ export class AuthService {
     await this.userService.updateRefreshToken(
       user._id.toString(),
       tokens.refreshToken,
-      new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+      new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     );
 
     return {
@@ -121,7 +121,7 @@ export class AuthService {
     }
 
     const resetToken = this.generateToken();
-    const resetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    const resetExpires = new Date(Date.now() + 60 * 60 * 1000);
 
     await this.userService.setPasswordResetToken(
       user._id.toString(),
@@ -129,7 +129,6 @@ export class AuthService {
       resetExpires,
     );
 
-    // Send reset email
     this.sendPasswordResetEmail(email, resetToken);
 
     return {

@@ -42,7 +42,6 @@ import { HealthModule } from './modules/health/health.module';
       }),
     }),
 
-    // for cron jobs and scheduled tasks
     ScheduleModule.forRoot(),
 
     MongooseModule.forRootAsync({

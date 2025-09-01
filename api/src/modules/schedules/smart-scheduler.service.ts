@@ -14,13 +14,11 @@ export class SmartSchedulerService {
     private readonly notificationsGateway: NotificationsGateway,
   ) {}
 
-  // Run every 5 minutes to check for APIs that need monitoring
   @Cron('*/5 * * * *')
   async handleApiChecking() {
     this.logger.log('Starting API monitoring cycle...');
 
     try {
-      // Get APIs that need checking based on their individual frequencies
       const apisToCheck = await this.apisService.getApisToCheck();
 
       if (apisToCheck.length === 0) {
@@ -30,20 +28,17 @@ export class SmartSchedulerService {
 
       this.logger.log(`Found ${apisToCheck.length} APIs to check`);
 
-      // Process APIs in batches to avoid overwhelming external services
       const batchSize = 10;
       for (let i = 0; i < apisToCheck.length; i += batchSize) {
         const batch = apisToCheck.slice(i, i + batchSize);
 
-        // Process batch concurrently but with limited concurrency
         const promises = batch.map((api) =>
           this.checkSingleApi((api._id as any).toString()),
         );
         await Promise.allSettled(promises);
 
-        // Small delay between batches
         if (i + batchSize < apisToCheck.length) {
-          await this.delay(1000); // 1 second delay
+          await this.delay(1000);
         }
       }
 
@@ -57,14 +52,12 @@ export class SmartSchedulerService {
     try {
       this.logger.debug(`Checking API: ${apiId}`);
 
-      // Get API details first
       const api = await this.apisService.getApiByIdInternal(apiId);
       if (!api) {
         this.logger.error(`API not found: ${apiId}`);
         return;
       }
 
-      // Emit real-time status update - checking
       this.notificationsGateway.broadcastAPIUpdate(
         apiId,
         api.userId.toString(),
@@ -78,17 +71,14 @@ export class SmartSchedulerService {
 
       const result = await this.apisService.checkApiForChanges(apiId);
 
-      // Determine health status
       const healthStatus = result.hasChanges ? 'unhealthy' : 'healthy';
 
-      // Update API health status
       await this.apisService.updateApiHealth(apiId, {
         status: healthStatus,
         lastChecked: new Date(),
-        responseTime: 200, // Could measure actual response time
+        responseTime: 200,
       });
 
-      // Emit real-time status update - completed
       this.notificationsGateway.broadcastAPIUpdate(
         apiId,
         api.userId.toString(),
@@ -97,7 +87,7 @@ export class SmartSchedulerService {
           apiName: api.apiName,
           status: healthStatus,
           responseTime: 200,
-          uptime: 99.9, // Calculate actual uptime
+          uptime: 99.9,
           lastChecked: new Date().toISOString(),
           changes: result.changes || [],
         },
@@ -106,7 +96,6 @@ export class SmartSchedulerService {
       if (result.hasChanges) {
         this.logger.log(`Changes detected for API ${apiId}`);
 
-        // Emit real-time API change notification
         this.notificationsGateway.broadcastAPIChange(
           apiId,
           api.userId.toString(),
@@ -115,14 +104,13 @@ export class SmartSchedulerService {
             apiId,
             apiName: api.apiName,
             changeType: this.determineChangeType(result.changes || []),
-            severity: 'medium', // Default severity since it's not in result
+            severity: 'medium',
             summary: `${result.changes?.length || 0} changes detected`,
             details: result.changes,
             timestamp: new Date().toISOString(),
           },
         );
 
-        // Send notifications for the changes
         await this.notificationsService.notifyApiChanges(
           apiId,
           result.changes ?? [],
@@ -132,10 +120,8 @@ export class SmartSchedulerService {
     } catch (error) {
       this.logger.error(`Failed to check API ${apiId}: ${error.message}`);
 
-      // Get API details for error broadcast
       const api = await this.apisService.getApiByIdInternal(apiId);
       if (api) {
-        // Emit error status
         this.notificationsGateway.broadcastAPIUpdate(
           apiId,
           api.userId.toString(),
@@ -149,7 +135,6 @@ export class SmartSchedulerService {
         );
       }
 
-      // Notify about API error
       await this.notificationsService.notifyApiError(apiId, error.message);
     }
   }
@@ -157,7 +142,6 @@ export class SmartSchedulerService {
   private determineChangeType(changes: any[]): string {
     if (!changes || changes.length === 0) return 'schema';
 
-    // Simple logic to determine change type based on changes
     const hasBreakingChanges = changes.some(
       (change) => change.breaking || change.severity === 'critical',
     );
@@ -165,14 +149,11 @@ export class SmartSchedulerService {
     return hasBreakingChanges ? 'breaking' : 'schema';
   }
 
-  // Health check every hour
   @Cron(CronExpression.EVERY_HOUR)
   private async performHealthChecks() {
     this.logger.log('Starting health check cycle...');
 
     try {
-      // This could check system health, cleanup old data, etc.
-      // Perform maintenance tasks
       const deletedCount = await this.apisService.cleanupOldSnapshots();
       if (deletedCount > 0) {
         this.logger.log(`Cleaned up ${deletedCount} old snapshots`);
@@ -189,13 +170,11 @@ export class SmartSchedulerService {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  // Manual trigger for immediate checking of all APIs
   async triggerImmediateCheck(): Promise<{ message: string; checked: number }> {
     this.logger.log('Manual trigger: checking all active APIs immediately');
 
     const apisToCheck = await this.apisService.getApisToCheck();
 
-    // Process all APIs without frequency restrictions
     const promises = apisToCheck.map((api) =>
       this.checkSingleApi((api._id as any).toString()),
     );

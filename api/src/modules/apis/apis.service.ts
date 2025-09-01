@@ -41,7 +41,6 @@ export class ApisService {
     return apis.map((api) => this.toResponseDto(api));
   }
 
-  // Get APIs that need checking based on their frequency
   async getApisToCheck(): Promise<Api[]> {
     const now = new Date();
     const apis = await this.apiModel.find({ isActive: true });
@@ -106,7 +105,6 @@ export class ApisService {
 
       const savedApi = await api.save();
 
-      // Create initial snapshot
       await this.createSnapshot(
         (savedApi._id as any).toString(),
         response.data,
@@ -142,7 +140,6 @@ export class ApisService {
     try {
       this.logger.log(`Checking API for changes: ${api.apiName}`);
 
-      // Update status to checking
       await this.apiModel.findByIdAndUpdate(apiId, {
         healthStatus: 'checking',
         lastHealthCheck: new Date(),
@@ -156,20 +153,17 @@ export class ApisService {
       const newSpec = response.data;
       const oldSpec = api.latestSpec;
 
-      // Extract base URL for health endpoint
       const baseUrl = api.openApiUrl
         .replace(/\/[^/]*\.json.*$/, '')
         .replace(/\/[^/]*\.yaml.*$/, '');
 
-      // Try to get health status from health endpoint
-      let healthStatus = 'healthy'; // Default to healthy if spec fetch was successful
+      let healthStatus = 'healthy';
       let healthErrorMessage: string | undefined;
-      
+
       try {
         const healthUrl = `${baseUrl}/health`;
         const healthResponse = await axios.get(healthUrl, { timeout: 5000 });
-        
-        // Check HTTP status code first
+
         if (healthResponse.status >= 500) {
           healthStatus = 'error';
           healthErrorMessage = `Health endpoint returned ${healthResponse.status}`;
@@ -177,7 +171,6 @@ export class ApisService {
           healthStatus = 'unhealthy';
           healthErrorMessage = `Health endpoint returned ${healthResponse.status}`;
         } else if (healthResponse.data?.status) {
-          // Parse response body status
           const status = healthResponse.data.status.toLowerCase();
           healthStatus =
             status === 'healthy'
@@ -195,8 +188,7 @@ export class ApisService {
           `Health check failed for ${api.apiName}: ${healthError.message}`,
         );
         healthErrorMessage = healthError.message;
-        
-        // Map HTTP status codes to health status
+
         if (healthError.response?.status) {
           const statusCode = healthError.response.status;
           if (statusCode >= 500) {
@@ -207,26 +199,22 @@ export class ApisService {
             healthStatus = 'healthy';
           }
         } else {
-          // Network error or timeout
           healthStatus = 'error';
         }
       }
 
-      // Detect changes using the change detector service
       const changeResult = await this.changeDetectorService.detectChanges(
         oldSpec,
         newSpec,
         apiId,
       );
 
-      // Get previous health status for comparison
       const previousHealthStatus = api.healthStatus;
-      
+
       this.logger.debug(
         `Health status check for ${api.apiName}: previous=${previousHealthStatus}, new=${healthStatus}`,
       );
 
-      // Update API health status with the actual health status
       await this.apiModel.findByIdAndUpdate(apiId, {
         healthStatus,
         lastChecked: new Date(),
@@ -234,7 +222,6 @@ export class ApisService {
         lastError: healthErrorMessage || null,
       });
 
-      // Create notification for health status changes
       if (previousHealthStatus && previousHealthStatus !== healthStatus) {
         await this.createHealthStatusNotification(
           apiId,
@@ -246,17 +233,14 @@ export class ApisService {
       }
 
       if (changeResult.hasChanges) {
-        // Update API with new spec and version
         await this.apiModel.findByIdAndUpdate(apiId, {
           latestSpec: newSpec,
           version: newSpec.info?.version || api.version,
           changeCount: api.changeCount + 1,
         });
 
-        // Create new snapshot
         await this.createSnapshot(apiId, newSpec);
 
-        // Create notification for API changes
         await this.notificationsService.notifyApiChanges(
           apiId,
           changeResult.changes,
@@ -271,7 +255,6 @@ export class ApisService {
         };
       }
 
-      // Just update lastChecked if no changes
       await this.apiModel.findByIdAndUpdate(apiId, {
         lastChecked: new Date(),
       });
@@ -280,17 +263,14 @@ export class ApisService {
     } catch (error) {
       this.logger.error(`Error checking API ${api.apiName}: ${error.message}`);
 
-      // Get previous health status
       const previousHealthStatus = api.healthStatus;
 
-      // Update error status
       await this.apiModel.findByIdAndUpdate(apiId, {
         healthStatus: 'error',
         lastHealthCheck: new Date(),
         lastError: error.message,
       });
 
-      // Create notification for API error if status changed
       if (previousHealthStatus !== 'error') {
         await this.notificationsService.notifyApiError(apiId, error.message);
       }
@@ -330,11 +310,9 @@ export class ApisService {
       );
 
       if (newStatus === 'healthy' && oldStatus !== 'healthy') {
-        // API recovered
         this.logger.log(`Creating recovery notification for ${apiName}`);
         await this.notificationsService.notifyApiRecovered(apiId);
       } else if (newStatus === 'unhealthy' || newStatus === 'error') {
-        // API has issues
         const message =
           errorMessage || 'API endpoint is not responding properly';
         this.logger.log(
@@ -349,7 +327,6 @@ export class ApisService {
     }
   }
 
-  // Rest of your existing methods...
   async getApiById(id: string, userId: string): Promise<ApiResponseDto> {
     const api = await this.apiModel.findById(id);
     if (!api) {
@@ -388,7 +365,6 @@ export class ApisService {
       throw new ForbiddenException('Access denied');
     }
 
-    // Clean up related data
     await Promise.all([
       this.apiModel.findByIdAndDelete(id),
       this.snapshotModel.deleteMany({ apiId: id }),
@@ -480,7 +456,6 @@ export class ApisService {
       ]),
     ]);
 
-    // Get recent changes (last 7 days)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
@@ -533,54 +508,17 @@ export class ApisService {
     userId: string,
     limit: number = 10,
   ): Promise<any[]> {
-    // Verify user owns the API
     await this.getApiById(apiId, userId);
 
     return this.snapshotModel
       .find({ apiId: new Types.ObjectId(apiId) })
       .sort({ detectedAt: -1 })
       .limit(limit)
-      .select('-spec') // Exclude full spec for performance
+      .select('-spec')
       .lean();
   }
 
-  // async refreshApi(id: string): Promise<{ changed: boolean; summary: string }> {
-  //   const api = await this.apiModel.findById(id);
-  //   if (!api) throw new NotFoundException('API not found');
-  //   const oldSpec = api.latestSpec;
-
-  //   // Fetch new spec
-  //   const response = await axios.get(api.openApiUrl);
-  //   const newSpec = response.data;
-
-  //   // Diff
-  //   const diff = diffOpenApi(oldSpec, newSpec);
-
-  //   if (diff.changed) {
-  //     // Save changelog
-  //     await this.changelogModel.create({
-  //       apiId: api._id,
-  //       previousVersion: oldSpec.info?.version,
-  //       newVersion: newSpec.info?.version,
-  //       diffSummary: diff.summary,
-  //     });
-
-  //     // Update api doc
-  //     api.latestSpec = newSpec;
-  //     api.version = newSpec.info?.version;
-  //     api.lastChecked = new Date();
-  //     await api.save();
-  //   } else {
-  //     // Just update lastChecked
-  //     api.lastChecked = new Date();
-  //     await api.save();
-  //   }
-
-  //   return diff;
-  // }
-
   async bulkToggleStatus(ids: string[], userId: string): Promise<void> {
-    // Find APIs belonging to the user and toggle their status
     const apis = await this.apiModel.find({
       _id: { $in: ids },
       userId: userId,
@@ -599,13 +537,11 @@ export class ApisService {
   }
 
   async bulkDelete(ids: string[], userId: string): Promise<void> {
-    // Delete APIs belonging to the user and their related data
     await this.apiModel.deleteMany({
       _id: { $in: ids },
       userId: userId,
     });
 
-    // Also clean up related changelogs
     await this.changelogModel.deleteMany({ apiId: { $in: ids } });
   }
 
@@ -619,11 +555,9 @@ export class ApisService {
       throw new NotFoundException('API not found');
     }
 
-    // Return the latest OpenAPI specification
     return api.latestSpec || {};
   }
 
-  // Helper methods for SmartSchedulerService
   async cleanupOldSnapshots(): Promise<number> {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -635,7 +569,6 @@ export class ApisService {
     return result.deletedCount;
   }
 
-  // Internal method to get API details without userId check (for scheduler)
   async getApiByIdInternal(apiId: string): Promise<any> {
     return this.apiModel.findById(apiId);
   }
@@ -667,7 +600,6 @@ export class ApisService {
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-      // Get recent snapshots (last 7 days) which indicates successful checks
       const recentSnapshots = await this.snapshotModel
         .find({
           apiId: api._id,
@@ -676,8 +608,6 @@ export class ApisService {
         .sort({ detectedAt: -1 });
 
       if (recentSnapshots.length > 0) {
-        // Calculate health score based on successful snapshot creation
-        // More recent snapshots = healthier API (being checked successfully)
         const totalDays = 7;
         const daysWithSnapshots = new Set(
           recentSnapshots.map(
@@ -687,7 +617,6 @@ export class ApisService {
 
         const healthScore = (daysWithSnapshots / totalDays) * 100;
 
-        // Boost score if current status is healthy
         let finalScore = Math.round(healthScore);
         if (api.healthStatus === 'healthy') {
           finalScore = Math.min(100, finalScore + 20);
@@ -703,7 +632,6 @@ export class ApisService {
     }
   }
 
-  // Add missing validateApiUrl method
   async validateApiUrl(url: string): Promise<{
     valid: boolean;
     accessible: boolean;
@@ -711,14 +639,12 @@ export class ApisService {
     error?: string;
   }> {
     try {
-      // Basic URL validation
       new URL(url);
 
-      // Test accessibility
       const startTime = Date.now();
       const response = await fetch(url, {
         method: 'HEAD',
-        // @ts-expect-error - timeout is valid but types may not be updated
+        // @ts-expect-error fetch supports a timeout option in this runtime
         timeout: 10000,
       });
       const responseTime = Date.now() - startTime;
@@ -750,19 +676,17 @@ export class ApisService {
     };
   }> {
     try {
-      // Basic URL validation
       new URL(url);
 
       this.logger.log(`Testing OpenAPI URL: ${url}`);
 
-      // Fetch the OpenAPI specification
       const response = await axios.get(url, {
         timeout: 15000,
         headers: {
           Accept: 'application/json, application/yaml, text/yaml, */*',
           'User-Agent': 'APILens/1.0.0',
         },
-        validateStatus: (status) => status < 500, // Accept redirects and client errors
+        validateStatus: (status) => status < 500,
       });
 
       if (response.status >= 400) {
@@ -777,11 +701,15 @@ export class ApisService {
       const contentType = response.headers['content-type'] || '';
 
       try {
-        // Try to parse as JSON first
-        if (contentType.includes('json') || response.data.toString().trim().startsWith('{')) {
-          spec = typeof response.data === 'string' ? JSON.parse(response.data) : response.data;
+        if (
+          contentType.includes('json') ||
+          response.data.toString().trim().startsWith('{')
+        ) {
+          spec =
+            typeof response.data === 'string'
+              ? JSON.parse(response.data)
+              : response.data;
         } else {
-          // Try to parse as YAML
           spec = yaml.parse(response.data.toString());
         }
       } catch (parseError) {
@@ -792,7 +720,6 @@ export class ApisService {
         };
       }
 
-      // Validate OpenAPI structure
       if (!spec || typeof spec !== 'object') {
         return {
           valid: false,
@@ -801,7 +728,6 @@ export class ApisService {
         };
       }
 
-      // Check for required OpenAPI fields
       const isOpenAPI3 = spec.openapi && spec.openapi.startsWith('3.');
       const isSwagger2 = spec.swagger && spec.swagger.startsWith('2.');
 
@@ -814,7 +740,6 @@ export class ApisService {
         };
       }
 
-      // Check for required sections
       if (!spec.info) {
         return {
           valid: false,
@@ -831,7 +756,6 @@ export class ApisService {
         };
       }
 
-      // Extract metadata
       const metadata = {
         title: spec.info?.title || 'Untitled API',
         version: spec.info?.version || '1.0.0',
@@ -855,10 +779,9 @@ export class ApisService {
         },
         metadata,
       };
-
     } catch (error) {
       this.logger.error(`Error testing OpenAPI URL ${url}:`, error.message);
-      
+
       if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
         return {
           valid: false,

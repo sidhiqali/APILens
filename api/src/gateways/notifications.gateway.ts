@@ -28,13 +28,12 @@ export class NotificationsGateway
   server: Server;
 
   private readonly logger = new Logger(NotificationsGateway.name);
-  private userSockets = new Map<string, Set<string>>(); // userId -> Set of socketIds
+  private userSockets = new Map<string, Set<string>>();
 
   constructor(private jwtService: JwtService) {}
 
   handleConnection(client: AuthenticatedSocket) {
     try {
-      // Extract JWT token from handshake auth
       const token =
         client.handshake.auth?.token ||
         client.handshake.headers?.authorization?.split(' ')[1];
@@ -45,17 +44,14 @@ export class NotificationsGateway
         return;
       }
 
-      // Verify JWT token
       const payload = this.jwtService.verify(token);
       client.userId = payload.userId;
 
-      // Track user socket connections
       if (!this.userSockets.has(payload.userId)) {
         this.userSockets.set(payload.userId, new Set());
       }
       this.userSockets.get(payload.userId)!.add(client.id);
 
-      // Join user-specific room
       void client.join(`user_${payload.userId}`);
 
       this.logger.log(
@@ -117,7 +113,6 @@ export class NotificationsGateway
     }
   }
 
-  // Methods to emit events to clients
   sendToUser(userId: string, event: string, data: any) {
     this.server.to(`user_${userId}`).emit(event, data);
   }
@@ -130,24 +125,20 @@ export class NotificationsGateway
     this.server.to(`user_apis_${userId}`).emit(event, data);
   }
 
-  // Broadcast real-time notifications
   broadcastNotification(userId: string, notification: any) {
     this.sendToUser(userId, 'notification:new', notification);
   }
 
-  // Broadcast API status updates
   broadcastAPIUpdate(apiId: string, userId: string, update: any) {
     this.sendToApiSubscribers(apiId, 'api:update', update);
     this.sendToUser(userId, 'api:update', update);
   }
 
-  // Broadcast API changes
   broadcastAPIChange(apiId: string, userId: string, change: any) {
     this.sendToApiSubscribers(apiId, 'api:change', change);
     this.sendToUser(userId, 'api:change', change);
   }
 
-  // Broadcast metrics updates
   broadcastMetricsUpdate(apiId: string, userId: string, metrics: any) {
     this.sendToApiSubscribers(apiId, 'metrics:update', metrics);
     this.sendToUser(userId, 'metrics:update', metrics);

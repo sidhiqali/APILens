@@ -36,7 +36,12 @@ export class ApisService {
   async getAllApis(userId: string): Promise<ApiResponseDto[]> {
     const apis = await this.apiModel
       .find({ userId: new Types.ObjectId(userId) })
-      .sort({ createdAt: -1 });
+      .select(
+        '_id apiName openApiUrl description tags isActive healthStatus checkFrequency lastChecked userId createdAt updatedAt version',
+      )
+      .sort({ createdAt: -1 })
+      .lean()
+      .maxTimeMS(10000);
 
     return apis.map((api) => this.toResponseDto(api));
   }

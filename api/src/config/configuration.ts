@@ -4,9 +4,18 @@ export default (): Record<string, any> => ({
   database: {
     uri: process.env.MONGO_URI || 'mongodb://localhost:27017/api-lens',
     options: {
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
+      serverSelectionTimeoutMS: 15000,
+      socketTimeoutMS: 20000,
+      connectTimeoutMS: 15000,
       bufferCommands: false,
+      maxPoolSize: 5,
+      minPoolSize: 1,
+      maxIdleTimeMS: 15000,
+      waitQueueTimeoutMS: 5000,
+      retryWrites: true,
+      retryReads: true,
+      heartbeatFrequencyMS: 20000,
+      compressors: ['zlib'],
     },
   },
 

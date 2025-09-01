@@ -14,7 +14,7 @@ export class SmartSchedulerService {
     private readonly notificationsGateway: NotificationsGateway,
   ) {}
 
-  @Cron('*/5 * * * *')
+  @Cron('0 */6 * * *')
   async handleApiChecking() {
     this.logger.log('Starting API monitoring cycle...');
 
@@ -28,7 +28,7 @@ export class SmartSchedulerService {
 
       this.logger.log(`Found ${apisToCheck.length} APIs to check`);
 
-      const batchSize = 10;
+      const batchSize = 5;
       for (let i = 0; i < apisToCheck.length; i += batchSize) {
         const batch = apisToCheck.slice(i, i + batchSize);
 
@@ -38,7 +38,7 @@ export class SmartSchedulerService {
         await Promise.allSettled(promises);
 
         if (i + batchSize < apisToCheck.length) {
-          await this.delay(1000);
+          await this.delay(2000);
         }
       }
 
@@ -165,7 +165,6 @@ export class SmartSchedulerService {
       this.logger.error(`Error in health check cycle: ${error.message}`);
     }
   }
-
   private delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }

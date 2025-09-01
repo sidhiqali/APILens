@@ -13,9 +13,14 @@ import { EmailService } from '../notifications/email.service';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET'),
+        secret:
+          configService.get<string>('jwt.secret') ||
+          configService.get<string>('JWT_SECRET'),
         signOptions: {
-          expiresIn: configService.get<string>('JWT_EXPIRES_IN') || '1h',
+          expiresIn:
+            (configService.get<string>('jwt.expiresIn') as string) ||
+            configService.get<string>('JWT_EXPIRES_IN') ||
+            '1h',
         },
       }),
       inject: [ConfigService],

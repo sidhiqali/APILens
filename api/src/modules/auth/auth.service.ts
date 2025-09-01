@@ -229,15 +229,23 @@ export class AuthService {
     const payload = { email: user.email, sub: user._id.toString() };
 
     const accessToken = this.jwtService.sign(payload, {
-      secret: this.configService.get<string>('JWT_SECRET'),
-      expiresIn: this.configService.get<string>('JWT_EXPIRES_IN') || '1h',
+      secret:
+        this.configService.get<string>('jwt.secret') ||
+        this.configService.get<string>('JWT_SECRET'),
+      expiresIn:
+        this.configService.get<string>('jwt.expiresIn') ||
+        this.configService.get<string>('JWT_EXPIRES_IN') ||
+        '1h',
     });
 
     const refreshToken = this.jwtService.sign(payload, {
       secret:
+        this.configService.get<string>('jwt.refreshSecret') ||
         this.configService.get<string>('JWT_REFRESH_SECRET') ||
+        this.configService.get<string>('jwt.secret') ||
         this.configService.get<string>('JWT_SECRET'),
-      expiresIn: '7d',
+      expiresIn:
+        this.configService.get<string>('jwt.refreshExpiresIn') || '7d',
     });
 
     return { accessToken, refreshToken };
@@ -248,7 +256,10 @@ export class AuthService {
   }
 
   private sendVerificationEmail(email: string, token: string) {
-    const verificationUrl = `${this.configService.get('APP_BASE_URL')}/auth/verify-email?token=${token}`;
+    const baseUrl =
+      (this.configService.get<string>('app.baseUrl') as string) ||
+      this.configService.get<string>('APP_BASE_URL');
+    const verificationUrl = `${baseUrl}/auth/verify-email?token=${token}`;
 
     this.emailService.sendVerificationEmail({
       to: email,
@@ -259,7 +270,10 @@ export class AuthService {
   }
 
   private sendPasswordResetEmail(email: string, token: string) {
-    const resetUrl = `${this.configService.get('FRONTEND_URL')}/reset-password?token=${token}`;
+    const frontendUrl =
+      (this.configService.get<string>('app.frontendUrl') as string) ||
+      this.configService.get<string>('FRONTEND_URL');
+    const resetUrl = `${frontendUrl}/reset-password?token=${token}`;
 
     this.emailService.sendPasswordResetEmail({
       to: email,

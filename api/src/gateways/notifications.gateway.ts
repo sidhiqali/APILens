@@ -44,19 +44,24 @@ export class NotificationsGateway
         return;
       }
 
-      const payload = this.jwtService.verify(token);
-      client.userId = payload.userId;
-
-      if (!this.userSockets.has(payload.userId)) {
-        this.userSockets.set(payload.userId, new Set());
+      const payload = this.jwtService.verify(token) as any;
+      const userId = payload?.sub || payload?.userId;
+      if (!userId) {
+        this.logger.warn(`Client ${client.id} provided token without user id`);
+        client.disconnect();
+        return;
       }
-      this.userSockets.get(payload.userId)!.add(client.id);
 
-      void client.join(`user_${payload.userId}`);
+      client.userId = userId;
 
-      this.logger.log(
-        `Client ${client.id} connected for user ${payload.userId}`,
-      );
+      if (!this.userSockets.has(userId)) {
+        this.userSockets.set(userId, new Set());
+      }
+      this.userSockets.get(userId)!.add(client.id);
+
+      void client.join(`user_${userId}`);
+
+      this.logger.log(`Client ${client.id} connected for user ${userId}`);
     } catch (error) {
       this.logger.error(
         `WebSocket authentication failed for ${client.id}:`,

@@ -50,10 +50,8 @@ async function bootstrap() {
   app.useGlobalInterceptors(new LoggingInterceptor());
 
   const config = new DocumentBuilder()
-    .setTitle('API Lens - API Change Tracking Service')
-    .setDescription(
-      'A comprehensive API monitoring service that tracks changes in OpenAPI specifications, detects breaking changes, and sends notifications. Monitor your APIs, get notified of changes, and maintain API compatibility across your services.',
-    )
+    .setTitle('API Lens')
+    .setDescription('Local API for API change tracking and notifications')
     .setVersion('1.0.0')
     .addBearerAuth(
       {
@@ -76,15 +74,7 @@ async function bootstrap() {
     .addTag('notifications', 'Notification management and preferences')
     .addTag('schedules', 'Scheduled monitoring and health checks')
     .addTag('health', 'System health and status endpoints')
-    .addServer('http://localhost:3000', 'Local development server')
-    .addServer('https://api.apilens.com', 'Production server')
-    .setContact(
-      'API Lens Support',
-      'https://apilens.com/support',
-      'support@apilens.com',
-    )
-    .setLicense('MIT', 'https://opensource.org/licenses/MIT')
-    .setExternalDoc('API Lens Documentation', 'https://docs.apilens.com')
+    .addServer('http://localhost:3000', 'Local server')
     .build();
 
   const document = SwaggerModule.createDocument(app, config, {
@@ -96,28 +86,11 @@ async function bootstrap() {
       persistAuthorization: true,
       displayRequestDuration: true,
       filter: true,
-      showExtensions: true,
-      showCommonExtensions: true,
     },
-    customSiteTitle: 'API Lens - API Documentation',
-    customfavIcon: '/favicon.ico',
-    customJs: [
-      'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-bundle.min.js',
-      'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-standalone-preset.min.js',
-    ],
-    customCssUrl: [
-      'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui.min.css',
-    ],
+    customSiteTitle: 'API Lens - Local API Docs',
   });
 
-  app.getHttpAdapter().get('/health', (req, res) => {
-    res.json({
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      environment: process.env.NODE_ENV || 'development',
-    });
-  });
+  // Health endpoints are provided via HealthController (Terminus)
 
   const port = process.env.PORT || 3000;
   await app.listen(port);

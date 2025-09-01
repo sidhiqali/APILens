@@ -232,6 +232,13 @@ export class AuthController {
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 409, description: 'Email already in use' })
+  async updateProfile(
+    @Request() req,
+    @Body() dto: UpdateProfileDto,
+  ): Promise<ProfileResponseDto> {
+    const user = await this.userService.updateProfile(req.user.userId, dto);
+    return { user };
+  }
   @Put('change-password')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()

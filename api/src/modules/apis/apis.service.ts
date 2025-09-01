@@ -647,23 +647,19 @@ export class ApisService {
       new URL(url);
 
       const startTime = Date.now();
-      const response = await fetch(url, {
-        method: 'HEAD',
-        // @ts-expect-error fetch supports a timeout option in this runtime
-        timeout: 10000,
-      });
+      const response = await axios.head(url, { timeout: 10000, validateStatus: () => true });
       const responseTime = Date.now() - startTime;
 
       return {
         valid: true,
-        accessible: response.ok,
+        accessible: response.status < 500,
         responseTime,
       };
     } catch (error) {
       return {
         valid: false,
         accessible: false,
-        error: error.message,
+        error: (error as Error).message,
       };
     }
   }

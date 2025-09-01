@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User } from 'src/Schemas/user.schema';
@@ -110,6 +110,34 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
     return toSafeUser(user);
+  }
+
+  async updateProfile(
+    userId: string,
+    dto: { email?: string; role?: string },
+  ): Promise<IUser> {
+    const user = await this.userModel.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (dto.email && dto.email !== user.email) {
+      const exists = await this.userModel.findOne({
+        email: dto.email,
+        isActive: true,
+        _id: { $ne: user._id },
+      });
+      if (exists) {
+        throw new ConflictException('Email already in use');
+      }
+      user.email = dto.email;
+      user.isEmailVerified = false;
+    }
+
+    // Intentionally ignore role changes here for safety.
+
+    const saved = await user.save();
+    return toSafeUser(saved);
   }
 
   async updateNotificationPreferences(

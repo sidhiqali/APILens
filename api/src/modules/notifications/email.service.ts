@@ -171,7 +171,10 @@ export class EmailService {
         </div>
 
         <div style="text-align: center; margin-top: 30px;">
-          <a href="${this.configService.get('FRONTEND_URL')}/dashboard" style="background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; display: inline-block;">
+          <a href="${
+            (this.configService.get('app.frontendUrl') as string) ||
+            (this.configService.get('FRONTEND_URL') as string)
+          }/dashboard" style="background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; display: inline-block;">
             View Full Details
           </a>
         </div>
@@ -179,7 +182,10 @@ export class EmailService {
         <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef;">
           <p style="color: #6c757d; font-size: 12px; margin: 0;">
             This notification was sent by API Lens<br>
-            <a href="${this.configService.get('FRONTEND_URL')}/settings/notifications" style="color: #667eea;">Manage notification preferences</a>
+            <a href="${
+              (this.configService.get('app.frontendUrl') as string) ||
+              (this.configService.get('FRONTEND_URL') as string)
+            }/settings/notifications" style="color: #667eea;">Manage notification preferences</a>
           </p>
         </div>
 
@@ -361,7 +367,10 @@ export class EmailService {
           </div>
 
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${this.configService.get('FRONTEND_URL')}/dashboard" style="background: #28a745; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; font-weight: 600; display: inline-block; font-size: 16px;">
+            <a href="${
+              (this.configService.get('app.frontendUrl') as string) ||
+              (this.configService.get('FRONTEND_URL') as string)
+            }/dashboard" style="background: #28a745; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; font-weight: 600; display: inline-block; font-size: 16px;">
               Go to Dashboard
             </a>
           </div>
@@ -377,7 +386,10 @@ export class EmailService {
 
         <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef;">
           <p style="color: #6c757d; font-size: 12px; margin: 0;">
-            Need help? Check out our <a href="${this.configService.get('FRONTEND_URL')}/docs" style="color: #667eea;">documentation</a> or contact support.<br>
+            Need help? Check out our <a href="${
+              (this.configService.get('app.frontendUrl') as string) ||
+              (this.configService.get('FRONTEND_URL') as string)
+            }/docs" style="color: #667eea;">documentation</a> or contact support.<br>
             Happy monitoring! 🎯
           </p>
         </div>

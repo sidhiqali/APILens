@@ -18,8 +18,7 @@ import {
 } from 'src/Schemas/notification.schema';
 import { User, UserSchema } from 'src/Schemas/user.schema';
 import { EmailService } from '../notifications/email.service';
-import { NotificationsGateway } from 'src/gateways/notifications.gateway';
-import { JwtService } from '@nestjs/jwt';
+import { WebSocketModule } from '../websocket/websocket.module';
 
 @Module({
   imports: [
@@ -31,6 +30,7 @@ import { JwtService } from '@nestjs/jwt';
       { name: Notification.name, schema: NotificationSchema },
       { name: User.name, schema: UserSchema },
     ]),
+    WebSocketModule,
   ],
   controllers: [ApisController],
   providers: [
@@ -39,8 +39,6 @@ import { JwtService } from '@nestjs/jwt';
     SmartSchedulerService,
     NotificationsService,
     EmailService,
-    NotificationsGateway,
-    JwtService,
   ],
   exports: [ApisService],
 })

@@ -1,10 +1,4 @@
-/**
- * APILens Mock Universe Orchestrator
- * 
- * Orchestrates 6 Prism mock servers and flips some from v1->v2 on a timer.
- * Enhanced with port checking, better error handling, and robust cleanup.
- * Now includes OpenAPI spec servers for APILens integration.
- */
+// Simple Prism orchestrator: starts mock servers, serves specs/health, flips v1→v2
 const { spawn, exec } = require('child_process');
 const path = require('path');
 const fs = require('fs');
@@ -28,12 +22,11 @@ function r(p) {
 }
 
 function timestamp() {
-  const elapsed = Math.floor((Date.now() - startTime) / 1000);
-  return `[${elapsed}s]`;
+  return Math.floor((Date.now() - startTime) / 1000) + 's';
 }
 
 function log(message) {
-  console.log(`${timestamp()} ${message}`);
+  console.log(`[${timestamp()}] ${message}`);
 }
 
 // Check if port is available
@@ -60,41 +53,41 @@ function checkPrismCli() {
 // Validate all spec files exist
 function ensureSpecsExist() {
   let ok = true;
-  log('Validating OpenAPI spec files...');
+  log('Validating OpenAPI spec files');
   
   for (const c of config) {
     for (const [version, specPath] of [['v1', c.v1], ['v2', c.v2]]) {
       const abs = r(specPath);
       if (!fs.existsSync(abs)) {
-        console.error(`❌ Missing ${c.name} ${version} spec: ${abs}`);
+        console.error(`Missing ${c.name} ${version} spec: ${abs}`);
         ok = false;
       } else {
-        log(`✅ Found ${c.name} ${version}: ${path.basename(specPath)}`);
+        log(`Found ${c.name} ${version}: ${path.basename(specPath)}`);
       }
     }
   }
   
   if (!ok) {
-    console.error('\n❌ One or more OpenAPI files are missing. Aborting.');
-    console.error('💡 Make sure all v1.yaml and v2.yaml files are created in mocks/openapi/*/');
+    console.error('\nOne or more OpenAPI files are missing. Aborting.');
+    console.error('Make sure v1.yaml and v2.yaml files are created in mocks/openapi/*/');
     process.exit(1);
   }
   
-  log('✅ All spec files validated');
+  log('All spec files validated');
 }
 
 // Check port availability for all configured ports
 async function checkAllPorts() {
-  log('Checking port availability...');
+  log('Checking port availability');
   
   for (const c of config) {
     const available = await checkPort(c.port);
     if (!available) {
-      console.error(`❌ Port ${c.port} is already in use (needed for ${c.name} API)`);
-      console.error(`💡 Stop the process using port ${c.port} or change the port in prismauto.config.js`);
+      console.error(`Port ${c.port} is already in use (needed for ${c.name})`);
+      console.error(`Stop the process on ${c.port} or change port in prismauto.config.js`);
       process.exit(1);
     }
-    log(`✅ Port ${c.port} available for ${c.name}`);
+    log(`Port ${c.port} available for ${c.name}`);
   }
 }
 
@@ -110,7 +103,7 @@ function startPrism(name, port, specPath, version = 'v1') {
   processes.set(name, child);
   
   const specName = path.basename(specPath);
-  log(`🚀 ${name} API started on :${port} (${version}) → ${specName}`);
+  log(`${name} started on :${port} (${version}) → ${specName}`);
   
   // Handle process output (optional: can be commented out to reduce noise)
   child.stdout.on('data', (data) => {
@@ -122,9 +115,7 @@ function startPrism(name, port, specPath, version = 'v1') {
   
   child.stderr.on('data', (data) => {
     const error = data.toString().trim();
-    if (error) {
-      console.error(`[${name}] ERROR: ${error}`);
-    }
+    if (error) console.error(`[${name}] ${error}`);
   });
   
   child.on('exit', (code, signal) => {
@@ -137,7 +128,7 @@ function startPrism(name, port, specPath, version = 'v1') {
   });
   
   child.on('error', (err) => {
-    console.error(`[${name}] spawn error:`, err.message);
+    console.error(`[${name}] spawn error: ${err.message}`);
   });
   
   return child;
@@ -211,98 +202,32 @@ function createSpecServer(name, port, currentSpecPath) {
     } else if (parsedUrl.pathname === '/health') {
       res.setHeader('Content-Type', 'application/json');
       
-      // Get the current spec path dynamically from the specServers map
       const serverInfo = specServers.get(name);
       const activeSpecPath = serverInfo ? serverInfo.currentSpecPath : currentSpecPath;
-      
-      // Create more dynamic health scenarios for testing notifications
-      const healthScenarios = [
-        { status: 'healthy', weight: 35 },
-        { status: 'unhealthy', weight: 30 },
-        { status: 'degraded', weight: 20 },
-        { status: 'error', weight: 15 }
-      ];
-      
-      // Use API name and time to create deterministic but frequently changing health status
-      const timeSlot = Math.floor(Date.now() / (2 * 60 * 1000)); // Changes every 2 minutes for more activity
-      const nameHash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-      const randomSeed = (nameHash + timeSlot) % 100;
-      
-      let accumulatedWeight = 0;
+
+      // Deterministic health cycle: 60s window with 15s quadrants, per-API offset
+      const cycleMs = 60 * 1000;
+      const offsets = { users: 0, notifications: 15_000, weather: 30_000, inventory: 45_000, orders: 60_000, payments: 75_000 };
+      const key = name.toLowerCase();
+      const offset = offsets[key] ?? 0;
+      const t = (Date.now() + offset) % cycleMs;
+
       let selectedStatus = 'healthy';
-      
-      for (const scenario of healthScenarios) {
-        accumulatedWeight += scenario.weight;
-        if (randomSeed < accumulatedWeight) {
-          selectedStatus = scenario.status;
-          break;
-        }
-      }
-      
-      // Create specific patterns for different APIs to simulate real-world behavior
-      const currentMinute = Math.floor(Date.now() / (60 * 1000)) % 10; // 10-minute cycle
-      
-      if (name.includes('Payments')) {
-        // Payments API: Alternates between healthy and unhealthy more frequently
-        selectedStatus = (currentMinute % 3 === 0) ? 'unhealthy' : 
-                        (currentMinute % 4 === 0) ? 'degraded' : 'healthy';
-      } else if (name.includes('Orders')) {
-        // Orders API: Periodic degraded states during "peak hours"
-        selectedStatus = (currentMinute >= 2 && currentMinute <= 4) ? 'degraded' :
-                        (currentMinute === 7) ? 'error' : 'healthy';
-      } else if (name.includes('Inventory')) {
-        // Inventory API: Occasionally goes into error state
-        selectedStatus = (currentMinute === 1 || currentMinute === 6) ? 'error' :
-                        (currentMinute === 9) ? 'unhealthy' : 'healthy';
-      } else if (name.includes('Notifications')) {
-        // Notifications API: Mix of all states for comprehensive testing
-        selectedStatus = (currentMinute % 4 === 0) ? 'unhealthy' :
-                        (currentMinute % 4 === 1) ? 'degraded' :
-                        (currentMinute % 4 === 2) ? 'error' : 'healthy';
-      }
-      
-      
-      // Generate appropriate error messages for unhealthy states
-      let errorMessage = null;
-      let responseTime = Math.floor(Math.random() * 200) + 50; // Base response time 50-250ms
-      
-      switch (selectedStatus) {
-        case 'unhealthy':
-          const unhealthyReasons = [
-            'Database connection pool exhausted',
-            'External payment service timeout',
-            'Memory usage above 90%',
-            'Too many failed authentication attempts',
-            'Circuit breaker is open'
-          ];
-          errorMessage = unhealthyReasons[Math.floor(Math.random() * unhealthyReasons.length)];
-          responseTime = Math.floor(Math.random() * 2000) + 1000; // Slow response 1-3s
-          break;
-        case 'degraded':
-          const degradedReasons = [
-            'High response times detected',
-            'Database queries running slowly',
-            'Cache hit rate below threshold',
-            'External dependency latency increased',
-            'CPU usage above 80%'
-          ];
-          errorMessage = degradedReasons[Math.floor(Math.random() * degradedReasons.length)];
-          responseTime = Math.floor(Math.random() * 1000) + 500; // Degraded response 500ms-1.5s
-          break;
-        case 'error':
-          const errorReasons = [
-            'Database connection failed',
-            'Critical service unavailable',
-            'Configuration error detected',
-            'Authentication service down',
-            'Internal server error'
-          ];
-          errorMessage = errorReasons[Math.floor(Math.random() * errorReasons.length)];
-          responseTime = Math.floor(Math.random() * 5000) + 2000; // Very slow or timeout 2-7s
-          break;
-        default:
-          responseTime = Math.floor(Math.random() * 200) + 50; // Healthy response 50-250ms
-      }
+      if (t < 15_000) selectedStatus = 'healthy';
+      else if (t < 30_000) selectedStatus = 'degraded';
+      else if (t < 45_000) selectedStatus = 'unhealthy';
+      else selectedStatus = 'error';
+
+      const reasons = {
+        degraded: ['High response times detected', 'Database queries running slowly'],
+        unhealthy: ['External dependency timeout', 'Circuit breaker open'],
+        error: ['Service unavailable', 'Internal server error'],
+      };
+      const quadrant = Math.floor(t / 15_000);
+      const pick = (arr) => arr[quadrant % arr.length];
+      const errorMessage = selectedStatus === 'healthy' ? null : pick(reasons[selectedStatus]);
+
+      const responseTime = selectedStatus === 'healthy' ? 120 : selectedStatus === 'degraded' ? 650 : selectedStatus === 'unhealthy' ? 1500 : 3000;
       
       const responseData = { 
         status: selectedStatus, 
@@ -327,10 +252,7 @@ function createSpecServer(name, port, currentSpecPath) {
                   Math.random() * 0.15 + 0.05
       };
       
-      // Set appropriate HTTP status codes
-      const statusCode = selectedStatus === 'healthy' ? 200 : 
-                        selectedStatus === 'degraded' ? 200 : 
-                        selectedStatus === 'unhealthy' ? 503 : 500;
+      const statusCode = selectedStatus === 'healthy' ? 200 : selectedStatus === 'degraded' ? 200 : selectedStatus === 'unhealthy' ? 503 : 500;
       
       res.writeHead(statusCode);
       res.end(JSON.stringify(responseData, null, 2));
@@ -340,9 +262,9 @@ function createSpecServer(name, port, currentSpecPath) {
     }
   });
   
-  const specPort = port + 1000; // Use port+1000 for spec servers (5101, 5102, etc.)
+  const specPort = port + 1000; // spec server on port+1000
   server.listen(specPort, '0.0.0.0', () => {
-    log(`📄 ${name} OpenAPI spec server started on :${specPort}`);
+    log(`${name} spec server on :${specPort}`);
   });
   
   specServers.set(name, { server, port: specPort, currentSpecPath });
@@ -394,23 +316,23 @@ function setupVersionSwitching(apiConfig) {
 // Graceful shutdown handler
 function setupShutdownHandlers() {
   function shutdown(signal) {
-    log(`\n🛑 Received ${signal}, shutting down mock servers...`);
+    log(`\nReceived ${signal}, shutting down mock servers`);
     
     // Stop Prism processes
     for (const [name] of processes) {
-      log(`🛑 Stopping ${name}...`);
+      log(`Stopping ${name}...`);
       killPrism(name);
     }
     
     // Stop spec servers
     for (const [name, { server }] of specServers) {
-      log(`🛑 Stopping ${name} spec server...`);
+      log(`Stopping ${name} spec server...`);
       server.close();
     }
     
     // Give processes time to clean up
     setTimeout(() => {
-      log('✅ All mock servers stopped. Goodbye!');
+      log('All mock servers stopped.');
       process.exit(0);
     }, 2000);
   }
@@ -427,8 +349,8 @@ function setupShutdownHandlers() {
 
 // Print startup banner
 function printBanner() {
-  console.log('\n🚀 APILens Mock Universe Starting...\n');
-  console.log('📋 Configuration:');
+  console.log('\nStarting mocks...\n');
+  console.log('Configuration:');
   
   config.forEach(c => {
     const flipInfo = c.flipAfterMs > 0 
@@ -437,18 +359,18 @@ function printBanner() {
     console.log(`   • ${c.name.padEnd(12)} :${c.port} - ${c.description} (${flipInfo})`);
   });
   
-  console.log('\n🌐 Mock API Endpoints:');
+  console.log('\nMock API endpoints:');
   config.forEach(c => {
     console.log(`   • ${c.name.padEnd(12)} http://localhost:${c.port}`);
   });
   
-  console.log('\n📄 OpenAPI Spec Endpoints (for APILens):');
+  console.log('\nOpenAPI spec endpoints:');
   config.forEach(c => {
     const specPort = c.port + 1000;
     console.log(`   • ${c.name.padEnd(12)} http://localhost:${specPort}/openapi.json`);
   });
   
-  console.log('\n💡 Stop with CTRL+C\n');
+  console.log('\nStop with CTRL+C\n');
 }
 
 // Main orchestrator function
@@ -457,15 +379,14 @@ async function run() {
     printBanner();
     
     // Pre-flight checks
-    log('🔍 Running pre-flight checks...');
+    log('Running pre-flight checks');
     
     const hasPrism = await checkPrismCli();
     if (!hasPrism) {
-      console.error('❌ Prism CLI not found!');
-      console.error('💡 Run: npm run mocks:install');
+      console.error('Prism CLI not found. Run: npm run mocks:install');
       process.exit(1);
     }
-    log('✅ Prism CLI detected');
+    log('Prism CLI detected');
     
     await checkAllPorts();
     ensureSpecsExist();
@@ -473,7 +394,7 @@ async function run() {
     // Setup graceful shutdown
     setupShutdownHandlers();
     
-    log('🚀 Starting mock servers...\n');
+    log('Starting mock servers');
     
     // Start all APIs on v1
     for (const apiConfig of config) {
@@ -482,8 +403,7 @@ async function run() {
       setupVersionSwitching(apiConfig);
     }
     
-    log('\n✅ All mock servers started successfully!');
-    log('📊 Watch the logs below for version switches...\n');
+    log('All mock servers started');
     
   } catch (error) {
     console.error('❌ Failed to start mock universe:', error.message);

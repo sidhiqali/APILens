@@ -4,7 +4,7 @@ module.exports = [
     port: 4101,
     v1: '../openapi/users/v1.yaml',
     v2: '../openapi/users/v2.yaml',
-    flipAfterMs: 60_000,   // flip once to v2 after 60s
+    flipAfterMs: 30_000,   // flip once to v2 after 30s
     flipBackEveryMs: 0,    // no flip back
     description: 'Field rename: username → handle'
   },
@@ -13,7 +13,7 @@ module.exports = [
     port: 4102,
     v1: '../openapi/orders/v1.yaml',
     v2: '../openapi/orders/v2.yaml',
-    flipAfterMs: 0,        // stay on v1 unless manually restarted
+    flipAfterMs: 150_000,  // flip once to v2 after 150s
     flipBackEveryMs: 0,
     description: 'New required header + cancel endpoint'
   },
@@ -31,7 +31,7 @@ module.exports = [
     port: 4104,
     v1: '../openapi/payments/v1.yaml',
     v2: '../openapi/payments/v2.yaml',
-    flipAfterMs: 0,        // stay on v1 for auth testing
+    flipAfterMs: 180_000,  // flip once to v2 after 180s
     flipBackEveryMs: 0,
     description: 'Auth scheme change: API Key → Bearer'
   },

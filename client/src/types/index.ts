@@ -1,8 +1,7 @@
-// User Types (matching backend User schema)
 export interface User {
   _id: string;
   email: string;
-  password?: string; // Only returned on certain operations
+  password?: string;
   role: string;
   isEmailVerified: boolean;
   emailVerificationToken?: string;
@@ -22,7 +21,7 @@ export interface User {
   profilePicture?: string;
   createdAt: string;
   updatedAt: string;
-  api_key?: string; // User's API key for external API access
+  api_key?: string;
 }
 
 export interface AuthUser extends User {
@@ -30,20 +29,19 @@ export interface AuthUser extends User {
   refreshToken: string;
 }
 
-// API Types (matching backend Api schema)
 export interface Api {
-  id: string; // Backend transforms _id to id in response
-  apiName: string; // Changed from 'name' to match backend
-  openApiUrl: string; // Changed from 'url' to match backend
+  id: string;
+  apiName: string;
+  openApiUrl: string;
   type: string;
   version?: string;
   latestSpec?: any;
   lastChecked?: string;
   userId: string;
-  checkFrequency: string; // Changed from checkInterval number to string (5m, 15m, 1h, 6h, 1d)
+  checkFrequency: string;
   isActive: boolean;
   tags: string[];
-  healthStatus: string; // healthy, unhealthy, checking, error
+  healthStatus: string;
   lastHealthCheck?: string;
   lastError?: string;
   changeCount: number;
@@ -103,14 +101,13 @@ export interface Notification {
   type: 'api_change' | 'api_error' | 'api_recovered' | 'system';
   title: string;
   message: string;
-  read: boolean; // Changed from isRead to match backend
-  severity: 'low' | 'medium' | 'high' | 'critical'; // Added severity field
+  read: boolean;
+  severity: 'low' | 'medium' | 'high' | 'critical';
   readAt?: string;
   metadata?: Record<string, any>;
   createdAt: string;
 }
 
-// Response Types
 export interface ApiResponse<T = any> {
   success: boolean;
   data?: T;
@@ -128,7 +125,6 @@ export interface PaginatedResponse<T> extends ApiResponse<T[]> {
   };
 }
 
-// Auth Types
 export interface LoginRequest {
   email: string;
   password: string;
@@ -158,22 +154,20 @@ export interface RefreshTokenRequest {
   refreshToken: string;
 }
 
-// API Management Types (matching backend DTOs)
 export interface CreateApiRequest {
-  apiName: string; // Changed to match backend
-  openApiUrl: string; // Changed to match backend
+  apiName: string;
+  openApiUrl: string;
   type: string;
   version?: string;
   description?: string;
   tags?: string[];
-  checkFrequency?: string; // 5m, 15m, 1h, 6h, 1d
+  checkFrequency?: string;
 }
 
 export interface UpdateApiRequest extends Partial<CreateApiRequest> {
   isActive?: boolean;
 }
 
-// UI State Types
 export interface LoadingState {
   isLoading: boolean;
   error?: string;
@@ -190,7 +184,6 @@ export interface SortState {
   direction: 'asc' | 'desc';
 }
 
-// Chart Data Types
 export interface ChartDataPoint {
   date: string;
   value: number;
@@ -203,14 +196,12 @@ export interface TimeSeriesData {
   errors: ChartDataPoint[];
 }
 
-// WebSocket Types
 export interface WebSocketMessage {
   type: 'api_change' | 'status_update' | 'notification';
   data: any;
   timestamp: string;
 }
 
-// Form Types
 export interface FormFieldError {
   message: string;
   type: string;
@@ -220,7 +211,6 @@ export interface FormErrors {
   [key: string]: FormFieldError;
 }
 
-// Table Types
 export interface Column<T> {
   key: keyof T;
   header: string;
@@ -245,7 +235,6 @@ export interface TableProps<T> {
   };
 }
 
-// Modal Types
 export interface ModalProps {
   isOpen: boolean;
   onClose: () => void;

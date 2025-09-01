@@ -1,6 +1,5 @@
 import { apiClient } from '@/lib/axios';
 
-// Settings Types
 export interface UserProfile {
   _id: string;
   email: string;
@@ -50,7 +49,6 @@ export interface ApiSettings {
 class SettingsService {
   private baseUrl = '/auth';
 
-  // User Profile Management
   async getProfile(): Promise<UserProfile> {
     const response = await apiClient.get<{ user: UserProfile }>(
       `${this.baseUrl}/profile`
@@ -75,7 +73,6 @@ class SettingsService {
     );
   }
 
-  // Notification Preferences
   async getNotificationPreferences(): Promise<NotificationPreferences> {
     const profile = await this.getProfile();
     return profile.notificationPreferences;
@@ -90,7 +87,6 @@ class SettingsService {
     return response.preferences;
   }
 
-  // API Settings Management
   async getApiSettings(apiId: string): Promise<ApiSettings> {
     return await apiClient.get<ApiSettings>(`/apis/${apiId}/settings`);
   }
@@ -105,14 +101,12 @@ class SettingsService {
     );
   }
 
-  // System Preferences
   async getSystemSettings(): Promise<{
     theme: 'light' | 'dark' | 'system';
     language: string;
     timezone: string;
     dateFormat: string;
   }> {
-    // This would typically come from local storage or user preferences
     return {
       theme: (localStorage.getItem('theme') as any) || 'system',
       language: localStorage.getItem('language') || 'en',
@@ -127,7 +121,6 @@ class SettingsService {
     timezone?: string;
     dateFormat?: string;
   }): Promise<void> {
-    // Store in localStorage for now
     Object.entries(settings).forEach(([key, value]) => {
       if (value !== undefined) {
         localStorage.setItem(key, value);
@@ -135,7 +128,6 @@ class SettingsService {
     });
   }
 
-  // Account Management
   async deleteAccount(): Promise<{ message: string }> {
     return await apiClient.delete<{ message: string }>(
       `${this.baseUrl}/account`
@@ -148,7 +140,6 @@ class SettingsService {
     });
   }
 
-  // API Key Management
   async generateApiKey(): Promise<{ apiKey: string }> {
     return await apiClient.post<{ apiKey: string }>(
       `${this.baseUrl}/api-key/generate`

@@ -10,7 +10,6 @@ import {
 class ApiService {
   private baseUrl = '/apis';
 
-  // Get all APIs for the authenticated user
   async getApis(params?: {
     page?: number;
     limit?: number;
@@ -36,12 +35,10 @@ class ApiService {
     );
   }
 
-  // Get a single API by ID
   async getApiById(id: string): Promise<Api> {
     return await apiClient.get<Api>(`${this.baseUrl}/${id}`);
   }
 
-  // Create a new API
   async createApi(apiData: CreateApiRequest): Promise<ApiResponse<Api>> {
     const response = await apiClient.post<ApiResponse<Api>>(
       this.baseUrl,
@@ -50,7 +47,6 @@ class ApiService {
     return response;
   }
 
-  // Update an existing API
   async updateApi(
     id: string,
     apiData: UpdateApiRequest
@@ -62,7 +58,6 @@ class ApiService {
     return response;
   }
 
-  // Delete an API
   async deleteApi(id: string): Promise<ApiResponse<void>> {
     const response = await apiClient.delete<ApiResponse<void>>(
       `${this.baseUrl}/${id}`
@@ -70,7 +65,6 @@ class ApiService {
     return response;
   }
 
-  // Toggle API active status
   async toggleApiStatus(id: string): Promise<ApiResponse<Api>> {
     const response = await apiClient.put<ApiResponse<Api>>(
       `${this.baseUrl}/${id}/toggle`
@@ -78,7 +72,6 @@ class ApiService {
     return response;
   }
 
-  // Manually trigger API check
   async checkApi(id: string): Promise<ApiResponse<any>> {
     const response = await apiClient.post<ApiResponse<any>>(
       `${this.baseUrl}/${id}/check-now`
@@ -86,7 +79,6 @@ class ApiService {
     return response;
   }
 
-  // Get API health status
   async getApiHealth(id: string): Promise<ApiResponse<any>> {
     const response = await apiClient.get<ApiResponse<any>>(
       `${this.baseUrl}/${id}/health`
@@ -94,7 +86,6 @@ class ApiService {
     return response;
   }
 
-  // Get API statistics
   async getApiStats(id: string, timeRange?: string): Promise<ApiResponse<any>> {
     const params = timeRange ? `?timeRange=${timeRange}` : '';
     const response = await apiClient.get<ApiResponse<any>>(
@@ -103,7 +94,6 @@ class ApiService {
     return response;
   }
 
-  // Get API changes/changelog
   async getApiChanges(
     id: string,
     params?: {
@@ -126,7 +116,6 @@ class ApiService {
     return response;
   }
 
-  // Export API data
   async exportApi(
     id: string,
     format: 'json' | 'csv' | 'yaml' = 'json'
@@ -140,7 +129,6 @@ class ApiService {
     return response;
   }
 
-  // Test API endpoint
   async testApi(id: string): Promise<ApiResponse<any>> {
     const response = await apiClient.post<ApiResponse<any>>(
       `${this.baseUrl}/${id}/test`
@@ -148,7 +136,6 @@ class ApiService {
     return response;
   }
 
-  // Get all tags
   async getTags(): Promise<ApiResponse<string[]>> {
     const response = await apiClient.get<ApiResponse<string[]>>(
       `${this.baseUrl}/tags`
@@ -156,7 +143,6 @@ class ApiService {
     return response;
   }
 
-  // Get API snapshot history
   async getApiSnapshots(
     id: string,
     params?: {
@@ -179,7 +165,6 @@ class ApiService {
     return response;
   }
 
-  // Compare API versions
   async compareApiVersions(
     id: string,
     fromVersion: string,
@@ -191,7 +176,6 @@ class ApiService {
     return response;
   }
 
-  // Get API documentation
   async getApiDocumentation(id: string): Promise<ApiResponse<any>> {
     const response = await apiClient.get<ApiResponse<any>>(
       `${this.baseUrl}/${id}/documentation`
@@ -199,7 +183,6 @@ class ApiService {
     return response;
   }
 
-  // Update check frequency
   async updateCheckFrequency(
     id: string,
     frequency: string
@@ -211,9 +194,6 @@ class ApiService {
     return response;
   }
 
-  // Additional enhanced methods for Phase 1
-
-  // Test API connection
   async testConnection(id: string): Promise<{
     status: 'healthy' | 'unhealthy' | 'error';
     responseTime: number;
@@ -224,7 +204,6 @@ class ApiService {
     return await apiClient.post(`${this.baseUrl}/${id}/test`);
   }
 
-  // Check API now (manual trigger)
   async checkNow(id: string): Promise<{
     message: string;
     hasChanges: boolean;
@@ -233,7 +212,6 @@ class ApiService {
     return await apiClient.post(`${this.baseUrl}/${id}/check-now`);
   }
 
-  // Check all APIs
   async checkAllApis(): Promise<{
     message: string;
     checked: number;
@@ -241,12 +219,10 @@ class ApiService {
     return await apiClient.post(`${this.baseUrl}/check-all`);
   }
 
-  // Get API by tag
   async getApisByTag(tag: string): Promise<ApiResponse<Api>[]> {
     return await apiClient.get(`${this.baseUrl}?tag=${tag}`);
   }
 
-  // Get general API stats (not dashboard specific)
   async getGeneralStats(): Promise<{
     totalApis: number;
     activeMonitoring: number;
@@ -259,7 +235,6 @@ class ApiService {
     return await apiClient.get(`${this.baseUrl}/stats`);
   }
 
-  // Bulk operations
   async bulkToggleStatus(ids: string[]): Promise<{
     updated: number;
     errors: string[];
@@ -287,7 +262,6 @@ class ApiService {
     });
   }
 
-  // Advanced search
   async searchApis(
     query: string,
     filters?: {
@@ -316,7 +290,6 @@ class ApiService {
     return await apiClient.get(`${this.baseUrl}/search?${params.toString()}`);
   }
 
-  // Validate API URL during registration
   async validateApiUrl(url: string): Promise<{
     valid: boolean;
     accessible: boolean;

@@ -19,23 +19,20 @@ export const RouteGuard = ({
   const router = useRouter();
 
   useEffect(() => {
-    if (isLoading) return; // Wait for auth state to be determined
+    if (isLoading) return;
 
     if (requireAuth && !isAuthenticated) {
-      // Protected route but user not authenticated
       router.replace('/login');
       return;
     }
 
     if (!requireAuth && isAuthenticated) {
-      // Public route but user is authenticated
       const defaultRedirect = redirectTo || '/dashboard';
       router.replace(defaultRedirect);
       return;
     }
   }, [isAuthenticated, isLoading, requireAuth, router, redirectTo]);
 
-  // Show loading spinner while checking auth
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -47,7 +44,6 @@ export const RouteGuard = ({
     );
   }
 
-  // Don't render anything while redirecting
   if (requireAuth && !isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">

@@ -41,13 +41,11 @@ export type AuthStore = AuthState & AuthActions;
 export const useAuth = create<AuthStore>()(
   persist(
     (set, get) => ({
-      // Initial state
       user: null,
       isAuthenticated: false,
       isLoading: false,
       error: null,
 
-      // Actions
       login: (user: User) => {
         set({
           user,
@@ -90,7 +88,6 @@ export const useAuth = create<AuthStore>()(
     {
       name: 'auth-storage',
       storage: createJSONStorage(() => localStorage),
-      // Only persist user and isAuthenticated
       partialize: (state) => ({
         user: state.user,
         isAuthenticated: state.isAuthenticated,
@@ -99,7 +96,6 @@ export const useAuth = create<AuthStore>()(
   )
 );
 
-// Selectors for better performance
 export const useAuthUser = () => useAuth((state) => state.user);
 export const useIsAuthenticated = () =>
   useAuth((state) => state.isAuthenticated);

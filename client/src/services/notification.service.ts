@@ -1,6 +1,5 @@
 import { apiClient } from '@/lib/axios';
 
-// Notification Types
 export interface Notification {
   _id: string;
   userId: string;
@@ -59,7 +58,6 @@ export interface PaginatedNotifications {
 class NotificationService {
   private baseUrl = '/notifications';
 
-  // Get user notifications with pagination
   async getUserNotifications(params?: {
     limit?: number;
     offset?: number;
@@ -76,33 +74,27 @@ class NotificationService {
     );
   }
 
-  // Get notification statistics
   async getNotificationStats(): Promise<NotificationStats> {
     return await apiClient.get<NotificationStats>(`${this.baseUrl}/stats`);
   }
 
-  // Mark notification as read
   async markAsRead(notificationId: string): Promise<void> {
     await apiClient.put(`${this.baseUrl}/${notificationId}/read`);
   }
 
-  // Mark all notifications as read
   async markAllAsRead(): Promise<void> {
     await apiClient.put(`${this.baseUrl}/mark-all-read`);
   }
 
-  // Delete notification
   async deleteNotification(notificationId: string): Promise<void> {
     await apiClient.delete(`${this.baseUrl}/${notificationId}`);
   }
 
-  // Get unread count
   async getUnreadCount(): Promise<number> {
     const stats = await this.getNotificationStats();
     return stats.unread;
   }
 
-  // Update notification preferences
   async updatePreferences(
     preferences: NotificationPreferences
   ): Promise<NotificationPreferences> {
@@ -112,7 +104,6 @@ class NotificationService {
     );
   }
 
-  // Get notification preferences
   async getPreferences(): Promise<NotificationPreferences> {
     const profile = await apiClient.get<{
       user: { notificationPreferences: NotificationPreferences };

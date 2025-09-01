@@ -92,7 +92,6 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
 }) => {
   const [zoomDomain, setZoomDomain] = useState<[string, string] | null>(null);
 
-  // Filter and combine data from selected APIs
   const chartData = useMemo(() => {
     const filteredData = data.filter((apiData) =>
       selectedApis.includes(apiData.apiId)
@@ -100,7 +99,6 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
 
     if (filteredData.length === 0) return [];
 
-    // Get all unique timestamps
     const allTimestamps = Array.from(
       new Set(
         filteredData.flatMap((apiData) =>
@@ -109,7 +107,6 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
       )
     ).sort();
 
-    // Combine data by timestamp
     return allTimestamps.map((timestamp) => {
       const dataPoint: any = { timestamp };
 
@@ -129,12 +126,10 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
     });
   }, [data, selectedApis]);
 
-  // Get filtered data for selected APIs
   const selectedApiData = useMemo(() => {
     return data.filter((apiData) => selectedApis.includes(apiData.apiId));
   }, [data, selectedApis]);
 
-  // Calculate statistics
   const statistics = useMemo(() => {
     const stats: Record<string, any> = {};
 
@@ -162,7 +157,6 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
     return stats;
   }, [selectedApiData]);
 
-  // Time range options
   const timeRangeOptions = [
     { key: '1h', label: 'Last Hour' },
     { key: '6h', label: 'Last 6 Hours' },
@@ -171,7 +165,6 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
     { key: '30d', label: 'Last 30 Days' },
   ];
 
-  // Custom tooltip
   const CustomTooltip = ({ active, payload }: any) => {
     if (!active || !payload || !payload.length) return null;
 
@@ -229,7 +222,6 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
     );
   };
 
-  // Handle zoom
   const handleZoom = (domain: any) => {
     if (domain) {
       setZoomDomain([domain.startIndex, domain.endIndex]);
@@ -238,18 +230,14 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
     }
   };
 
-  // Handle brush
   const handleBrush = (domain: any) => {
-    // Brush functionality can be implemented here
     console.log('Brush domain:', domain);
   };
 
-  // Reset zoom
   const resetZoom = () => {
     setZoomDomain(null);
   };
 
-  // Format value for display
   const formatValue = (value: number, unit: string) => {
     if (typeof value !== 'number') return '—';
 
@@ -263,7 +251,6 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
     return `${value.toFixed(2)}${unit}`;
   };
 
-  // Render chart based on type
   const renderChart = () => {
     const ChartComponent = chartType === 'area' ? AreaChart : LineChart;
 
@@ -285,7 +272,6 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
           <Tooltip content={<CustomTooltip />} />
           <Legend />
 
-          {/* Threshold lines */}
           {showThresholds &&
             selectedApiData.map((apiData) => {
               if (!apiData.thresholds) return null;
@@ -320,7 +306,6 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
               );
             })}
 
-          {/* Data lines/areas */}
           {selectedApiData.map((apiData) => {
             if (chartType === 'area') {
               return (
@@ -353,7 +338,6 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
             }
           })}
 
-          {/* Brush for zooming */}
           {enableBrush && (
             <Brush
               dataKey="formattedTime"
@@ -374,7 +358,6 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
         className
       )}
     >
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
           <TrendingUp className="w-6 h-6 text-blue-600" />
@@ -412,9 +395,7 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
         </div>
       </div>
 
-      {/* Controls */}
       <div className="flex flex-wrap items-center gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
-        {/* Chart Type */}
         <div className="flex items-center space-x-2">
           <span className="text-sm font-medium text-gray-700">Type:</span>
           <div className="flex bg-white rounded-lg p-1 border border-gray-200">
@@ -443,7 +424,6 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
           </div>
         </div>
 
-        {/* Time Range */}
         <div className="flex items-center space-x-2">
           <span className="text-sm font-medium text-gray-700">Range:</span>
           <select
@@ -459,14 +439,12 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
           </select>
         </div>
 
-        {/* Feature toggles */}
         <div className="flex items-center space-x-4">
           <label className="flex items-center space-x-2 cursor-pointer">
             <input
               type="checkbox"
               checked={showAnomalies}
               onChange={() => {
-                /* Handle anomaly toggle */
               }}
               className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
             />
@@ -478,7 +456,6 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
               type="checkbox"
               checked={showPredictions}
               onChange={() => {
-                /* Handle prediction toggle */
               }}
               className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             />
@@ -490,7 +467,6 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
               type="checkbox"
               checked={showThresholds}
               onChange={() => {
-                /* Handle threshold toggle */
               }}
               className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
             />
@@ -499,7 +475,6 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
         </div>
       </div>
 
-      {/* API Selection */}
       <div className="mb-6">
         <h4 className="text-sm font-semibold text-gray-900 mb-3">
           Select APIs:
@@ -541,7 +516,6 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
         </div>
       </div>
 
-      {/* Chart */}
       {selectedApis.length > 0 ? (
         <div className="mb-6">{renderChart()}</div>
       ) : (
@@ -556,7 +530,6 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
         </div>
       )}
 
-      {/* Statistics Summary */}
       {selectedApis.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {selectedApiData.map((apiData) => {

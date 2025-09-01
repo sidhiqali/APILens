@@ -21,10 +21,8 @@ export const useGetApiChanges = (apiId: string) => {
                 const { data } = await api.get(`/apis/${apiId}/changes`);
                 return data;
             } catch (error) {
-                // If the API doesn't return changes, provide mock data for demonstration
                 console.log('Using mock change data for', apiId);
                 
-                // Generate some sample changes based on API ID for consistency
                 const mockChanges = [
                     {
                         id: `${apiId}-change-1`,
@@ -89,11 +87,8 @@ export const useGetApiIssues = (apiId: string) => {
     return useQuery({
         queryKey: ['apiIssues', apiId],
         queryFn: async () => {
-            // For now, we'll simulate API-specific issues based on the API data
-            // In a real application, this would be a backend endpoint
             const { data: apiData } = await api.get(`/apis/${apiId}`);
             
-            // Generate issues based on health status and other factors
             const issues = [];
             
             if (apiData.healthStatus === 'error') {
@@ -135,7 +130,6 @@ export const useGetApiIssues = (apiId: string) => {
                 });
             }
             
-            // Add change-related issues if the API has recent changes
             if (apiData.lastChecked && new Date(apiData.lastChecked) > new Date(Date.now() - 24 * 60 * 60 * 1000)) {
                 issues.push({
                     id: `${apiId}-recent-change`,

@@ -6,7 +6,6 @@ import type {
   ApiHealthSummary,
 } from '@/services/dashboard.service';
 
-// Query keys for React Query
 export const dashboardQueryKeys = {
   all: ['dashboard'] as const,
   overview: () => [...dashboardQueryKeys.all, 'overview'] as const,
@@ -20,84 +19,75 @@ export const dashboardQueryKeys = {
     [...dashboardQueryKeys.all, 'changesTrend', { days }] as const,
 };
 
-// Hook to get complete dashboard overview
 export const useDashboardOverview = () => {
   return useQuery({
     queryKey: dashboardQueryKeys.overview(),
     queryFn: () => dashboardService.getDashboardOverview(),
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    refetchInterval: 5 * 60 * 1000, // Auto refresh every 5 minutes
+    staleTime: 2 * 60 * 1000,
+    refetchInterval: 5 * 60 * 1000,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 };
 
-// Hook to get dashboard statistics
 export const useDashboardStats = () => {
   return useQuery({
     queryKey: dashboardQueryKeys.stats(),
     queryFn: () => dashboardService.getDashboardStats(),
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    refetchInterval: 3 * 60 * 1000, // Auto refresh every 3 minutes
+    staleTime: 2 * 60 * 1000,
+    refetchInterval: 3 * 60 * 1000,
     retry: 3,
   });
 };
 
-// Hook to get recent activity
 export const useRecentActivity = (limit: number = 10) => {
   return useQuery({
     queryKey: dashboardQueryKeys.recentActivity(limit),
     queryFn: () => dashboardService.getRecentActivity(limit),
-    staleTime: 1 * 60 * 1000, // 1 minute
-    refetchInterval: 2 * 60 * 1000, // Auto refresh every 2 minutes
+    staleTime: 1 * 60 * 1000,
+    refetchInterval: 2 * 60 * 1000,
     retry: 2,
   });
 };
 
-// Hook to get API health summary
 export const useApiHealthSummary = () => {
   return useQuery({
     queryKey: dashboardQueryKeys.apiHealth(),
     queryFn: () => dashboardService.getApiHealthSummary(),
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    refetchInterval: 3 * 60 * 1000, // Auto refresh every 3 minutes
+    staleTime: 2 * 60 * 1000,
+    refetchInterval: 3 * 60 * 1000,
     retry: 3,
   });
 };
 
-// Hook to get critical alerts
 export const useCriticalAlerts = (limit: number = 5) => {
   return useQuery({
     queryKey: dashboardQueryKeys.criticalAlerts(limit),
     queryFn: () => dashboardService.getCriticalAlerts(limit),
-    staleTime: 1 * 60 * 1000, // 1 minute
-    refetchInterval: 2 * 60 * 1000, // Auto refresh every 2 minutes
+    staleTime: 1 * 60 * 1000,
+    refetchInterval: 2 * 60 * 1000,
     retry: 3,
   });
 };
 
-// Hook to get API changes trend
 export const useApiChangesTrend = (days: number = 30) => {
   return useQuery({
     queryKey: dashboardQueryKeys.changesTrend(days),
     queryFn: () => dashboardService.getApiChangesTrend(days),
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 10 * 60 * 1000,
     retry: 2,
   });
 };
 
-// Hook to refresh all dashboard data
 export const useRefreshDashboard = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async () => {
-      // Invalidate all dashboard queries
       await queryClient.invalidateQueries({
         queryKey: dashboardQueryKeys.all,
       });
 
-      // Force refetch critical queries
       await Promise.all([
         queryClient.refetchQueries({
           queryKey: dashboardQueryKeys.stats(),
@@ -119,7 +109,6 @@ export const useRefreshDashboard = () => {
   });
 };
 
-// Hook for real-time dashboard updates
 export const useDashboardRealtime = () => {
   const queryClient = useQueryClient();
 

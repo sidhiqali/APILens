@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import Layout from '@/components/layout/Layout';
@@ -27,7 +27,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 
-const APIsPage = () => {
+const APIsPageContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
@@ -38,7 +38,6 @@ const APIsPage = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [additionalFilters, setAdditionalFilters] = useState<FilterState>({});
 
-  // Initialize filters from URL parameters
   useEffect(() => {
     const status = searchParams.get('status');
     const search = searchParams.get('search');
@@ -60,10 +59,8 @@ const APIsPage = () => {
   const toggleStatusMutation = useToggleApiStatus();
   const checkApiMutation = useCheckApi();
 
-  // Set up real-time updates via WebSocket
   useEffect(() => {
     const unsubscribe = subscribe('api_status_changed', (data: any) => {
-      // Invalidate queries to refresh the data
       queryClient.invalidateQueries({ queryKey: apiQueryKeys.lists() });
       queryClient.invalidateQueries({ queryKey: apiQueryKeys.detail(data.apiId) });
     });
@@ -136,16 +133,13 @@ const APIsPage = () => {
   };
 
   const handleBulkAction = async (action: string) => {
-    // TODO: Implement bulk actions
     console.log(`Bulk ${action} for APIs:`, selectedApis);
   };
 
-  // Get unique values for filter options
   const allTags = Array.from(new Set(apis.flatMap(api => api.tags || [])));
   const allHealthStatuses = Array.from(new Set(apis.map(api => api.healthStatus).filter(Boolean)));
   const allCheckFrequencies = Array.from(new Set(apis.map(api => api.checkFrequency).filter(Boolean)));
 
-  // Filter configuration
   const filterGroups: FilterGroup[] = [
     {
       id: 'healthStatus',
@@ -191,7 +185,6 @@ const APIsPage = () => {
       (statusFilter === 'active' && api.isActive) ||
       (statusFilter === 'inactive' && !api.isActive);
 
-    // Additional filters
     const matchesHealthStatus = !additionalFilters.healthStatus?.length || 
       additionalFilters.healthStatus.includes(api.healthStatus);
     
@@ -271,16 +264,13 @@ const APIsPage = () => {
             </div>
           </div>
 
-          {/* Actions Dropdown */}
           <div className="relative">
             <button className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100">
               <MoreVertical className="w-4 h-4" />
             </button>
-            {/* TODO: Add dropdown menu */}
           </div>
         </div>
 
-        {/* Action Buttons */}
         <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
           <div className="flex items-center space-x-2 flex-shrink-0">
             <button
@@ -348,7 +338,6 @@ const APIsPage = () => {
           </div>
         </div>
 
-        {/* API URL */}
         <div className="mt-3 pt-3 border-t border-gray-100">
           <div className="flex items-center justify-between">
             <span className="text-xs text-gray-500 truncate flex-1 pr-2">
@@ -372,7 +361,6 @@ const APIsPage = () => {
     <RouteGuard requireAuth={true}>
       <Layout>
         <div className="p-6 mx-auto max-w-7xl">
-          {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">APIs</h1>
@@ -389,7 +377,6 @@ const APIsPage = () => {
             </button>
           </div>
 
-          {/* Filters and Search */}
           <div className="flex items-center justify-between mb-6 space-x-4">
             <div className="flex items-center flex-1 space-x-4">
               <div className="relative flex-1 max-w-md">
@@ -423,7 +410,6 @@ const APIsPage = () => {
               </button>
             </div>
 
-            {/* Bulk Actions */}
             {selectedApis.length > 0 && (
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-600">
@@ -445,7 +431,6 @@ const APIsPage = () => {
             )}
           </div>
 
-          {/* Advanced Filters */}
           {showFilters && (
             <div className="mb-6">
               <FilterPanel
@@ -459,7 +444,6 @@ const APIsPage = () => {
             </div>
           )}
 
-          {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div className="bg-white p-4 rounded-lg border shadow-sm">
               <div className="flex items-center">
@@ -501,7 +485,6 @@ const APIsPage = () => {
             </div>
           </div>
 
-          {/* Active APIs Section */}
           {activeApis.length > 0 && (
             <div className="mb-8">
               <div className="flex items-center justify-between mb-4">
@@ -526,7 +509,6 @@ const APIsPage = () => {
             </div>
           )}
 
-          {/* Inactive APIs Section */}
           {inactiveApis.length > 0 && (
             <div className="mb-8">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">
@@ -540,7 +522,6 @@ const APIsPage = () => {
             </div>
           )}
 
-          {/* Empty State */}
           {filteredApis.length === 0 && !isLoading && (
             <div className="text-center py-12">
               <div className="w-16 h-16 mx-auto mb-4 text-gray-400">
@@ -571,6 +552,22 @@ const APIsPage = () => {
         </div>
       </Layout>
     </RouteGuard>
+  );
+};
+
+const APIsPage = () => {
+  return (
+    <Suspense fallback={
+      <RouteGuard requireAuth={true}>
+        <Layout>
+          <div className="flex items-center justify-center min-h-96">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          </div>
+        </Layout>
+      </RouteGuard>
+    }>
+      <APIsPageContent />
+    </Suspense>
   );
 };
 

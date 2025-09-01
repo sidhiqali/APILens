@@ -58,7 +58,6 @@ const HealthScoreCard: React.FC<HealthScoreCardProps> = ({
   showTrends = true,
   showRecommendations = true,
 }) => {
-  // Calculate health score breakdown
   const scoreBreakdown = useMemo(() => {
     const totalWeight = data.metrics.reduce(
       (sum, metric) => sum + metric.weight,
@@ -83,7 +82,6 @@ const HealthScoreCard: React.FC<HealthScoreCardProps> = ({
     };
   }, [data.metrics, data.overallScore]);
 
-  // Determine score status and color
   const getScoreStatus = (score: number) => {
     if (score >= 90)
       return { status: 'excellent', color: 'green', label: 'Excellent' };
@@ -93,7 +91,6 @@ const HealthScoreCard: React.FC<HealthScoreCardProps> = ({
     return { status: 'critical', color: 'red', label: 'Critical' };
   };
 
-  // Calculate score change
   const scoreChange = useMemo(() => {
     if (!data.previousScore) return null;
     const change = data.overallScore - data.previousScore;
@@ -107,7 +104,6 @@ const HealthScoreCard: React.FC<HealthScoreCardProps> = ({
 
   const scoreStatus = getScoreStatus(data.overallScore);
 
-  // Get metric icon
   const getMetricIcon = (metricName: string) => {
     const name = metricName.toLowerCase();
     if (name.includes('response') || name.includes('latency')) return Clock;
@@ -123,7 +119,6 @@ const HealthScoreCard: React.FC<HealthScoreCardProps> = ({
     return Gauge;
   };
 
-  // Get status color classes
   const getStatusColors = (status: string) => {
     switch (status) {
       case 'excellent':
@@ -139,7 +134,6 @@ const HealthScoreCard: React.FC<HealthScoreCardProps> = ({
     }
   };
 
-  // Size classes
   const getSizeClasses = () => {
     switch (size) {
       case 'small':
@@ -151,7 +145,6 @@ const HealthScoreCard: React.FC<HealthScoreCardProps> = ({
     }
   };
 
-  // Render circular progress indicator
   const CircularProgress = ({
     score,
     size = 80,
@@ -203,7 +196,6 @@ const HealthScoreCard: React.FC<HealthScoreCardProps> = ({
     );
   };
 
-  // Render metric bar
   const MetricBar = ({
     metric,
   }: {
@@ -272,7 +264,6 @@ const HealthScoreCard: React.FC<HealthScoreCardProps> = ({
       )}
       onClick={onDetailsToggle}
     >
-      {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3">
           <Heart
@@ -322,7 +313,6 @@ const HealthScoreCard: React.FC<HealthScoreCardProps> = ({
         </div>
       </div>
 
-      {/* Status Badge */}
       <div className="flex items-center justify-between mb-4">
         <div
           className={clsx(
@@ -338,7 +328,6 @@ const HealthScoreCard: React.FC<HealthScoreCardProps> = ({
         </div>
       </div>
 
-      {/* Metrics Details */}
       {showDetails && (
         <div className="space-y-4">
           <div className="border-t pt-4">
@@ -352,7 +341,6 @@ const HealthScoreCard: React.FC<HealthScoreCardProps> = ({
             </div>
           </div>
 
-          {/* Score Breakdown */}
           <div className="border-t pt-4">
             <h4 className="text-sm font-semibold text-gray-900 mb-3">
               Score Composition
@@ -392,7 +380,6 @@ const HealthScoreCard: React.FC<HealthScoreCardProps> = ({
             </div>
           </div>
 
-          {/* Recommendations */}
           {showRecommendations && data.recommendations.length > 0 && (
             <div className="border-t pt-4">
               <h4 className="text-sm font-semibold text-gray-900 mb-3">
@@ -412,7 +399,6 @@ const HealthScoreCard: React.FC<HealthScoreCardProps> = ({
             </div>
           )}
 
-          {/* Critical Issues Alert */}
           {data.metrics.some((m) => m.status === 'critical') && (
             <div className="border-t pt-4">
               <div className="bg-red-50 border border-red-200 rounded-lg p-3">
@@ -438,7 +424,6 @@ const HealthScoreCard: React.FC<HealthScoreCardProps> = ({
         </div>
       )}
 
-      {/* Quick Stats Summary (when not showing details) */}
       {!showDetails && (
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>

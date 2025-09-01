@@ -7,7 +7,6 @@ import { Eye, ArrowRight } from 'lucide-react';
 const LandingPage = () => {
   return (
     <div className="min-h-screen bg-white">
-      {/* Navigation */}
       <nav className="bg-white border-b border-gray-200 shadow-sm">
         <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -37,7 +36,6 @@ const LandingPage = () => {
         </div>
       </nav>
 
-      {/* Hero Section */}
       <section className="pt-20 pb-16 bg-gradient-to-br from-blue-50 to-white">
         <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
           <div className="text-center">
@@ -69,7 +67,6 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Features Section */}
       <section className="py-16 bg-white">
         <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
           <div className="mb-16 text-center">
@@ -84,7 +81,6 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="py-12 bg-white border-t border-gray-200">
         <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
           <div className="text-center">

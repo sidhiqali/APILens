@@ -38,20 +38,16 @@ const NotificationsPage = () => {
   const [readFilter, setReadFilter] = useState<ReadFilter>('all');
   const [showFilters, setShowFilters] = useState(false);
 
-  // Hooks
   const { data: unreadCount = 0, error: unreadCountError } = useUnreadCount();
   const markAsReadMutation = useMarkAsRead();
   const markAllAsReadMutation = useMarkAllAsRead();
   const deleteNotificationMutation = useDeleteNotification();
 
-  // Handle errors silently
   React.useEffect(() => {
     if (unreadCountError) {
-      // Could add error tracking here if needed
     }
   }, [unreadCountError]);
 
-  // Build filter params for API call
   const filterParams = {
     limit: 20,
     unreadOnly: readFilter === 'unread',
@@ -66,7 +62,6 @@ const NotificationsPage = () => {
     isError,
   } = useInfiniteNotifications(filterParams);
 
-  // Flatten paginated data and apply client-side filters
   const allNotifications = React.useMemo(() => {
     if (!data || !data.pages) {
       return [];
@@ -90,16 +85,12 @@ const NotificationsPage = () => {
     });
   }, [allNotifications, severityFilter, typeFilter, readFilter]);
 
-  // Handle notification click
   const handleNotificationClick = async (notification: any) => {
     try {
-      // Mark as read if not already read
       if (!notification.read) {
         await markAsReadMutation.mutateAsync(notification._id);
       }
 
-      // Navigate to API detail page if apiId exists
-      // Handle both populated (object) and non-populated (string) apiId
       const apiId = typeof notification.apiId === 'object' && notification.apiId?._id 
         ? notification.apiId._id 
         : notification.apiId;
@@ -107,7 +98,6 @@ const NotificationsPage = () => {
       if (apiId) {
         router.push(`/apis/${apiId}?notification=${notification._id}`);
       } else {
-        // If no apiId, just mark as read - for system notifications
         console.log('No apiId found for notification:', notification);
       }
     } catch (error) {
@@ -115,7 +105,6 @@ const NotificationsPage = () => {
     }
   };
 
-  // Handle mark all as read
   const handleMarkAllAsRead = async () => {
     try {
       await markAllAsReadMutation.mutateAsync();
@@ -124,7 +113,6 @@ const NotificationsPage = () => {
     }
   };
 
-  // Handle delete notification
   const handleDeleteNotification = async (e: React.MouseEvent, notificationId: string) => {
     e.stopPropagation();
     try {
@@ -134,7 +122,6 @@ const NotificationsPage = () => {
     }
   };
 
-  // Format relative time
   const formatRelativeTime = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -215,7 +202,6 @@ const NotificationsPage = () => {
     <RouteGuard requireAuth={true}>
       <Layout>
         <div className="max-w-4xl p-6 mx-auto">
-          {/* Header */}
           <div className="mb-8">
             <h1 className="mb-2 text-3xl font-bold text-gray-900">Notifications</h1>
             <div className="flex items-center justify-between">
@@ -235,7 +221,6 @@ const NotificationsPage = () => {
             </div>
           </div>
 
-          {/* Filters */}
           <div className="mb-6">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">
@@ -305,7 +290,6 @@ const NotificationsPage = () => {
             )}
           </div>
 
-          {/* Notifications List */}
           <div className="space-y-4">
             {filteredNotifications.length > 0 ? (
               <>
@@ -371,7 +355,6 @@ const NotificationsPage = () => {
                   </div>
                 ))}
 
-                {/* Load More Button */}
                 {hasNextPage && (
                   <div className="pt-6 text-center">
                     <button

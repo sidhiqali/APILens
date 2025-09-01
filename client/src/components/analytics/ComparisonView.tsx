@@ -80,18 +80,15 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [showOnlyIssues, setShowOnlyIssues] = useState(false);
 
-  // Filter and sort data
   const processedData = useMemo(() => {
     let filteredData = [...data];
 
-    // Filter by category
     if (selectedCategory !== 'all') {
       filteredData = filteredData.filter(
         (api) => api.category === selectedCategory
       );
     }
 
-    // Filter by issues
     if (showOnlyIssues) {
       filteredData = filteredData.filter(
         (api) =>
@@ -102,7 +99,6 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({
       );
     }
 
-    // Sort data
     filteredData.sort((a, b) => {
       let aValue: number, bValue: number;
 
@@ -126,10 +122,8 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({
     return filteredData;
   }, [data, selectedCategory, sortBy, sortOrder, showOnlyIssues]);
 
-  // Prepare chart data based on view type
   const chartData = useMemo(() => {
     if (viewType === 'radar') {
-      // For radar chart, we need a different data structure
       const subjects = [
         'Response Time',
         'Uptime',
@@ -144,13 +138,13 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({
           let value;
           switch (subject) {
             case 'Response Time':
-              value = Math.max(0, 100 - api.metrics.responseTime / 10); // Normalized to 0-100
+              value = Math.max(0, 100 - api.metrics.responseTime / 10);
               break;
             case 'Uptime':
               value = api.metrics.uptime;
               break;
             case 'Error Rate':
-              value = Math.max(0, 100 - api.metrics.errorRate); // Inverted for radar
+              value = Math.max(0, 100 - api.metrics.errorRate);
               break;
             case 'Reliability':
               value = api.metrics.reliability;
@@ -183,7 +177,6 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({
       }));
     }
 
-    // For bar and line charts
     return processedData.map((api) => ({
       name: api.apiName,
       category: api.category,
@@ -193,7 +186,6 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({
     }));
   }, [processedData, viewType]);
 
-  // Get unique categories
   const categories = useMemo(() => {
     const uniqueCategories = Array.from(
       new Set(data.map((api) => api.category))
@@ -201,7 +193,6 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({
     return ['all', ...uniqueCategories];
   }, [data]);
 
-  // Available metrics for comparison
   const availableMetrics = [
     { key: 'responseTime', label: 'Response Time', unit: 'ms', icon: Clock },
     { key: 'uptime', label: 'Uptime', unit: '%', icon: TrendingUp },
@@ -222,7 +213,6 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({
     },
   ];
 
-  // Chart view options
   const viewOptions = [
     { type: 'bar', label: 'Bar Chart', icon: BarChart },
     { type: 'line', label: 'Line Chart', icon: TrendingUp },
@@ -230,7 +220,6 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({
     { type: 'scatter', label: 'Scatter Plot', icon: ScatterIcon },
   ];
 
-  // Custom tooltip for different chart types
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload || !payload.length) return null;
 
@@ -441,7 +430,6 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({
         className
       )}
     >
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
           <GitCompare className="w-6 h-6 text-blue-600" />
@@ -465,9 +453,7 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({
         </div>
       </div>
 
-      {/* Controls */}
       <div className="flex flex-wrap items-center gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
-        {/* View Type */}
         <div className="flex items-center space-x-2">
           <span className="text-sm font-medium text-gray-700">View:</span>
           <div className="flex bg-white rounded-lg p-1 border border-gray-200">
@@ -492,7 +478,6 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({
           </div>
         </div>
 
-        {/* Category Filter */}
         {showCategories && (
           <div className="flex items-center space-x-2">
             <span className="text-sm font-medium text-gray-700">Category:</span>
@@ -510,7 +495,6 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({
           </div>
         )}
 
-        {/* Sort Controls */}
         <div className="flex items-center space-x-2">
           <span className="text-sm font-medium text-gray-700">Sort by:</span>
           <select
@@ -532,7 +516,6 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({
           </button>
         </div>
 
-        {/* Issues Filter */}
         <label className="flex items-center space-x-2 cursor-pointer">
           <input
             type="checkbox"
@@ -544,7 +527,6 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({
         </label>
       </div>
 
-      {/* Metrics Selection */}
       <div className="mb-6">
         <h4 className="text-sm font-medium text-gray-900 mb-3">
           Select Metrics to Compare:
@@ -573,7 +555,6 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({
         </div>
       </div>
 
-      {/* Chart */}
       <div className="mb-6">
         {selectedMetrics.length > 0 ? (
           renderChart()
@@ -590,7 +571,6 @@ const ComparisonView: React.FC<ComparisonViewProps> = ({
         )}
       </div>
 
-      {/* Summary Table */}
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>

@@ -34,12 +34,9 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
   const [isVisible, setIsVisible] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
 
-  // Auto-hide timer
   useEffect(() => {
-    // Show with animation
     const showTimeout = setTimeout(() => setIsVisible(true), 50);
 
-    // Auto-hide for non-critical notifications
     let hideTimeout: NodeJS.Timeout;
     if (notification.severity !== 'critical' && autoHideDuration > 0) {
       hideTimeout = setTimeout(() => {
@@ -158,18 +155,14 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
           'overflow-hidden'
         )}
       >
-        {/* Accent bar */}
         <div
           className={clsx('absolute left-0 top-0 bottom-0 w-1', styles.accent)}
         />
 
-        {/* Content */}
         <div className="p-4 pl-6">
           <div className="flex items-start space-x-3">
-            {/* Icon */}
             <div className={clsx('mt-0.5', styles.icon)}>{getIcon()}</div>
 
-            {/* Content */}
             <div className="flex-1 min-w-0">
               <h4
                 className={clsx('text-sm font-semibold truncate', styles.title)}
@@ -180,7 +173,6 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
                 {notification.message}
               </p>
 
-              {/* Metadata */}
               {notification.metadata && (
                 <div className="mt-2 space-y-1">
                   {notification.metadata.changesCount && (
@@ -200,7 +192,6 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
                 </div>
               )}
 
-              {/* Actions */}
               {showActions && (
                 <div className="flex items-center space-x-3 mt-3">
                   {onAction && (
@@ -227,7 +218,6 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
               )}
             </div>
 
-            {/* Close button */}
             <button
               onClick={handleDismiss}
               className="flex-shrink-0 p-1 rounded-md text-gray-400 hover:text-gray-600 transition-colors"
@@ -237,7 +227,6 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
           </div>
         </div>
 
-        {/* Progress bar for auto-hide */}
         {notification.severity !== 'critical' && autoHideDuration > 0 && (
           <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-200">
             <div
@@ -268,7 +257,6 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
   );
 };
 
-// Container for managing multiple toasts
 interface NotificationToastContainerProps {
   notifications: RealtimeNotification[];
   onDismiss: (id: string) => void;
@@ -286,10 +274,8 @@ export const NotificationToastContainer: React.FC<
   maxVisible = 5,
   position = 'top-right',
 }) => {
-  // Show only the most recent notifications
   const visibleNotifications = notifications.slice(0, maxVisible);
 
-  // Calculate stacking offset
   const getStackOffset = (index: number) => {
     const baseOffset = index * 4;
     const scaleOffset = index * 2;
@@ -316,7 +302,6 @@ export const NotificationToastContainer: React.FC<
         </div>
       ))}
 
-      {/* Show count if there are more notifications */}
       {notifications.length > maxVisible && (
         <div
           className={clsx(
@@ -349,7 +334,6 @@ export const NotificationToastContainer: React.FC<
   );
 };
 
-// Hook for managing notification toasts
 export const useNotificationToasts = () => {
   const [toasts, setToasts] = useState<RealtimeNotification[]>([]);
 

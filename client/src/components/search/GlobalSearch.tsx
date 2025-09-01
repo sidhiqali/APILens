@@ -80,16 +80,13 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
     { type: 'setting', label: 'Settings', icon: Settings },
   ];
 
-  // Mock search function - replace with actual API call
   const performSearch = async (
     searchQuery: string
   ): Promise<SearchResult[]> => {
     if (!searchQuery.trim()) return [];
 
-    // Simulate API delay
     await new Promise((resolve) => setTimeout(resolve, 300));
 
-    // Mock search results
     const mockResults: SearchResult[] = [
       {
         id: '1',
@@ -131,7 +128,6 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
       },
     ];
 
-    // Filter based on query and selected filter
     return mockResults.filter((result) => {
       const matchesQuery =
         result.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -142,7 +138,6 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
     });
   };
 
-  // Handle search
   useEffect(() => {
     const searchDebounced = async () => {
       if (!query.trim()) {
@@ -167,7 +162,6 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
     return () => clearTimeout(debounceTimer);
   }, [query, selectedFilter]);
 
-  // Load recent searches
   useEffect(() => {
     const saved = localStorage.getItem('recent_searches');
     if (saved) {
@@ -175,7 +169,6 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
     }
   }, []);
 
-  // Save recent search
   const saveRecentSearch = (searchQuery: string) => {
     const updated = [
       searchQuery,
@@ -185,7 +178,6 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
     localStorage.setItem('recent_searches', JSON.stringify(updated));
   };
 
-  // Handle result selection
   const handleResultSelect = (result: SearchResult) => {
     saveRecentSearch(query);
 
@@ -203,13 +195,11 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
     setResults([]);
   };
 
-  // Handle recent search selection
   const handleRecentSearch = (recentQuery: string) => {
     setQuery(recentQuery);
     searchRef.current?.focus();
   };
 
-  // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!results.length) return;
@@ -244,7 +234,6 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [results, selectedIndex, isModal, onClose]);
 
-  // Auto-focus on mount
   useEffect(() => {
     if (isModal && searchRef.current) {
       searchRef.current.focus();
@@ -268,7 +257,6 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
 
   return (
     <div className={clsx('relative', className)}>
-      {/* Search Input */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
         <input
@@ -296,7 +284,6 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
         )}
       </div>
 
-      {/* Filter Tabs */}
       {(showResults || showRecent) && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
           <div className="flex items-center space-x-1 p-2 border-b border-gray-200">
@@ -324,7 +311,6 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
           </div>
 
           <div ref={resultsRef} className="max-h-96 overflow-y-auto">
-            {/* Loading State */}
             {isLoading && (
               <div className="p-4 text-center">
                 <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
@@ -332,7 +318,6 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
               </div>
             )}
 
-            {/* Search Results */}
             {showResults && !isLoading && (
               <>
                 {results.map((result, index) => {
@@ -401,7 +386,6 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
               </>
             )}
 
-            {/* Recent Searches */}
             {showRecent && (
               <>
                 <div className="p-3 border-b border-gray-200 bg-gray-50">
@@ -428,7 +412,6 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
   );
 };
 
-// Modal variant of global search
 interface SearchModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -442,13 +425,11 @@ export const SearchModal: React.FC<SearchModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50">
-      {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black bg-opacity-50"
         onClick={onClose}
       />
 
-      {/* Modal */}
       <div className="relative z-10 flex items-start justify-center pt-16 px-4">
         <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full">
           <div className="p-6">

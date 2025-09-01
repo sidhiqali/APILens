@@ -52,20 +52,18 @@ const LiveMetrics: React.FC<LiveMetricsProps> = ({
   onAPIClick,
   className = '',
   alertThresholds = {
-    responseTime: 2000, // 2 seconds
-    errorRate: 5, // 5%
-    uptime: 99, // 99%
+    responseTime: 2000,
+    errorRate: 5,
+    uptime: 99,
   },
 }) => {
   const [metrics, setMetrics] = useState<APIMetrics[]>(initialAPIs);
   const [isLive, setIsLive] = useState(true);
 
-  // Subscribe to all APIs for real-time metrics
   initialAPIs.forEach((api) => {
     useAPISubscription(api.apiId);
   });
 
-  // Handle real-time metrics updates
   useRealtimeMetrics((update: RealtimeMetrics) => {
     setMetrics((prevMetrics) =>
       prevMetrics.map((apiMetrics) =>
@@ -118,7 +116,7 @@ const LiveMetrics: React.FC<LiveMetricsProps> = ({
     inverse = false
   ): 'up' | 'down' | 'stable' => {
     const percentageChange = ((newValue - oldValue) / oldValue) * 100;
-    const threshold = 5; // 5% change threshold
+    const threshold = 5;
 
     if (Math.abs(percentageChange) < threshold) return 'stable';
 
@@ -188,14 +186,12 @@ const LiveMetrics: React.FC<LiveMetricsProps> = ({
     return date.toLocaleTimeString();
   };
 
-  // Toggle live updates
   const toggleLive = () => {
     setIsLive(!isLive);
   };
 
   return (
     <div className={clsx('space-y-6', className)}>
-      {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-900">Live Metrics</h3>
         <div className="flex items-center space-x-4">
@@ -219,7 +215,6 @@ const LiveMetrics: React.FC<LiveMetricsProps> = ({
         </div>
       </div>
 
-      {/* Metrics Grid */}
       <div className="grid gap-6 md:grid-cols-2">
         {metrics.map((apiMetrics) => (
           <div
@@ -232,7 +227,6 @@ const LiveMetrics: React.FC<LiveMetricsProps> = ({
                 : 'cursor-default'
             )}
           >
-            {/* API Header */}
             <div className="flex items-center justify-between mb-4">
               <h4 className="text-lg font-medium text-gray-900">
                 {apiMetrics.apiName}
@@ -245,9 +239,7 @@ const LiveMetrics: React.FC<LiveMetricsProps> = ({
               </div>
             </div>
 
-            {/* Metrics Cards */}
             <div className="grid grid-cols-2 gap-4">
-              {/* Response Time */}
               <div className="p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center space-x-1">
@@ -280,7 +272,6 @@ const LiveMetrics: React.FC<LiveMetricsProps> = ({
                 </div>
               </div>
 
-              {/* Uptime */}
               <div className="p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center space-x-1">
@@ -311,7 +302,6 @@ const LiveMetrics: React.FC<LiveMetricsProps> = ({
                 </div>
               </div>
 
-              {/* Error Rate */}
               <div className="p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center space-x-1">
@@ -344,7 +334,6 @@ const LiveMetrics: React.FC<LiveMetricsProps> = ({
                 </div>
               </div>
 
-              {/* Request Count */}
               <div className="p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center space-x-1">
@@ -360,7 +349,6 @@ const LiveMetrics: React.FC<LiveMetricsProps> = ({
               </div>
             </div>
 
-            {/* Health Status */}
             <div className="mt-4 pt-4 border-t border-gray-200">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Overall Health</span>
@@ -397,7 +385,6 @@ const LiveMetrics: React.FC<LiveMetricsProps> = ({
         ))}
       </div>
 
-      {/* Empty State */}
       {metrics.length === 0 && (
         <div className="text-center py-12">
           <BarChart3 className="w-16 h-16 mx-auto mb-4 text-gray-400" />
@@ -413,7 +400,6 @@ const LiveMetrics: React.FC<LiveMetricsProps> = ({
   );
 };
 
-// Compact metrics summary component
 interface LiveMetricsSummaryProps {
   metrics: APIMetrics[];
   className?: string;

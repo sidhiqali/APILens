@@ -21,7 +21,6 @@ const Sidebar = ({
   const trigger = useRef<any>(null);
   const sidebar = useRef<any>(null);
 
-  // ...existing code...
 
   const handleLogout = () => {
     logout();
@@ -52,7 +51,6 @@ const Sidebar = ({
     return () => document.removeEventListener('keydown', keyHandler);
   });
 
-  // ...existing code...
   const menuItems = [
     {
       title: 'Dashboard',

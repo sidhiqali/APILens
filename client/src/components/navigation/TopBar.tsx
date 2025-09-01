@@ -46,7 +46,6 @@ const TopBar: React.FC<TopBarProps> = ({
   const { user, logout } = useAuth();
   const { subscribe } = useWebSocket();
   
-  // Notification hooks
   const { data: notificationsData, isLoading: notificationsLoading } = useNotifications({ 
     limit: 10,
     unreadOnly: false 
@@ -64,7 +63,6 @@ const TopBar: React.FC<TopBarProps> = ({
   const notificationRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
-  // Set up real-time notification updates
   useEffect(() => {
     const unsubscribe = subscribe('notification_created', (notification: any) => {
       addNewNotification(notification);
@@ -80,15 +78,12 @@ const TopBar: React.FC<TopBarProps> = ({
     };
   }, [subscribe, addNewNotification, invalidateNotifications]);
 
-  // Handle notification click - navigate to API detail page
   const handleNotificationClick = async (notification: any) => {
     try {
-      // Mark as read if not already read
       if (!notification.read) {
         await markAsReadMutation.mutateAsync(notification._id);
       }
 
-      // Navigate to API detail page if apiId exists
       if (notification.apiId) {
         window.location.href = `/apis/${notification.apiId}?notification=${notification._id}`;
       }
@@ -99,7 +94,6 @@ const TopBar: React.FC<TopBarProps> = ({
     }
   };
 
-  // Handle mark all as read
   const handleMarkAllAsRead = async () => {
     try {
       await markAllAsReadMutation.mutateAsync();
@@ -108,9 +102,8 @@ const TopBar: React.FC<TopBarProps> = ({
     }
   };
 
-  // Handle delete notification
   const handleDeleteNotification = async (e: React.MouseEvent, notificationId: string) => {
-    e.stopPropagation(); // Prevent notification click
+    e.stopPropagation();
     try {
       await deleteNotificationMutation.mutateAsync(notificationId);
     } catch (error) {
@@ -118,7 +111,6 @@ const TopBar: React.FC<TopBarProps> = ({
     }
   };
 
-  // Format relative time
   const formatRelativeTime = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -132,7 +124,6 @@ const TopBar: React.FC<TopBarProps> = ({
     return `${diffDays}d ago`;
   };
 
-  // Get dynamic title based on route
   const getPageTitle = () => {
     if (title) return title;
 
@@ -155,7 +146,6 @@ const TopBar: React.FC<TopBarProps> = ({
     );
   };
 
-  // Close dropdowns on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -179,7 +169,6 @@ const TopBar: React.FC<TopBarProps> = ({
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      // Navigate to search results
       window.location.href = `/search?q=${encodeURIComponent(searchQuery)}`;
     }
   };
@@ -206,9 +195,7 @@ const TopBar: React.FC<TopBarProps> = ({
         className
       )}
     >
-      {/* Left Section */}
       <div className="flex items-center space-x-4">
-        {/* Mobile Menu Button */}
         <button
           onClick={onMenuToggle}
           className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
@@ -216,7 +203,6 @@ const TopBar: React.FC<TopBarProps> = ({
           <Menu className="w-5 h-5 text-gray-600" />
         </button>
 
-        {/* Page Title */}
         <div>
           <h1 className="text-xl font-semibold text-gray-900">
             {getPageTitle()}
@@ -233,7 +219,6 @@ const TopBar: React.FC<TopBarProps> = ({
         </div>
       </div>
 
-      {/* Center Section - Search */}
       {showSearch && (
         <div className="hidden md:flex flex-1 max-w-lg mx-8">
           <form onSubmit={handleSearch} className="w-full">
@@ -251,9 +236,7 @@ const TopBar: React.FC<TopBarProps> = ({
         </div>
       )}
 
-      {/* Right Section */}
       <div className="flex items-center space-x-3">
-        {/* Quick Actions */}
         <div className="hidden sm:flex items-center space-x-2">
           {quickActions.map((action) => (
             <Link
@@ -272,7 +255,6 @@ const TopBar: React.FC<TopBarProps> = ({
           ))}
         </div>
 
-        {/* Notifications */}
         <div className="relative" ref={notificationRef}>
           <button
             onClick={() => setShowNotifications(!showNotifications)}
@@ -286,7 +268,6 @@ const TopBar: React.FC<TopBarProps> = ({
             )}
           </button>
 
-          {/* Notifications Dropdown */}
           {showNotifications && (
             <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
               <div className="p-4 border-b border-gray-200">
@@ -401,7 +382,6 @@ const TopBar: React.FC<TopBarProps> = ({
           )}
         </div>
 
-        {/* Settings */}
         <Link
           href="/settings"
           className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
@@ -409,7 +389,6 @@ const TopBar: React.FC<TopBarProps> = ({
           <Settings className="w-5 h-5 text-gray-600" />
         </Link>
 
-        {/* User Menu */}
         {user ? (
           <div className="relative" ref={userMenuRef}>
             <button
@@ -422,7 +401,6 @@ const TopBar: React.FC<TopBarProps> = ({
               <ChevronDown className="w-4 h-4 text-gray-600" />
             </button>
 
-            {/* User Dropdown */}
             {showUserMenu && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
                 <div className="p-3 border-b border-gray-200">

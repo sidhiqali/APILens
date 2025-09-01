@@ -26,19 +26,17 @@ export const useAuthHooks = () => {
     setError,
   } = useAuth();
 
-  // Session validation query - disabled to prevent refresh loops
   const sessionQuery = useQuery({
     queryKey: ['auth', 'session'],
     queryFn: () => authService.validateSession(),
-    enabled: false, // Disable automatic session validation
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: false,
+    staleTime: 5 * 60 * 1000,
     retry: false,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
-    refetchInterval: false, // Disable automatic refetch
+    refetchInterval: false,
   });
 
-  // Update auth state based on session validation
   useEffect(() => {
     if (sessionQuery.isLoading) {
       setLoading(true);
@@ -47,7 +45,6 @@ export const useAuthHooks = () => {
 
     setLoading(false);
 
-    // Only update if session is successful and we have user data
     if (
       sessionQuery.data?.success &&
       sessionQuery.data.data &&
@@ -55,7 +52,6 @@ export const useAuthHooks = () => {
     ) {
       setAuthData(sessionQuery.data.data);
     }
-    // Don't auto-logout on session error - let the axios interceptor handle it
   }, [
     sessionQuery.data,
     sessionQuery.isLoading,
@@ -64,7 +60,6 @@ export const useAuthHooks = () => {
     setLoading,
   ]);
 
-  // Login mutation
   const loginMutation = useMutation({
     mutationFn: (credentials: LoginRequest) => authService.login(credentials),
     onMutate: () => {
@@ -92,7 +87,6 @@ export const useAuthHooks = () => {
     },
   });
 
-  // Register mutation
   const registerMutation = useMutation({
     mutationFn: (userData: RegisterRequest) => authService.register(userData),
     onMutate: () => {
@@ -125,7 +119,6 @@ export const useAuthHooks = () => {
     },
   });
 
-  // Logout mutation
   const logoutMutation = useMutation({
     mutationFn: () => authService.logout(),
     onSuccess: () => {
@@ -135,7 +128,6 @@ export const useAuthHooks = () => {
       router.push('/login');
     },
     onError: (error: any) => {
-      // Still logout locally even if server logout fails
       clearAuthData();
       queryClient.clear();
       router.push('/login');
@@ -143,7 +135,6 @@ export const useAuthHooks = () => {
     },
   });
 
-  // Forgot password mutation
   const forgotPasswordMutation = useMutation({
     mutationFn: (request: ForgotPasswordRequest) =>
       authService.forgotPassword(request),
@@ -159,7 +150,6 @@ export const useAuthHooks = () => {
     },
   });
 
-  // Reset password mutation
   const resetPasswordMutation = useMutation({
     mutationFn: (request: ResetPasswordRequest) =>
       authService.resetPassword(request),
@@ -174,7 +164,6 @@ export const useAuthHooks = () => {
     },
   });
 
-  // Change password mutation
   const changePasswordMutation = useMutation({
     mutationFn: (request: ChangePasswordRequest) =>
       authService.changePassword(request),
@@ -188,7 +177,6 @@ export const useAuthHooks = () => {
     },
   });
 
-  // Verify email mutation
   const verifyEmailMutation = useMutation({
     mutationFn: (token: string) => authService.verifyEmail(token),
     onSuccess: (response) => {
@@ -202,7 +190,6 @@ export const useAuthHooks = () => {
     },
   });
 
-  // Resend verification email mutation
   const resendVerificationMutation = useMutation({
     mutationFn: () => authService.resendVerificationEmail(),
     onSuccess: (response) => {
@@ -217,16 +204,14 @@ export const useAuthHooks = () => {
     },
   });
 
-  // Get profile query
   const profileQuery = useQuery({
     queryKey: ['auth', 'profile'],
     queryFn: () => authService.getProfile(),
     enabled: isAuthenticated,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
     retry: false,
   });
 
-  // Update profile mutation
   const updateProfileMutation = useMutation({
     mutationFn: (userData: Partial<any>) => authService.updateProfile(userData),
     onSuccess: (response) => {
@@ -241,7 +226,6 @@ export const useAuthHooks = () => {
     },
   });
 
-  // Upload profile picture mutation
   const uploadProfilePictureMutation = useMutation({
     mutationFn: (file: File) => authService.uploadProfilePicture(file),
     onSuccess: (response) => {
@@ -299,13 +283,11 @@ export const useAuthHooks = () => {
   };
 
   return {
-    // State
     user,
     isAuthenticated,
     isLoading:
       isLoading || loginMutation.isPending || registerMutation.isPending,
 
-    // Actions
     login,
     register,
     logout,
@@ -317,7 +299,6 @@ export const useAuthHooks = () => {
     updateProfile,
     uploadProfilePicture,
 
-    // Mutations (for internal use)
     loginMutation,
     registerMutation,
     logoutMutation,
@@ -329,11 +310,9 @@ export const useAuthHooks = () => {
     updateProfileMutation,
     uploadProfilePictureMutation,
 
-    // Queries
     profileQuery,
     sessionQuery,
 
-    // Mutation states
     isLoginPending: loginMutation.isPending,
     isRegisterPending: registerMutation.isPending,
     isLogoutPending: logoutMutation.isPending,
@@ -345,14 +324,12 @@ export const useAuthHooks = () => {
     isUpdateProfilePending: updateProfileMutation.isPending,
     isUploadProfilePicturePending: uploadProfilePictureMutation.isPending,
 
-    // Query data
     profile: profileQuery.data?.data,
     isProfileLoading: profileQuery.isLoading,
     isSessionValid: sessionQuery.data?.success,
   };
 };
 
-// Legacy hooks for backward compatibility
 export const useUser = () => {
   const { profileQuery } = useAuthHooks();
   return profileQuery;

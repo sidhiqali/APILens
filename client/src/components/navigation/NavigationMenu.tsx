@@ -222,7 +222,6 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
   };
 
   useEffect(() => {
-    // Auto-expand active parent items
     filteredItems.forEach((item) => {
       if (item.children && isParentActive(item)) {
         setExpandedItems((prev) =>
@@ -234,7 +233,6 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
 
   return (
     <>
-      {/* Mobile Overlay */}
       {isOpen && (
         <div
           className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
@@ -242,7 +240,6 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
         />
       )}
 
-      {/* Sidebar */}
       <aside
         className={clsx(
           'fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0',
@@ -251,7 +248,6 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
         )}
       >
         <div className="flex flex-col h-full">
-          {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200">
             <Link href="/dashboard" className="flex items-center space-x-2">
               <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-lg">
@@ -267,7 +263,6 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
             </button>
           </div>
 
-          {/* Navigation */}
           <nav className="flex-1 px-4 py-6 overflow-y-auto">
             <ul className="space-y-2">
               {filteredItems.map((item) => (
@@ -284,7 +279,6 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
             </ul>
           </nav>
 
-          {/* User Section */}
           {user && (
             <div className="p-4 border-t border-gray-200">
               <div className="flex items-center mb-3 space-x-3">

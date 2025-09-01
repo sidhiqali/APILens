@@ -29,7 +29,6 @@ const QuickActions: React.FC<QuickActionsProps> = ({ className = '' }) => {
       icon: RefreshCw,
       color: 'bg-green-600 hover:bg-green-700 text-white',
       action: () => {
-        // Trigger refresh of all APIs
         window.location.reload();
       },
     },
@@ -40,7 +39,6 @@ const QuickActions: React.FC<QuickActionsProps> = ({ className = '' }) => {
       label: 'Pause All Monitoring',
       icon: Pause,
       action: () => {
-        // Implement pause all functionality
         console.log('Pause all monitoring');
       },
     },
@@ -48,7 +46,6 @@ const QuickActions: React.FC<QuickActionsProps> = ({ className = '' }) => {
       label: 'Resume All Monitoring',
       icon: Play,
       action: () => {
-        // Implement resume all functionality
         console.log('Resume all monitoring');
       },
     },
@@ -61,7 +58,6 @@ const QuickActions: React.FC<QuickActionsProps> = ({ className = '' }) => {
 
   return (
     <div className={`flex items-center space-x-2 ${className}`}>
-      {/* Quick Action Buttons */}
       {quickActions.map((action, index) => (
         <button
           key={index}
@@ -77,7 +73,6 @@ const QuickActions: React.FC<QuickActionsProps> = ({ className = '' }) => {
         </button>
       ))}
 
-      {/* Dropdown for More Actions */}
       <div className="relative">
         <button
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -93,13 +88,11 @@ const QuickActions: React.FC<QuickActionsProps> = ({ className = '' }) => {
 
         {isDropdownOpen && (
           <>
-            {/* Backdrop */}
             <div
               className="fixed inset-0 z-10"
               onClick={() => setIsDropdownOpen(false)}
             />
 
-            {/* Dropdown Menu */}
             <div
               className="
               absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 

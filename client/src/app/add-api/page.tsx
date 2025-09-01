@@ -35,7 +35,6 @@ const AddAPIPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Basic validation
     const newErrors: Record<string, string> = {};
     
     if (!formData.apiName.trim()) {
@@ -64,7 +63,6 @@ const AddAPIPage = () => {
 
   const handleInputChange = (field: keyof CreateApiRequest, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
@@ -100,7 +98,6 @@ const AddAPIPage = () => {
     <RouteGuard requireAuth={true}>
       <Layout>
         <div className="p-6 max-w-4xl mx-auto">
-          {/* Header */}
           <div className="mb-8">
             <div className="flex items-center gap-4 mb-4">
               <Link
@@ -121,7 +118,6 @@ const AddAPIPage = () => {
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-6">Basic Information</h2>
               
-              {/* API Name */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <Globe className="w-4 h-4 inline mr-2" />
@@ -141,7 +137,6 @@ const AddAPIPage = () => {
                 )}
               </div>
 
-              {/* OpenAPI URL */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <Globe className="w-4 h-4 inline mr-2" />
@@ -164,7 +159,6 @@ const AddAPIPage = () => {
                 </p>
               </div>
 
-              {/* API Type */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   API Type
@@ -181,7 +175,6 @@ const AddAPIPage = () => {
                 </select>
               </div>
 
-              {/* Description */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <FileText className="w-4 h-4 inline mr-2" />
@@ -197,11 +190,9 @@ const AddAPIPage = () => {
               </div>
             </div>
 
-            {/* Monitoring Configuration */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-6">Monitoring Configuration</h2>
               
-              {/* Check Frequency */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <Clock className="w-4 h-4 inline mr-2" />
@@ -223,7 +214,6 @@ const AddAPIPage = () => {
                 </p>
               </div>
 
-              {/* Tags */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <Tag className="w-4 h-4 inline mr-2" />
@@ -271,7 +261,6 @@ const AddAPIPage = () => {
               </div>
             </div>
 
-            {/* Submit Buttons */}
             <div className="flex gap-4">
               <button
                 type="submit"

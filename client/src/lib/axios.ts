@@ -1,26 +1,22 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { toast } from 'react-hot-toast';
 
-// Create axios instance
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
   timeout: 10000,
-  withCredentials: true, // This is crucial for httpOnly cookies
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Request interceptor - simplified for cookie-based auth
 api.interceptors.request.use(
   (config) => {
-    // Cookies are automatically sent with requests when withCredentials: true
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// Response interceptor - simplified for cookie-based auth
 api.interceptors.response.use(
   (response: AxiosResponse) => response,
   async (error: AxiosError) => {
@@ -28,17 +24,13 @@ api.interceptors.response.use(
       _retry?: boolean;
     };
 
-    // Handle 401 unauthorized errors - but only for authenticated routes
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
-      // Import auth store dynamically to avoid circular dependency
       const { useAuth } = await import('@/store/auth');
 
-      // Clear auth state
       useAuth.getState().logout();
 
-      // Only redirect if not already on auth pages
       if (
         typeof window !== 'undefined' &&
         !window.location.pathname.includes('/login') &&
@@ -52,9 +44,7 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // Handle different error types
     if (error.response) {
-      // Server responded with error status
       const { status, data } = error.response;
       const errorData = data as any;
 
@@ -69,7 +59,6 @@ api.interceptors.response.use(
           toast.error('Resource not found');
           break;
         case 422:
-          // Validation errors
           if (errorData?.errors) {
             Object.values(errorData.errors).forEach((error: any) => {
               toast.error(error.message);
@@ -88,10 +77,8 @@ api.interceptors.response.use(
           toast.error(errorData?.message || 'An error occurred');
       }
     } else if (error.request) {
-      // Network error
       toast.error('Network error. Please check your connection.');
     } else {
-      // Something else happened
       toast.error('An unexpected error occurred');
     }
 
@@ -99,7 +86,6 @@ api.interceptors.response.use(
   }
 );
 
-// Utility functions for different HTTP methods
 export const apiClient = {
   get: <T = any>(url: string, config?: AxiosRequestConfig) =>
     api.get<T>(url, config).then((response) => response.data),
@@ -117,7 +103,6 @@ export const apiClient = {
     api.delete<T>(url, config).then((response) => response.data),
 };
 
-// File upload utility
 export const uploadFile = async (
   file: File,
   endpoint: string,
@@ -141,7 +126,6 @@ export const uploadFile = async (
   });
 };
 
-// Download file utility
 export const downloadFile = async (url: string, filename?: string) => {
   const response = await api.get(url, {
     responseType: 'blob',

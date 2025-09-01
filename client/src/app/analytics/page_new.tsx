@@ -45,7 +45,6 @@ const AnalyticsPage = () => {
 
   const apiList = apis || [];
 
-  // Calculate analytics data
   const statusCounts = apiList.reduce((acc: any, api: any) => {
     const status = api.status || 'unknown';
     acc[status] = (acc[status] || 0) + 1;
@@ -60,7 +59,7 @@ const AnalyticsPage = () => {
 
   const healthScoreData = apiList.map((api: any) => ({
     name: api.apiName || api.name || 'Unknown',
-    score: api.healthScore || Math.floor(Math.random() * 30) + 70, // Mock data if not available
+    score: api.healthScore || Math.floor(Math.random() * 30) + 70,
   }));
 
   const changeFrequencyData = apiList.map((api: any) => ({
@@ -73,13 +72,11 @@ const AnalyticsPage = () => {
       <Layout>
         <div className="min-h-screen bg-gray-50">
           <div className="max-w-7xl mx-auto p-6">
-            {/* Header */}
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Analytics Dashboard</h1>
               <p className="text-gray-600">Comprehensive insights into your API ecosystem</p>
             </div>
 
-            {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
               <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                 <div className="flex items-center">
@@ -134,7 +131,6 @@ const AnalyticsPage = () => {
               </div>
             </div>
 
-            {/* Tab Navigation */}
             <div className="mb-8">
               <div className="border-b border-gray-200">
                 <nav className="-mb-px flex space-x-8">
@@ -159,9 +155,7 @@ const AnalyticsPage = () => {
               </div>
             </div>
 
-            {/* Tab Content */}
             <div className="space-y-8">
-              {/* Overview Tab */}
               {activeTab === 'overview' && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
@@ -210,7 +204,6 @@ const AnalyticsPage = () => {
                 </div>
               )}
 
-              {/* API Status Tab */}
               {activeTab === 'status' && (
                 <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Detailed API Status</h3>
@@ -263,7 +256,6 @@ const AnalyticsPage = () => {
                 </div>
               )}
 
-              {/* Health Metrics Tab */}
               {activeTab === 'health' && (
                 <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Health Score by API</h3>
@@ -286,7 +278,6 @@ const AnalyticsPage = () => {
                 </div>
               )}
 
-              {/* Trends Tab */}
               {activeTab === 'trends' && (
                 <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Health Score Trends</h3>
@@ -316,7 +307,6 @@ const AnalyticsPage = () => {
               )}
             </div>
 
-            {/* Footer note */}
             <div className="mt-12 text-center text-gray-500 text-sm">
               <p>Analytics data is updated in real-time. Last refresh: {new Date().toLocaleTimeString()}</p>
             </div>

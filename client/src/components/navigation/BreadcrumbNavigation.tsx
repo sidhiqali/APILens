@@ -25,14 +25,12 @@ const BreadcrumbNavigation: React.FC<BreadcrumbNavigationProps> = ({
 }) => {
   const pathname = usePathname();
 
-  // Generate breadcrumbs from pathname if not provided
   const getBreadcrumbs = (): BreadcrumbItem[] => {
     if (items) return items;
 
     const pathSegments = pathname.split('/').filter(Boolean);
     const breadcrumbs: BreadcrumbItem[] = [];
 
-    // Add home if enabled
     if (showHome) {
       breadcrumbs.push({
         label: 'Dashboard',
@@ -46,7 +44,6 @@ const BreadcrumbNavigation: React.FC<BreadcrumbNavigationProps> = ({
       currentPath += `/${segment}`;
       const isLast = index === pathSegments.length - 1;
 
-      // Create human-readable labels
       const label = getLabelForSegment(segment, pathSegments, index);
 
       breadcrumbs.push({
@@ -64,7 +61,6 @@ const BreadcrumbNavigation: React.FC<BreadcrumbNavigationProps> = ({
     segments: string[],
     index: number
   ): string => {
-    // Handle dynamic routes and common patterns
     const labelMap: Record<string, string> = {
       apis: 'APIs',
       'add-api': 'Add API',
@@ -83,9 +79,7 @@ const BreadcrumbNavigation: React.FC<BreadcrumbNavigationProps> = ({
       dashboard: 'Dashboard',
     };
 
-    // Check if it's a UUID or ID (for dynamic routes)
     if (isUUID(segment) || isObjectId(segment)) {
-      // Try to get context from previous segment
       const previousSegment = index > 0 ? segments[index - 1] : '';
       if (previousSegment === 'apis') return 'API Details';
       if (previousSegment === 'team') return 'Member';
@@ -93,7 +87,6 @@ const BreadcrumbNavigation: React.FC<BreadcrumbNavigationProps> = ({
       return 'Details';
     }
 
-    // Return mapped label or capitalize the segment
     return (
       labelMap[segment] ||
       segment.charAt(0).toUpperCase() + segment.slice(1).replace(/-/g, ' ')
@@ -114,7 +107,7 @@ const BreadcrumbNavigation: React.FC<BreadcrumbNavigationProps> = ({
   const breadcrumbs = getBreadcrumbs();
 
   if (breadcrumbs.length <= 1 && pathname === '/dashboard') {
-    return null; // Don't show breadcrumbs on dashboard
+    return null;
   }
 
   return (
@@ -149,7 +142,6 @@ const BreadcrumbNavigation: React.FC<BreadcrumbNavigationProps> = ({
   );
 };
 
-// Enhanced breadcrumb with custom items
 interface EnhancedBreadcrumbProps extends BreadcrumbNavigationProps {
   title?: string;
   subtitle?: string;
@@ -164,7 +156,6 @@ export const EnhancedBreadcrumb: React.FC<EnhancedBreadcrumbProps> = ({
 }) => {
   const pathname = usePathname();
 
-  // Get current page title if not provided
   const getPageTitle = () => {
     if (title) return title;
 
@@ -196,10 +187,8 @@ export const EnhancedBreadcrumb: React.FC<EnhancedBreadcrumbProps> = ({
     <div className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between">
         <div className="min-w-0 flex-1">
-          {/* Breadcrumb Navigation */}
           <BreadcrumbNavigation {...breadcrumbProps} />
 
-          {/* Page Title */}
           <div className="mt-2">
             <h1 className="text-2xl font-bold text-gray-900 truncate">
               {getPageTitle()}
@@ -210,7 +199,6 @@ export const EnhancedBreadcrumb: React.FC<EnhancedBreadcrumbProps> = ({
           </div>
         </div>
 
-        {/* Actions */}
         {actions && <div className="ml-4 flex-shrink-0">{actions}</div>}
       </div>
     </div>

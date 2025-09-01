@@ -40,7 +40,6 @@ const ApiDetailPage = ({ params }: Props) => {
   const [id, setId] = useState<string>('');
   const [isParamsLoaded, setIsParamsLoaded] = useState(false);
 
-  // Handle async params
   useEffect(() => {
     params.then((resolvedParams) => {
       setId(resolvedParams.id);
@@ -58,7 +57,6 @@ const ApiDetailPage = ({ params }: Props) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  // Handle URL parameters for tab switching and highlighting
   useEffect(() => {
     const tab = searchParams.get('tab');
     const highlight = searchParams.get('highlight');
@@ -68,24 +66,19 @@ const ApiDetailPage = ({ params }: Props) => {
       setActiveTab(tab);
     }
     
-    // If coming from notification, handle navigation
     if (notificationId) {
-      // Default to changes tab for notifications
       setActiveTab('changes');
       
-      // Scroll to changes section and highlight it
       setTimeout(() => {
         const changesSection = document.getElementById('changes-section');
         if (changesSection) {
           changesSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          // Add notification highlight effect
           changesSection.classList.add('ring-2', 'ring-blue-500', 'ring-opacity-50');
           setTimeout(() => {
             changesSection.classList.remove('ring-2', 'ring-blue-500', 'ring-opacity-50');
           }, 3000);
         }
         
-        // Show a notification banner
         const banner = document.createElement('div');
         banner.className = 'fixed top-4 right-4 bg-blue-100 border border-blue-300 text-blue-800 px-4 py-2 rounded-lg shadow-lg z-50';
         banner.innerHTML = `
@@ -99,7 +92,6 @@ const ApiDetailPage = ({ params }: Props) => {
         `;
         document.body.appendChild(banner);
         
-        // Auto-remove banner after 5 seconds
         setTimeout(() => {
           if (banner.parentElement) {
             banner.remove();
@@ -108,15 +100,12 @@ const ApiDetailPage = ({ params }: Props) => {
       }, 500);
     }
     
-    // If coming from issues page, highlight issues section
     if (highlight === 'issues') {
       setActiveTab('overview');
-      // Scroll to issues section after a short delay
       setTimeout(() => {
         const issuesSection = document.getElementById('issues-section');
         if (issuesSection) {
           issuesSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          // Add a temporary highlight effect
           issuesSection.classList.add('ring-2', 'ring-red-500', 'ring-opacity-50');
           setTimeout(() => {
             issuesSection.classList.remove('ring-2', 'ring-red-500', 'ring-opacity-50');
@@ -126,7 +115,6 @@ const ApiDetailPage = ({ params }: Props) => {
     }
   }, [searchParams]);
 
-  // Show loading while params are being resolved
   if (!isParamsLoaded) {
     return (
       <RouteGuard requireAuth={true}>
@@ -237,7 +225,6 @@ const ApiDetailPage = ({ params }: Props) => {
     <RouteGuard requireAuth={true}>
       <Layout>
         <div className="p-6 mx-auto max-w-7xl">
-          {/* Header */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -283,7 +270,6 @@ const ApiDetailPage = ({ params }: Props) => {
               </div>
             </div>
 
-            {/* Tabs */}
             <div className="border-b border-gray-200">
               <nav className="flex -mb-px space-x-8">
                 {[
@@ -308,10 +294,8 @@ const ApiDetailPage = ({ params }: Props) => {
             </div>
           </div>
 
-          {/* Tab Content */}
           {activeTab === 'overview' && (
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-              {/* Main Info */}
               <div className="space-y-6 lg:col-span-2">
                 <div className="p-6 bg-white border rounded-lg shadow-sm">
                   <h3 className="mb-4 text-lg font-semibold text-gray-900">
@@ -363,7 +347,6 @@ const ApiDetailPage = ({ params }: Props) => {
                   </div>
                 </div>
 
-                {/* Recent Changes */}
                 <div className="bg-white border rounded-lg shadow-sm">
                   <div className="p-6 border-b border-gray-200">
                     <h3 className="text-lg font-semibold text-gray-900">Recent Changes</h3>
@@ -412,7 +395,6 @@ const ApiDetailPage = ({ params }: Props) => {
                   </div>
                 </div>
 
-                {/* Active Issues */}
                 <div id="issues-section" className="bg-white border rounded-lg shadow-sm transition-all duration-300">
                   <div className="p-6 border-b border-gray-200">
                     <h3 className="text-lg font-semibold text-gray-900">Active Issues</h3>
@@ -479,9 +461,7 @@ const ApiDetailPage = ({ params }: Props) => {
                 </div>
               </div>
 
-              {/* Sidebar */}
               <div className="space-y-6">
-                {/* Health Status */}
                 <div className="p-6 bg-white border rounded-lg shadow-sm">
                   <h3 className="mb-4 text-lg font-semibold text-gray-900">Health Status</h3>
                   <div className="space-y-4">
@@ -492,7 +472,6 @@ const ApiDetailPage = ({ params }: Props) => {
                       </span>
                     </div>
                     
-                    {/* Health Details */}
                     <div className="pt-4 border-t border-gray-200">
                       <div className="space-y-3 text-sm">
                         <div className="flex justify-between">
@@ -516,7 +495,6 @@ const ApiDetailPage = ({ params }: Props) => {
                       </div>
                     </div>
 
-                    {/* Health Explanation */}
                     {api.healthStatus && api.healthStatus !== 'healthy' && (
                       <div className="p-3 rounded-lg bg-yellow-50 border border-yellow-200">
                         <p className="text-sm text-yellow-800">
@@ -530,7 +508,6 @@ const ApiDetailPage = ({ params }: Props) => {
                   </div>
                 </div>
 
-                {/* Tags */}
                 {api.tags && api.tags.length > 0 && (
                   <div className="p-6 bg-white border rounded-lg shadow-sm">
                     <h3 className="mb-4 text-lg font-semibold text-gray-900">Tags</h3>
@@ -547,7 +524,6 @@ const ApiDetailPage = ({ params }: Props) => {
                   </div>
                 )}
 
-                {/* Quick Actions */}
                 <div className="p-6 bg-white border rounded-lg shadow-sm">
                   <h3 className="mb-4 text-lg font-semibold text-gray-900">Quick Actions</h3>
                   <div className="space-y-3">
@@ -579,7 +555,6 @@ const ApiDetailPage = ({ params }: Props) => {
 
           {activeTab === 'changes' && (
             <div className="space-y-6">
-              {/* Changes Summary */}
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <div className="p-4 bg-white border rounded-lg shadow-sm">
                   <div className="flex items-center">
@@ -626,7 +601,6 @@ const ApiDetailPage = ({ params }: Props) => {
                 </div>
               </div>
 
-              {/* Changes List */}
               <div id="changes-section" className="bg-white border rounded-lg shadow-sm">
                 <div className="p-6 border-b border-gray-200">
                   <h3 className="text-lg font-semibold text-gray-900">Change History</h3>
@@ -780,7 +754,6 @@ const ApiDetailPage = ({ params }: Props) => {
           )}
         </div>
 
-        {/* Delete Confirmation Modal */}
         {showDeleteConfirm && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="w-full max-w-md p-6 mx-4 bg-white rounded-lg">

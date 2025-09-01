@@ -51,12 +51,10 @@ const LiveAPIStatus: React.FC<LiveAPIStatusProps> = ({
   const [apis, setApis] = useState<APIStatus[]>(initialAPIs);
   const [lastUpdate, setLastUpdate] = useState<string | null>(null);
 
-  // Subscribe to real-time updates for all APIs
   initialAPIs.forEach((api) => {
     useAPISubscription(api.id);
   });
 
-  // Handle real-time API updates
   useRealtimeAPIUpdates((update: RealtimeAPIUpdate) => {
     setApis((prevApis) =>
       prevApis.map((api) =>
@@ -67,7 +65,6 @@ const LiveAPIStatus: React.FC<LiveAPIStatusProps> = ({
               responseTime: update.responseTime || api.responseTime,
               uptime: update.uptime || api.uptime,
               lastChecked: update.lastChecked,
-              // Calculate trend based on response time change
               trend: calculateTrend(api.responseTime, update.responseTime),
             }
           : api
@@ -82,8 +79,8 @@ const LiveAPIStatus: React.FC<LiveAPIStatusProps> = ({
   ): 'up' | 'down' | 'stable' => {
     if (!oldValue || !newValue) return 'stable';
     const percentageChange = ((newValue - oldValue) / oldValue) * 100;
-    if (percentageChange > 10) return 'down'; // Worse performance
-    if (percentageChange < -10) return 'up'; // Better performance
+    if (percentageChange > 10) return 'down';
+    if (percentageChange < -10) return 'up';
     return 'stable';
   };
 
@@ -196,7 +193,6 @@ const LiveAPIStatus: React.FC<LiveAPIStatusProps> = ({
 
   return (
     <div className={clsx('space-y-4', className)}>
-      {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-900">Live API Status</h3>
         <div className="flex items-center space-x-2">
@@ -210,7 +206,6 @@ const LiveAPIStatus: React.FC<LiveAPIStatusProps> = ({
         </div>
       </div>
 
-      {/* API Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {apis.map((api) => (
           <div
@@ -224,7 +219,6 @@ const LiveAPIStatus: React.FC<LiveAPIStatusProps> = ({
                 : 'cursor-default'
             )}
           >
-            {/* Header */}
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-2">
                 {getStatusIcon(api.status)}
@@ -239,7 +233,6 @@ const LiveAPIStatus: React.FC<LiveAPIStatusProps> = ({
               )}
             </div>
 
-            {/* Metrics */}
             {showMetrics && (
               <div className="grid grid-cols-2 gap-3 mb-3">
                 <div>
@@ -257,7 +250,6 @@ const LiveAPIStatus: React.FC<LiveAPIStatusProps> = ({
               </div>
             )}
 
-            {/* Alerts */}
             {(api.errorCount || api.alertsCount) && (
               <div className="flex items-center space-x-4 mb-3">
                 {api.errorCount && api.errorCount > 0 && (
@@ -279,7 +271,6 @@ const LiveAPIStatus: React.FC<LiveAPIStatusProps> = ({
               </div>
             )}
 
-            {/* Footer */}
             <div className="text-xs text-gray-500">
               Last checked: {formatLastChecked(api.lastChecked)}
             </div>
@@ -287,7 +278,6 @@ const LiveAPIStatus: React.FC<LiveAPIStatusProps> = ({
         ))}
       </div>
 
-      {/* Empty State */}
       {apis.length === 0 && (
         <div className="text-center py-8">
           <Activity className="w-12 h-12 mx-auto mb-4 text-gray-400" />
@@ -303,7 +293,6 @@ const LiveAPIStatus: React.FC<LiveAPIStatusProps> = ({
   );
 };
 
-// Summary component for overview
 interface LiveAPIStatusSummaryProps {
   apis: APIStatus[];
   className?: string;

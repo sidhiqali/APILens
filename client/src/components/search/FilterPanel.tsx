@@ -59,7 +59,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   const [collapsedGroups, setCollapsedGroups] = useState<string[]>([]);
   const [isPanelCollapsed, setIsPanelCollapsed] = useState(false);
 
-  // Calculate active filter count
   const getActiveFilterCount = useCallback(() => {
     let count = 0;
     Object.entries(filterState).forEach(([groupId, value]) => {
@@ -87,14 +86,12 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 
   const activeCount = getActiveFilterCount();
 
-  // Update filter value
   const updateFilter = (groupId: string, value: any) => {
     const newState = { ...filterState, [groupId]: value };
     setFilterState(newState);
     onFiltersChange(newState);
   };
 
-  // Clear all filters
   const handleClearAll = () => {
     const clearedState: FilterState = {};
     filters.forEach((group) => {
@@ -114,7 +111,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     onClearAll?.();
   };
 
-  // Toggle group collapse
   const toggleGroupCollapse = (groupId: string) => {
     setCollapsedGroups((prev) =>
       prev.includes(groupId)
@@ -123,14 +119,12 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     );
   };
 
-  // Render different filter types
   const renderFilterGroup = (group: FilterGroup) => {
     const isGroupCollapsed = collapsedGroups.includes(group.id);
     const currentValue = filterState[group.id];
 
     return (
       <div key={group.id} className="border-b border-gray-200 last:border-b-0">
-        {/* Group Header */}
         <div
           className={clsx(
             'flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50',
@@ -144,7 +138,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         >
           <h3 className="text-sm font-medium text-gray-900">{group.label}</h3>
           <div className="flex items-center space-x-2">
-            {/* Active indicator */}
             {getGroupActiveCount(group, currentValue) > 0 && (
               <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
                 {getGroupActiveCount(group, currentValue)}
@@ -161,7 +154,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           </div>
         </div>
 
-        {/* Group Content */}
         {!isGroupCollapsed && (
           <div className="px-4 pb-4">
             {renderFilterContent(group, currentValue)}
@@ -361,7 +353,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     <div
       className={clsx('bg-white border border-gray-200 rounded-lg', className)}
     >
-      {/* Panel Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
         <div className="flex items-center space-x-2">
           <Filter className="w-4 h-4 text-gray-500" />
@@ -393,7 +384,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         </div>
       </div>
 
-      {/* Filter Groups */}
       <div className="max-h-96 overflow-y-auto">
         {filters.map(renderFilterGroup)}
       </div>
@@ -401,7 +391,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   );
 };
 
-// Preset filter configurations
 export const createAPIFilters = (): FilterGroup[] => [
   {
     id: 'status',

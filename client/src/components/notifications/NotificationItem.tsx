@@ -35,12 +35,10 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
 
   const handleClick = async () => {
     try {
-      // Mark as read if not already read
       if (!notification.read && onMarkAsRead) {
         onMarkAsRead(notification._id);
       }
 
-      // Navigate to API detail page if apiId exists
       if (notification.apiId) {
         router.push(`/apis/${notification.apiId}?notification=${notification._id}`);
       }

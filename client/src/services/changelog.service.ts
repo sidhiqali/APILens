@@ -1,6 +1,5 @@
 import { apiClient } from '@/lib/axios';
 
-// Enhanced Changelog Types
 export interface ApiChange {
   _id: string;
   apiId: string;
@@ -71,7 +70,6 @@ export interface PaginatedSnapshots {
 class ChangelogService {
   private baseUrl = '/apis';
 
-  // Get all changes across APIs
   async getAllChanges(
     params?: {
       page?: number;
@@ -96,7 +94,6 @@ class ChangelogService {
     );
   }
 
-  // Get API change history
   async getApiChanges(
     apiId: string,
     params?: {
@@ -117,7 +114,6 @@ class ChangelogService {
     );
   }
 
-  // Get API snapshots
   async getApiSnapshots(
     apiId: string,
     limit: number = 10
@@ -127,7 +123,6 @@ class ChangelogService {
     );
   }
 
-  // Get all changelogs for an API
   async getApiChangelogs(
     apiId: string,
     page: number = 1,
@@ -138,14 +133,12 @@ class ChangelogService {
     );
   }
 
-  // Get a specific changelog
   async getChangelog(apiId: string, changelogId: string): Promise<Changelog> {
     return await apiClient.get<Changelog>(
       `${this.baseUrl}/${apiId}/changelog/${changelogId}`
     );
   }
 
-  // Create a new changelog entry
   async createChangelog(
     apiId: string,
     changelogData: {
@@ -161,7 +154,6 @@ class ChangelogService {
     );
   }
 
-  // Update changelog
   async updateChangelog(
     apiId: string,
     changelogId: string,
@@ -178,12 +170,10 @@ class ChangelogService {
     );
   }
 
-  // Delete changelog
   async deleteChangelog(apiId: string, changelogId: string): Promise<void> {
     await apiClient.delete(`${this.baseUrl}/${apiId}/changelog/${changelogId}`);
   }
 
-  // Compare two API versions
   async compareVersions(
     apiId: string,
     fromVersion: string,
@@ -199,7 +189,6 @@ class ChangelogService {
     );
   }
 
-  // Get change statistics for an API
   async getChangeStats(
     apiId: string,
     timeRange: string = '30d'
@@ -216,7 +205,6 @@ class ChangelogService {
     );
   }
 
-  // Export changelogs
   async exportChangelogs(apiId: string): Promise<Blob> {
     return await apiClient.get(`${this.baseUrl}/${apiId}/export`, {
       responseType: 'blob',

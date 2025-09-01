@@ -12,18 +12,15 @@ import {
 class AuthService {
   private baseUrl = '/auth';
 
-  // Authentication methods
   async login(credentials: LoginRequest): Promise<ApiResponse<User>> {
     const response = await apiClient.post<any>(
       `${this.baseUrl}/login`,
       credentials
     );
     
-    // Backend returns { message, user, token, refreshToken } directly
-    // Transform to match our expected format
     return {
       success: true,
-      data: response.user, // User data without tokens (tokens are in httpOnly cookies)
+      data: response.user,
       message: response.message,
       statusCode: 200,
     };
@@ -44,7 +41,6 @@ class AuthService {
     return response;
   }
 
-  // Validate session using cookies
   async validateSession(): Promise<ApiResponse<User>> {
     const response = await apiClient.get<any>(
       `${this.baseUrl}/profile`
@@ -52,7 +48,6 @@ class AuthService {
     return response;
   }
 
-  // Get user profile
   async getProfile(): Promise<ApiResponse<User>> {
     const response = await apiClient.get<any>(
       `${this.baseUrl}/profile`
@@ -60,7 +55,6 @@ class AuthService {
     return response;
   }
 
-  // Password management
   async forgotPassword(
     request: ForgotPasswordRequest
   ): Promise<ApiResponse<void>> {
@@ -91,7 +85,6 @@ class AuthService {
     return response;
   }
 
-  // Email verification
   async verifyEmail(token: string): Promise<ApiResponse<void>> {
     const response = await apiClient.post<any>(
       `${this.baseUrl}/verify-email`,
@@ -107,7 +100,6 @@ class AuthService {
     return response;
   }
 
-  // Profile management
   async updateProfile(userData: Partial<User>): Promise<ApiResponse<User>> {
     const response = await apiClient.put<any>(
       `${this.baseUrl}/profile`,
@@ -132,7 +124,6 @@ class AuthService {
     return response;
   }
 
-  // Notification preferences
   async updateNotificationPreferences(
     preferences: User['notificationPreferences']
   ): Promise<ApiResponse<User>> {

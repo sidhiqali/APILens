@@ -34,10 +34,8 @@ const DashboardPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Fetch dashboard stats
   const { data: statsData, isLoading: statsLoading } = useDashboardStats();
 
-  // Fetch APIs list
   const {
     data: apisData,
     isLoading: apisLoading,
@@ -49,12 +47,10 @@ const DashboardPage = () => {
     status: filterStatus,
   });
 
-  // Mutations
   const toggleStatusMutation = useToggleApiStatus();
   const deleteApiMutation = useDeleteApi();
   const checkApiMutation = useCheckApi();
 
-  // Handle actions
   const handleToggleStatus = (id: string) => {
     toggleStatusMutation.mutate(id);
   };
@@ -69,7 +65,6 @@ const DashboardPage = () => {
     checkApiMutation.mutate(id);
   };
 
-  // Get stats with fallback to default values
   const stats = (statsData as any)?.data ||
     statsData || {
       totalApis: 0,
@@ -85,10 +80,8 @@ const DashboardPage = () => {
       uptimePercentage: 100,
     };
 
-  // Get APIs list with fallback
   const allApis = apisData || [];
 
-  // Apply client-side filtering and pagination
   const filteredApis = allApis.filter((api: any) => {
     const matchesSearch =
       !searchTerm ||
@@ -145,7 +138,6 @@ const DashboardPage = () => {
     <RouteGuard requireAuth={true}>
       <Layout>
         <div className="space-y-6">
-          {/* Header */}
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
@@ -162,7 +154,6 @@ const DashboardPage = () => {
             </Link>
           </div>
 
-          {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <Link href="/apis" className="block">
               <div className="bg-white p-6 rounded-lg shadow-sm border hover:shadow-md transition-shadow cursor-pointer">
@@ -241,7 +232,6 @@ const DashboardPage = () => {
             </Link>
           </div>
 
-          {/* Filters and Search */}
           <div className="bg-white p-6 rounded-lg shadow-sm border">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
@@ -274,13 +264,11 @@ const DashboardPage = () => {
             </div>
           </div>
 
-          {/* APIs List */}
           <div className="bg-white rounded-lg shadow-sm border">
             <div className="px-6 py-4 border-b border-gray-200">
               <h2 className="text-lg font-semibold text-gray-900">Your APIs</h2>
             </div>
 
-            {/* Loading State */}
             {apisLoading && (
               <div className="p-6 text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
@@ -288,7 +276,6 @@ const DashboardPage = () => {
               </div>
             )}
 
-            {/* Error State */}
             {apisError && (
               <div className="p-6 text-center">
                 <AlertTriangle className="w-8 h-8 text-red-600 mx-auto mb-2" />
@@ -296,7 +283,6 @@ const DashboardPage = () => {
               </div>
             )}
 
-            {/* Empty State */}
             {!apisLoading && !apisError && apis?.length === 0 && (
               <div className="p-6 text-center">
                 <Activity className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -316,7 +302,6 @@ const DashboardPage = () => {
               </div>
             )}
 
-            {/* APIs Table */}
             {!apisLoading && !apisError && (apis?.length ?? 0) > 0 && (
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -437,7 +422,6 @@ const DashboardPage = () => {
               </div>
             )}
 
-            {/* Pagination */}
             {!apisLoading &&
               !apisError &&
               (apis?.length ?? 0) > 0 &&

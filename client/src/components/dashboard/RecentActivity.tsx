@@ -183,7 +183,6 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ activity }) => {
               <button
                 className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center space-x-1"
                 onClick={() => {
-                  // Navigate to API details
                   if (activity.apiId) {
                     window.location.href = `/apis/${activity.apiId}`;
                   }
@@ -197,7 +196,6 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ activity }) => {
                 <button
                   className="text-xs text-gray-500 hover:text-gray-700 flex items-center space-x-1"
                   onClick={() => {
-                    // Open in new tab
                     window.open(`/apis/${activity.apiId}`, '_blank');
                   }}
                 >

@@ -38,13 +38,11 @@ const PageLayout: React.FC<PageLayoutProps> = ({
   const [isMobile, setIsMobile] = useState(false);
   const pathname = usePathname();
 
-  // Handle responsive behavior
   useEffect(() => {
     const handleResize = () => {
-      const mobile = window.innerWidth < 1024; // lg breakpoint
+      const mobile = window.innerWidth < 1024;
       setIsMobile(mobile);
 
-      // Auto-close sidebar on mobile when route changes
       if (mobile && isSidebarOpen) {
         setIsSidebarOpen(false);
       }
@@ -55,7 +53,6 @@ const PageLayout: React.FC<PageLayoutProps> = ({
     return () => window.removeEventListener('resize', handleResize);
   }, [isSidebarOpen]);
 
-  // Close sidebar on route change (mobile)
   useEffect(() => {
     if (isMobile && isSidebarOpen) {
       setIsSidebarOpen(false);
@@ -66,7 +63,6 @@ const PageLayout: React.FC<PageLayoutProps> = ({
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  // Check if we're on auth pages
   const isAuthPage =
     pathname.includes('/login') ||
     pathname.includes('/register') ||
@@ -82,19 +78,16 @@ const PageLayout: React.FC<PageLayoutProps> = ({
 
   return (
     <div className={clsx('min-h-screen bg-gray-50', className)}>
-      {/* Navigation Sidebar */}
       {showNavigation && (
         <NavigationMenu isOpen={isSidebarOpen} onToggle={toggleSidebar} />
       )}
 
-      {/* Main Content Area */}
       <div
         className={clsx(
           'flex flex-col min-h-screen',
           showNavigation && 'lg:pl-64'
         )}
       >
-        {/* Top Bar */}
         {showTopBar && (
           <TopBar
             onMenuToggle={toggleSidebar}
@@ -103,7 +96,6 @@ const PageLayout: React.FC<PageLayoutProps> = ({
           />
         )}
 
-        {/* Enhanced Breadcrumb */}
         {showBreadcrumbs && !isAuthPage && (
           <EnhancedBreadcrumb
             title={title}
@@ -113,7 +105,6 @@ const PageLayout: React.FC<PageLayoutProps> = ({
           />
         )}
 
-        {/* Page Content */}
         <main
           className={clsx(
             'flex-1',
@@ -124,7 +115,6 @@ const PageLayout: React.FC<PageLayoutProps> = ({
           {children}
         </main>
 
-        {/* Footer */}
         <footer className="bg-white border-t border-gray-200 px-6 py-4">
           <div
             className={clsx(
@@ -157,7 +147,6 @@ const PageLayout: React.FC<PageLayoutProps> = ({
   );
 };
 
-// Specialized layout variants
 export const DashboardLayout: React.FC<
   Omit<PageLayoutProps, 'showBreadcrumbs'>
 > = (props) => <PageLayout {...props} showBreadcrumbs={false} />;
@@ -182,7 +171,6 @@ export const APILayout: React.FC<PageLayoutProps> = (props) => (
   />
 );
 
-// Loading layout for async pages
 interface LoadingLayoutProps {
   title?: string;
   showSkeleton?: boolean;
@@ -196,7 +184,6 @@ export const LoadingLayout: React.FC<LoadingLayoutProps> = ({
     <div className="space-y-6">
       {showSkeleton ? (
         <>
-          {/* Header Skeleton */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <div className="animate-pulse">
               <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
@@ -204,7 +191,6 @@ export const LoadingLayout: React.FC<LoadingLayoutProps> = ({
             </div>
           </div>
 
-          {/* Content Skeleton */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div
@@ -235,7 +221,6 @@ export const LoadingLayout: React.FC<LoadingLayoutProps> = ({
   </PageLayout>
 );
 
-// Error layout for error states
 interface ErrorLayoutProps {
   title?: string;
   message?: string;

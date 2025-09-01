@@ -64,7 +64,6 @@ const RegisterPage = () => {
     if (field === 'password') setPassword(value);
     if (field === 'confirmPassword') setConfirmPassword(value);
     
-    // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
@@ -74,7 +73,6 @@ const RegisterPage = () => {
     <RouteGuard requireAuth={false} redirectTo="/dashboard">
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
         <div className="bg-white rounded-xl shadow-lg w-full max-w-md">
-          {/* Header */}
           <div className="text-center pt-8 pb-6 px-8">
             <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl mx-auto mb-4 flex items-center justify-center shadow-lg">
               <Activity className="text-white w-8 h-8" />
@@ -83,10 +81,8 @@ const RegisterPage = () => {
             <p className="text-gray-600">Start monitoring your APIs today</p>
           </div>
 
-          {/* Register Form */}
           <div className="px-8 pb-8">
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Email Input */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Email address
@@ -114,7 +110,6 @@ const RegisterPage = () => {
                 )}
               </div>
 
-              {/* Password Input */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Password
@@ -154,7 +149,6 @@ const RegisterPage = () => {
                 )}
               </div>
 
-              {/* Confirm Password Input */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Confirm Password
@@ -194,7 +188,6 @@ const RegisterPage = () => {
                 )}
               </div>
 
-              {/* Terms and Conditions */}
               <div className="flex items-start">
                 <input
                   id="agree-terms"
@@ -215,7 +208,6 @@ const RegisterPage = () => {
                 </label>
               </div>
 
-              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={isRegisterPending}
@@ -231,7 +223,6 @@ const RegisterPage = () => {
                 )}
               </button>
 
-              {/* Divider */}
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-gray-300" />
@@ -241,7 +232,6 @@ const RegisterPage = () => {
                 </div>
               </div>
 
-              {/* Login Link */}
               <div className="text-center">
                 <Link
                   href="/login"

@@ -78,36 +78,31 @@ const APIPerformanceChart: React.FC<APIPerformanceChartProps> = ({
 }) => {
   const [showTooltip] = useState(true);
 
-  // Color palette for multiple APIs
   const colors = [
-    '#3B82F6', // Blue
-    '#10B981', // Green
-    '#F59E0B', // Yellow
-    '#EF4444', // Red
-    '#8B5CF6', // Purple
-    '#06B6D4', // Cyan
-    '#F97316', // Orange
-    '#84CC16', // Lime
+    '#3B82F6',
+    '#10B981',
+    '#F59E0B',
+    '#EF4444',
+    '#8B5CF6',
+    '#06B6D4',
+    '#F97316',
+    '#84CC16',
   ];
 
-  // Filter and process data based on selections
   const chartData = useMemo(() => {
     const apisToShow = compareMode
       ? apis.filter((api) => selectedAPIs.includes(api.apiId))
-      : apis.slice(0, 1); // Show only first API in single mode
+      : apis.slice(0, 1);
 
     if (apisToShow.length === 0) return [];
 
-    // Merge data points by timestamp for comparison
     const mergedData: any[] = [];
     const timePoints = new Set<string>();
 
-    // Collect all unique timestamps
     apisToShow.forEach((api) => {
       api.data.forEach((point) => timePoints.add(point.timestamp));
     });
 
-    // Create merged data points
     Array.from(timePoints)
       .sort()
       .forEach((timestamp) => {
@@ -130,7 +125,6 @@ const APIPerformanceChart: React.FC<APIPerformanceChartProps> = ({
     return mergedData;
   }, [apis, compareMode, selectedAPIs, metric]);
 
-  // Get metric configuration
   const getMetricConfig = () => {
     switch (metric) {
       case 'responseTime':
@@ -184,7 +178,6 @@ const APIPerformanceChart: React.FC<APIPerformanceChartProps> = ({
 
   const config = getMetricConfig();
 
-  // Custom tooltip
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload || !showTooltip) return null;
 
@@ -211,7 +204,6 @@ const APIPerformanceChart: React.FC<APIPerformanceChartProps> = ({
     );
   };
 
-  // Time range options
   const timeRangeOptions = [
     { value: '1h', label: '1 Hour' },
     { value: '6h', label: '6 Hours' },
@@ -220,7 +212,6 @@ const APIPerformanceChart: React.FC<APIPerformanceChartProps> = ({
     { value: '30d', label: '30 Days' },
   ];
 
-  // Metric options
   const metricOptions = [
     { value: 'responseTime', label: 'Response Time', icon: Clock },
     { value: 'uptime', label: 'Uptime', icon: TrendingUp },
@@ -228,7 +219,6 @@ const APIPerformanceChart: React.FC<APIPerformanceChartProps> = ({
     { value: 'requestCount', label: 'Request Count', icon: BarChart3 },
   ];
 
-  // Calculate trend
   const calculateTrend = (data: PerformanceDataPoint[]) => {
     if (data.length < 2) return { direction: 'stable', percentage: 0 };
 
@@ -244,7 +234,6 @@ const APIPerformanceChart: React.FC<APIPerformanceChartProps> = ({
     return { direction, percentage: Math.abs(change) };
   };
 
-  // Render chart based on type
   const renderChart = () => {
     const apisToShow = compareMode
       ? apis.filter((api) => selectedAPIs.includes(api.apiId))
@@ -314,7 +303,7 @@ const APIPerformanceChart: React.FC<APIPerformanceChartProps> = ({
           </BarChart>
         );
 
-      default: // line
+      default:
         return (
           <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" />
@@ -356,7 +345,6 @@ const APIPerformanceChart: React.FC<APIPerformanceChartProps> = ({
         className
       )}
     >
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
           <config.icon className="w-6 h-6 text-gray-600" />
@@ -372,13 +360,10 @@ const APIPerformanceChart: React.FC<APIPerformanceChartProps> = ({
           </div>
         </div>
 
-        {/* Controls */}
         <div className="flex items-center space-x-4">
-          {/* Compare Mode Toggle */}
           {apis.length > 1 && (
             <button
               onClick={() => {
-                // Toggle compare mode logic would go here
                 if (onAPISelection && !compareMode) {
                   onAPISelection(apis.slice(0, 2).map((api) => api.apiId));
                 }
@@ -394,7 +379,6 @@ const APIPerformanceChart: React.FC<APIPerformanceChartProps> = ({
             </button>
           )}
 
-          {/* Time Range Selector */}
           <select
             value={timeRange}
             onChange={(e) => onTimeRangeChange(e.target.value as any)}
@@ -407,7 +391,6 @@ const APIPerformanceChart: React.FC<APIPerformanceChartProps> = ({
             ))}
           </select>
 
-          {/* Metric Selector */}
           <select
             value={metric}
             onChange={(e) => onMetricChange(e.target.value as any)}
@@ -422,7 +405,6 @@ const APIPerformanceChart: React.FC<APIPerformanceChartProps> = ({
         </div>
       </div>
 
-      {/* Stats Summary */}
       {!compareMode && apis.length > 0 && (
         <div className="grid grid-cols-4 gap-4 mb-6">
           {apis.slice(0, 1).map((api) => {
@@ -462,14 +444,12 @@ const APIPerformanceChart: React.FC<APIPerformanceChartProps> = ({
         </div>
       )}
 
-      {/* Chart */}
       <div className="h-80">
         <ResponsiveContainer width="100%" height="100%">
           {renderChart()}
         </ResponsiveContainer>
       </div>
 
-      {/* API Selection for Compare Mode */}
       {compareMode && (
         <div className="mt-6 pt-6 border-t border-gray-200">
           <h4 className="text-sm font-medium text-gray-900 mb-3">
@@ -510,7 +490,6 @@ const APIPerformanceChart: React.FC<APIPerformanceChartProps> = ({
         </div>
       )}
 
-      {/* Empty State */}
       {chartData.length === 0 && (
         <div className="text-center py-12">
           <BarChart3 className="w-16 h-16 mx-auto mb-4 text-gray-400" />

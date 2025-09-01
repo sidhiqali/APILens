@@ -19,7 +19,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           </div>
         </main>
       </div>
-      {/* Real-time notification toasts */}
       <NotificationToastManager />
     </div>
   );

@@ -9,7 +9,6 @@ import type {
   ApiSettings,
 } from '@/services/settings.service';
 
-// Query keys for React Query
 export const settingsQueryKeys = {
   all: ['settings'] as const,
   profile: () => [...settingsQueryKeys.all, 'profile'] as const,
@@ -21,17 +20,15 @@ export const settingsQueryKeys = {
   apiKey: () => [...settingsQueryKeys.all, 'apiKey'] as const,
 };
 
-// Hook to get user profile
 export const useProfile = () => {
   return useQuery({
     queryKey: settingsQueryKeys.profile(),
     queryFn: () => settingsService.getProfile(),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
     retry: 2,
   });
 };
 
-// Hook to update profile
 export const useUpdateProfile = () => {
   const queryClient = useQueryClient();
 
@@ -39,12 +36,10 @@ export const useUpdateProfile = () => {
     mutationFn: (data: UpdateProfileRequest) =>
       settingsService.updateProfile(data),
     onMutate: async (data) => {
-      // Cancel any outgoing refetches
       await queryClient.cancelQueries({
         queryKey: settingsQueryKeys.profile(),
       });
 
-      // Optimistically update profile
       queryClient.setQueryData(
         settingsQueryKeys.profile(),
         (oldData: UserProfile | undefined) => {
@@ -54,21 +49,18 @@ export const useUpdateProfile = () => {
       );
     },
     onError: (error: any) => {
-      // Revert optimistic update
       queryClient.invalidateQueries({
         queryKey: settingsQueryKeys.profile(),
       });
       toast.error(error?.message || 'Failed to update profile');
     },
     onSuccess: (data) => {
-      // Update cached profile
       queryClient.setQueryData(settingsQueryKeys.profile(), data);
       toast.success('Profile updated successfully');
     },
   });
 };
 
-// Hook to change password
 export const useChangePassword = () => {
   return useMutation({
     mutationFn: (data: ChangePasswordRequest) =>
@@ -82,17 +74,15 @@ export const useChangePassword = () => {
   });
 };
 
-// Hook to get notification preferences
 export const useNotificationPreferences = () => {
   return useQuery({
     queryKey: settingsQueryKeys.notificationPreferences(),
     queryFn: () => settingsService.getNotificationPreferences(),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
     retry: 2,
   });
 };
 
-// Hook to update notification preferences
 export const useUpdateNotificationPreferences = () => {
   const queryClient = useQueryClient();
 
@@ -100,19 +90,16 @@ export const useUpdateNotificationPreferences = () => {
     mutationFn: (preferences: NotificationPreferences) =>
       settingsService.updateNotificationPreferences(preferences),
     onMutate: async (preferences) => {
-      // Cancel any outgoing refetches
       await queryClient.cancelQueries({
         queryKey: settingsQueryKeys.notificationPreferences(),
       });
 
-      // Optimistically update preferences
       queryClient.setQueryData(
         settingsQueryKeys.notificationPreferences(),
         preferences
       );
     },
     onError: (error: any) => {
-      // Revert optimistic update
       queryClient.invalidateQueries({
         queryKey: settingsQueryKeys.notificationPreferences(),
       });
@@ -121,7 +108,6 @@ export const useUpdateNotificationPreferences = () => {
       );
     },
     onSuccess: (data) => {
-      // Update cached preferences
       queryClient.setQueryData(
         settingsQueryKeys.notificationPreferences(),
         data
@@ -131,18 +117,16 @@ export const useUpdateNotificationPreferences = () => {
   });
 };
 
-// Hook to get API settings
 export const useApiSettings = (apiId: string) => {
   return useQuery({
     queryKey: settingsQueryKeys.apiSettings(apiId),
     queryFn: () => settingsService.getApiSettings(apiId),
     enabled: !!apiId,
-    staleTime: 3 * 60 * 1000, // 3 minutes
+    staleTime: 3 * 60 * 1000,
     retry: 2,
   });
 };
 
-// Hook to update API settings
 export const useUpdateApiSettings = () => {
   const queryClient = useQueryClient();
 
@@ -155,12 +139,10 @@ export const useUpdateApiSettings = () => {
       settings: Partial<ApiSettings>;
     }) => settingsService.updateApiSettings(apiId, settings),
     onMutate: async ({ apiId, settings }) => {
-      // Cancel any outgoing refetches
       await queryClient.cancelQueries({
         queryKey: settingsQueryKeys.apiSettings(apiId),
       });
 
-      // Optimistically update settings
       queryClient.setQueryData(
         settingsQueryKeys.apiSettings(apiId),
         (oldData: ApiSettings | undefined) => {
@@ -170,31 +152,27 @@ export const useUpdateApiSettings = () => {
       );
     },
     onError: (error: any, { apiId }) => {
-      // Revert optimistic update
       queryClient.invalidateQueries({
         queryKey: settingsQueryKeys.apiSettings(apiId),
       });
       toast.error(error?.message || 'Failed to update API settings');
     },
     onSuccess: (data, { apiId }) => {
-      // Update cached settings
       queryClient.setQueryData(settingsQueryKeys.apiSettings(apiId), data);
       toast.success('API settings updated');
     },
   });
 };
 
-// Hook to get system settings
 export const useSystemSettings = () => {
   return useQuery({
     queryKey: settingsQueryKeys.systemSettings(),
     queryFn: () => settingsService.getSystemSettings(),
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 10 * 60 * 1000,
     retry: 1,
   });
 };
 
-// Hook to update system settings
 export const useUpdateSystemSettings = () => {
   const queryClient = useQueryClient();
 
@@ -206,12 +184,10 @@ export const useUpdateSystemSettings = () => {
       dateFormat?: string;
     }) => settingsService.updateSystemSettings(settings),
     onMutate: async (settings) => {
-      // Cancel any outgoing refetches
       await queryClient.cancelQueries({
         queryKey: settingsQueryKeys.systemSettings(),
       });
 
-      // Optimistically update settings
       queryClient.setQueryData(
         settingsQueryKeys.systemSettings(),
         (oldData: any) => {
@@ -221,7 +197,6 @@ export const useUpdateSystemSettings = () => {
       );
     },
     onError: (error: any) => {
-      // Revert optimistic update
       queryClient.invalidateQueries({
         queryKey: settingsQueryKeys.systemSettings(),
       });
@@ -233,13 +208,11 @@ export const useUpdateSystemSettings = () => {
   });
 };
 
-// Hook to delete account
 export const useDeleteAccount = () => {
   return useMutation({
     mutationFn: () => settingsService.deleteAccount(),
     onSuccess: () => {
       toast.success('Account deleted successfully');
-      // Redirect to home page or login
       window.location.href = '/';
     },
     onError: (error: any) => {
@@ -248,12 +221,10 @@ export const useDeleteAccount = () => {
   });
 };
 
-// Hook to export user data
 export const useExportUserData = () => {
   return useMutation({
     mutationFn: () => settingsService.exportUserData(),
     onSuccess: (blob) => {
-      // Create download link
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -271,24 +242,21 @@ export const useExportUserData = () => {
   });
 };
 
-// Hook to get API key
 export const useApiKey = () => {
   return useQuery({
     queryKey: settingsQueryKeys.apiKey(),
     queryFn: () => settingsService.getApiKey(),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
     retry: 2,
   });
 };
 
-// Hook to generate API key
 export const useGenerateApiKey = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: () => settingsService.generateApiKey(),
     onSuccess: (data) => {
-      // Update cached API key
       queryClient.setQueryData(settingsQueryKeys.apiKey(), data);
       toast.success('API key generated successfully');
     },
@@ -298,14 +266,12 @@ export const useGenerateApiKey = () => {
   });
 };
 
-// Hook to revoke API key
 export const useRevokeApiKey = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: () => settingsService.revokeApiKey(),
     onSuccess: () => {
-      // Update cached API key to null
       queryClient.setQueryData(settingsQueryKeys.apiKey(), { apiKey: null });
       toast.success('API key revoked successfully');
     },

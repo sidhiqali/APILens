@@ -54,7 +54,6 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     new Map()
   );
 
-  // Connect to WebSocket
   const connect = useCallback(() => {
     if (socket?.connected || isConnecting) return;
 
@@ -69,10 +68,9 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
         },
         transports: ['websocket', 'polling'],
         timeout: 20000,
-        reconnection: false, // We'll handle reconnection manually
+        reconnection: false,
       });
 
-      // Connection successful
       newSocket.on('connect', () => {
         console.log('WebSocket connected');
         setIsConnected(true);
@@ -80,12 +78,10 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
         setConnectionError(null);
         setConnectionAttempts(0);
 
-        // Clear any pending reconnection
         if (reconnectTimeoutRef.current) {
           clearTimeout(reconnectTimeoutRef.current);
         }
 
-        // Re-subscribe to all events
         subscribersRef.current.forEach((callbacks, event) => {
           callbacks.forEach((callback) => {
             newSocket.on(event, callback);
@@ -98,14 +94,12 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
         });
       });
 
-      // Connection error
       newSocket.on('connect_error', (error) => {
         console.error('WebSocket connection error:', error);
         setIsConnected(false);
         setIsConnecting(false);
         setConnectionError(error.message || 'Connection failed');
 
-        // Attempt reconnection if under max attempts
         if (connectionAttempts < maxReconnectAttempts) {
           scheduleReconnect();
         } else {
@@ -116,21 +110,17 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
         }
       });
 
-      // Disconnection
       newSocket.on('disconnect', (reason) => {
         console.log('WebSocket disconnected:', reason);
         setIsConnected(false);
 
         if (reason === 'io server disconnect') {
-          // Server initiated disconnect, don't reconnect
           setConnectionError('Server disconnected');
         } else {
-          // Client-side disconnect or network issue, attempt reconnect
           scheduleReconnect();
         }
       });
 
-      // Authentication error
       newSocket.on('auth_error', (error) => {
         console.error('WebSocket auth error:', error);
         setConnectionError('Authentication failed');
@@ -143,7 +133,6 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
         });
       });
 
-      // Rate limit error
       newSocket.on('rate_limit', (data) => {
         console.warn('WebSocket rate limit:', data);
         toast.error('Too many requests. Please slow down.', {
@@ -160,7 +149,6 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     }
   }, [url, user?.api_key, user?._id, connectionAttempts, maxReconnectAttempts]);
 
-  // Schedule reconnection attempt
   const scheduleReconnect = useCallback(() => {
     setConnectionAttempts((prev) => prev + 1);
 
@@ -172,7 +160,6 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     }, reconnectInterval);
   }, [connect, connectionAttempts, maxReconnectAttempts, reconnectInterval]);
 
-  // Disconnect from WebSocket
   const disconnect = useCallback(() => {
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current);
@@ -189,13 +176,11 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     setConnectionAttempts(0);
   }, [socket]);
 
-  // Reconnect (manual)
   const reconnect = useCallback(() => {
     disconnect();
     setTimeout(() => connect(), 1000);
   }, [disconnect, connect]);
 
-  // Emit event
   const emit = useCallback(
     (event: string, data?: any) => {
       if (socket?.connected) {
@@ -207,21 +192,17 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     [socket]
   );
 
-  // Subscribe to event
   const subscribe = useCallback(
     (event: string, callback: (data: any) => void) => {
-      // Add to subscribers map
       if (!subscribersRef.current.has(event)) {
         subscribersRef.current.set(event, new Set());
       }
       subscribersRef.current.get(event)!.add(callback);
 
-      // Subscribe to socket if connected
       if (socket?.connected) {
         socket.on(event, callback);
       }
 
-      // Return unsubscribe function
       return () => {
         const subscribers = subscribersRef.current.get(event);
         if (subscribers) {
@@ -239,7 +220,6 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     [socket]
   );
 
-  // Auto-connect on mount and user change
   useEffect(() => {
     if (autoConnect && user && user.api_key) {
       connect();
@@ -252,7 +232,6 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     };
   }, [autoConnect, user, user?.api_key, connect]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       disconnect();
@@ -279,7 +258,6 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   );
 };
 
-// Hook to use WebSocket context
 export const useWebSocket = (): WebSocketContextType => {
   const context = useContext(WebSocketContext);
   if (!context) {
@@ -288,7 +266,6 @@ export const useWebSocket = (): WebSocketContextType => {
   return context;
 };
 
-// Connection status indicator component
 interface ConnectionStatusProps {
   className?: string;
   showText?: boolean;
@@ -326,7 +303,6 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
   );
 };
 
-// Hook for specific event subscriptions
 export const useWebSocketEvent = (
   event: string,
   callback: (data: any) => void,
@@ -340,7 +316,6 @@ export const useWebSocketEvent = (
   }, [event, subscribe, ...deps]);
 };
 
-// Hook for emitting events
 export const useWebSocketEmit = () => {
   const { emit } = useWebSocket();
   return emit;

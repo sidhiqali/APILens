@@ -21,7 +21,6 @@ interface DashboardOverviewProps {
 const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   className = '',
 }) => {
-  // Fetch dashboard data
   const {
     data: overviewData,
     isLoading: overviewLoading,
@@ -40,7 +39,6 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
     error: alertsError,
   } = useCriticalAlerts();
 
-  // Enable real-time updates
   useRealTimeDashboard();
 
   if (overviewLoading || statsLoading) {
@@ -78,7 +76,6 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 
   return (
     <div className={`space-y-6 ${className}`}>
-      {/* Header with Real-time Status */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
@@ -95,7 +92,6 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         </div>
       </div>
 
-      {/* Critical Alerts Banner */}
       {alerts && alerts.length > 0 && (
         <div className="p-4 border border-red-200 rounded-lg bg-red-50">
           <div className="flex items-center">
@@ -108,27 +104,23 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         </div>
       )}
 
-      {/* Stats Cards */}
       <StatsCards stats={stats} loading={statsLoading} />
 
-      {/* Main Content Grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Left Column - Recent Activity */}
         <div className="space-y-6 lg:col-span-2">
           <RecentActivity
             data={overview?.recentActivity}
             loading={overviewLoading}
           />
 
-          {/* Health Monitor */}
           <HealthMonitor
             apis={
               overview?.apiHealthSummary?.map((api) => ({
                 id: api.id,
                 name: api.name,
                 status: api.status,
-                responseTime: 200, // Mock data for now
-                uptime: 99.5, // Mock data for now
+                responseTime: 200,
+                uptime: 99.5,
                 lastChecked: api.lastChecked,
                 trend: 'stable' as const,
               })) || []
@@ -137,7 +129,6 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           />
         </div>
 
-        {/* Right Column - Alerts and Actions */}
         <div className="space-y-6">
           <CriticalAlerts
             alerts={
@@ -158,7 +149,6 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             error={alertsError}
           />
 
-          {/* API Health Summary */}
           {overview?.apiHealthSummary &&
             overview.apiHealthSummary.length > 0 && (
               <div className="p-6 bg-white border rounded-lg shadow-sm">
@@ -209,7 +199,6 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
               </div>
             )}
 
-          {/* Performance Summary */}
           {stats && (
             <div className="p-6 bg-white border rounded-lg shadow-sm">
               <h3 className="mb-4 text-lg font-semibold text-gray-900">
@@ -244,11 +233,9 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   );
 };
 
-// Loading skeleton component
 const DashboardSkeleton: React.FC = () => {
   return (
     <>
-      {/* Header Skeleton */}
       <div className="flex items-center justify-between">
         <div>
           <div className="w-48 h-8 mb-2 bg-gray-200 rounded animate-pulse"></div>
@@ -257,7 +244,6 @@ const DashboardSkeleton: React.FC = () => {
         <div className="w-32 h-10 bg-gray-200 rounded animate-pulse"></div>
       </div>
 
-      {/* Stats Cards Skeleton */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="p-6 bg-white border rounded-lg shadow-sm">
@@ -267,7 +253,6 @@ const DashboardSkeleton: React.FC = () => {
         ))}
       </div>
 
-      {/* Content Grid Skeleton */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           <div className="p-6 bg-white border rounded-lg shadow-sm">

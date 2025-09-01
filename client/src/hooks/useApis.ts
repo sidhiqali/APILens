@@ -4,7 +4,6 @@ import { apiService } from '@/services/api.service';
 import { dashboardService } from '@/services/dashboard.service';
 import { CreateApiRequest, UpdateApiRequest } from '@/types';
 
-// Query keys for React Query
 export const apiQueryKeys = {
   all: ['apis'] as const,
   lists: () => [...apiQueryKeys.all, 'list'] as const,
@@ -21,7 +20,6 @@ export const apiQueryKeys = {
   health: (id: string) => [...apiQueryKeys.all, 'health', id] as const,
 };
 
-// Hook to get all APIs with filtering and pagination
 export const useApis = (params?: {
   page?: number;
   limit?: number;
@@ -34,41 +32,37 @@ export const useApis = (params?: {
   return useQuery({
     queryKey: apiQueryKeys.list(params || {}),
     queryFn: () => apiService.getApis(params),
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 2 * 60 * 1000,
   });
 };
 
-// Hook to get single API
 export const useApi = (id: string) => {
   return useQuery({
     queryKey: apiQueryKeys.detail(id),
     queryFn: () => apiService.getApiById(id),
     enabled: !!id,
-    staleTime: 1 * 60 * 1000, // 1 minute
+    staleTime: 1 * 60 * 1000,
   });
 };
 
-// Hook to get dashboard stats
 export const useDashboardStats = () => {
   return useQuery({
     queryKey: apiQueryKeys.dashboardStats(),
     queryFn: () => dashboardService.getDashboardStats(),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchInterval: 5 * 60 * 1000, // Auto refresh every 5 minutes
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 5 * 60 * 1000,
   });
 };
 
-// Hook to get API stats
 export const useApiStats = (id: string, timeRange?: string) => {
   return useQuery({
     queryKey: apiQueryKeys.apiStats(id),
     queryFn: () => apiService.getApiStats(id, timeRange),
     enabled: !!id,
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 2 * 60 * 1000,
   });
 };
 
-// Hook to get API changes
 export const useApiChanges = (
   id: string,
   params?: {
@@ -82,20 +76,18 @@ export const useApiChanges = (
     queryKey: apiQueryKeys.changes(id),
     queryFn: () => apiService.getApiChanges(id, params),
     enabled: !!id,
-    staleTime: 1 * 60 * 1000, // 1 minute
+    staleTime: 1 * 60 * 1000,
   });
 };
 
-// Hook to get all tags
 export const useTags = () => {
   return useQuery({
     queryKey: apiQueryKeys.tags(),
     queryFn: () => apiService.getTags(),
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 10 * 60 * 1000,
   });
 };
 
-// Hook to create API
 export const useCreateApi = () => {
   const queryClient = useQueryClient();
 
@@ -117,7 +109,6 @@ export const useCreateApi = () => {
   });
 };
 
-// Hook to update API
 export const useUpdateApi = () => {
   const queryClient = useQueryClient();
 
@@ -143,24 +134,19 @@ export const useUpdateApi = () => {
   });
 };
 
-// Hook to delete API
 export const useDeleteApi = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (id: string) => apiService.deleteApi(id),
     onMutate: async (id) => {
-      // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: apiQueryKeys.lists() });
       
-      // Snapshot the previous value
       const previousApis = queryClient.getQueryData(apiQueryKeys.lists());
       
-      // Get the API name for the toast message
       const apis = previousApis as any[];
       const apiToDelete = apis?.find((api: any) => api.id === id);
       
-      // Optimistically remove the API
       queryClient.setQueriesData(
         { queryKey: apiQueryKeys.lists() },
         (old: any) => {
@@ -172,7 +158,6 @@ export const useDeleteApi = () => {
       return { previousApis, apiName: apiToDelete?.apiName };
     },
     onError: (err: any, _id, context: any) => {
-      // If the mutation fails, roll back
       if (context?.previousApis) {
         queryClient.setQueryData(apiQueryKeys.lists(), context.previousApis);
       }
@@ -195,20 +180,16 @@ export const useDeleteApi = () => {
   });
 };
 
-// Hook to toggle API status
 export const useToggleApiStatus = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (id: string) => apiService.toggleApiStatus(id),
     onMutate: async (id) => {
-      // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
       await queryClient.cancelQueries({ queryKey: apiQueryKeys.lists() });
       
-      // Snapshot the previous value
       const previousApis = queryClient.getQueryData(apiQueryKeys.lists());
       
-      // Optimistically update to the new value
       queryClient.setQueriesData(
         { queryKey: apiQueryKeys.lists() },
         (old: any) => {
@@ -219,11 +200,9 @@ export const useToggleApiStatus = () => {
         }
       );
       
-      // Return a context object with the snapshotted value
       return { previousApis };
     },
     onError: (err: any, _id, context: any) => {
-      // If the mutation fails, use the context returned from onMutate to roll back
       if (context?.previousApis) {
         queryClient.setQueryData(apiQueryKeys.lists(), context.previousApis);
       }
@@ -233,7 +212,6 @@ export const useToggleApiStatus = () => {
     },
     onSuccess: (response, id) => {
       if (response.success) {
-        // Update individual API data
         queryClient.invalidateQueries({ queryKey: apiQueryKeys.detail(id) });
         queryClient.invalidateQueries({
           queryKey: apiQueryKeys.dashboardStats(),
@@ -247,20 +225,17 @@ export const useToggleApiStatus = () => {
       }
     },
     onSettled: () => {
-      // Always refetch after error or success to ensure consistency
       queryClient.invalidateQueries({ queryKey: apiQueryKeys.lists() });
     },
   });
 };
 
-// Hook to manually check API
 export const useCheckApi = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (id: string) => apiService.checkApi(id),
     onMutate: async (id) => {
-      // Get the API name for better toast messages
       const apis = queryClient.getQueryData(apiQueryKeys.lists()) as any[];
       const api = apis?.find((api: any) => api.id === id);
       return { apiName: api?.apiName };
@@ -282,7 +257,6 @@ export const useCheckApi = () => {
   });
 };
 
-// Hook to validate API URL (for API registration form)
 export const useValidateApiUrl = () => {
   return useMutation({
     mutationFn: (url: string) => apiService.validateApiUrl(url),
@@ -294,7 +268,6 @@ export const useValidateApiUrl = () => {
   });
 };
 
-// Legacy exports for backward compatibility
 export const useGetApis = useApis;
 export const useGetApiStats = useDashboardStats;
 export const useGetApi = useApi;

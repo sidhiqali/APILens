@@ -1,6 +1,5 @@
 import { io, Socket } from 'socket.io-client';
 
-// Socket event types
 export interface SocketEvents {
   'api-change': (data: {
     apiId: string;
@@ -70,7 +69,6 @@ class SocketService {
       console.error('🔌 Socket connection error:', error);
     });
 
-    // Setup event listeners
     this.setupEventListeners();
   }
 
@@ -85,28 +83,23 @@ class SocketService {
   private setupEventListeners(): void {
     if (!this.socket) return;
 
-    // API Change events
     this.socket.on('api-change', (data) => {
       this.emit('api-change', data);
     });
 
-    // API Health Update events
     this.socket.on('api-health-update', (data) => {
       this.emit('api-health-update', data);
     });
 
-    // Notification events
     this.socket.on('notification', (data) => {
       this.emit('notification', data);
     });
 
-    // API Check Complete events
     this.socket.on('api-check-complete', (data) => {
       this.emit('api-check-complete', data);
     });
   }
 
-  // Subscribe to events
   on<K extends keyof SocketEvents>(event: K, callback: SocketEvents[K]): void {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
@@ -114,12 +107,10 @@ class SocketService {
     this.listeners.get(event)?.add(callback);
   }
 
-  // Unsubscribe from events
   off<K extends keyof SocketEvents>(event: K, callback: SocketEvents[K]): void {
     this.listeners.get(event)?.delete(callback);
   }
 
-  // Emit events to listeners
   private emit<K extends keyof SocketEvents>(
     event: K,
     data: Parameters<SocketEvents[K]>[0]
@@ -136,33 +127,28 @@ class SocketService {
     }
   }
 
-  // Join API specific room
   joinApiRoom(apiId: string): void {
     if (this.socket?.connected) {
       this.socket.emit('join-api-room', apiId);
     }
   }
 
-  // Leave API specific room
   leaveApiRoom(apiId: string): void {
     if (this.socket?.connected) {
       this.socket.emit('leave-api-room', apiId);
     }
   }
 
-  // Join user notification room
   joinUserRoom(userId: string): void {
     if (this.socket?.connected) {
       this.socket.emit('join-user-room', userId);
     }
   }
 
-  // Check connection status
   get isConnected(): boolean {
     return this.socket?.connected || false;
   }
 
-  // Get socket ID
   get socketId(): string | undefined {
     return this.socket?.id;
   }

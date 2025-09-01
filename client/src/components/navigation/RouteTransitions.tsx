@@ -76,7 +76,6 @@ const RouteTransitions: React.FC<RouteTransitionsProps> = ({
   );
 };
 
-// Loading transition component
 interface LoadingTransitionProps {
   isLoading: boolean;
   children: React.ReactNode;
@@ -110,7 +109,6 @@ export const LoadingTransition: React.FC<LoadingTransitionProps> = ({
 
   return (
     <div className={clsx('relative', className)}>
-      {/* Loading overlay */}
       <div
         className={clsx(
           'absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center transition-opacity duration-300 z-10',
@@ -120,7 +118,6 @@ export const LoadingTransition: React.FC<LoadingTransitionProps> = ({
         {loadingComponent || defaultLoadingComponent}
       </div>
 
-      {/* Content */}
       <div
         className={clsx(
           'transition-opacity duration-300',
@@ -133,7 +130,6 @@ export const LoadingTransition: React.FC<LoadingTransitionProps> = ({
   );
 };
 
-// Page transition wrapper with route-specific transitions
 interface PageTransitionProps {
   children: React.ReactNode;
   className?: string;
@@ -145,7 +141,6 @@ export const PageTransition: React.FC<PageTransitionProps> = ({
 }) => {
   const pathname = usePathname();
 
-  // Different transition types for different routes
   const getTransitionType = (): 'fade' | 'slide' | 'scale' | 'none' => {
     if (pathname.includes('/auth') || pathname.includes('/login'))
       return 'fade';
@@ -164,7 +159,6 @@ export const PageTransition: React.FC<PageTransitionProps> = ({
   );
 };
 
-// Animated list transitions
 interface AnimatedListProps {
   children: React.ReactNode[];
   itemClassName?: string;
@@ -218,7 +212,6 @@ export const AnimatedList: React.FC<AnimatedListProps> = ({
   );
 };
 
-// Modal transition
 interface ModalTransitionProps {
   isOpen: boolean;
   children: React.ReactNode;
@@ -248,7 +241,6 @@ export const ModalTransition: React.FC<ModalTransitionProps> = ({
 
   return (
     <div className="fixed inset-0 z-50">
-      {/* Backdrop */}
       <div
         className={clsx(
           'absolute inset-0 bg-black transition-opacity duration-300',
@@ -257,7 +249,6 @@ export const ModalTransition: React.FC<ModalTransitionProps> = ({
         onClick={onClose}
       />
 
-      {/* Modal content */}
       <div className="relative z-10 flex items-center justify-center min-h-full p-4">
         <div
           className={clsx(
@@ -275,7 +266,6 @@ export const ModalTransition: React.FC<ModalTransitionProps> = ({
   );
 };
 
-// Tab transition
 interface TabTransitionProps {
   activeTab: string;
   children: React.ReactNode;

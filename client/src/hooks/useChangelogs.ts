@@ -3,7 +3,6 @@ import { toast } from 'react-hot-toast';
 import { changelogService } from '@/services/changelog.service';
 import type { ApiChange, Changelog } from '@/services/changelog.service';
 
-// Query keys for React Query
 export const changelogQueryKeys = {
   all: ['changelogs'] as const,
   allChanges: (params?: any) =>
@@ -28,7 +27,6 @@ export const changelogQueryKeys = {
     [...changelogQueryKeys.all, 'stats', apiId] as const,
 };
 
-// Hook to get all changes across APIs
 export const useChangelogs = (
   params?: {
     page?: number;
@@ -42,12 +40,11 @@ export const useChangelogs = (
   return useQuery({
     queryKey: changelogQueryKeys.allChanges(params),
     queryFn: () => changelogService.getAllChanges(params),
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 2 * 60 * 1000,
     retry: 3,
   });
 };
 
-// Hook to get API changes
 export const useApiChanges = (
   apiId: string,
   params?: {
@@ -61,23 +58,21 @@ export const useApiChanges = (
     queryKey: changelogQueryKeys.apiChanges(apiId),
     queryFn: () => changelogService.getApiChanges(apiId, params),
     enabled: !!apiId,
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 2 * 60 * 1000,
     retry: 3,
   });
 };
 
-// Hook to get API snapshots
 export const useApiSnapshots = (apiId: string, limit: number = 10) => {
   return useQuery({
     queryKey: changelogQueryKeys.apiSnapshots(apiId),
     queryFn: () => changelogService.getApiSnapshots(apiId, limit),
     enabled: !!apiId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
     retry: 3,
   });
 };
 
-// Hook to get API changelogs
 export const useApiChangelogs = (
   apiId: string,
   page: number = 1,
@@ -87,23 +82,21 @@ export const useApiChangelogs = (
     queryKey: changelogQueryKeys.changelog(apiId),
     queryFn: () => changelogService.getApiChangelogs(apiId, page, limit),
     enabled: !!apiId,
-    staleTime: 3 * 60 * 1000, // 3 minutes
+    staleTime: 3 * 60 * 1000,
     retry: 2,
   });
 };
 
-// Hook to get specific changelog
 export const useChangelog = (apiId: string, changelogId: string) => {
   return useQuery({
     queryKey: changelogQueryKeys.changelogDetail(apiId, changelogId),
     queryFn: () => changelogService.getChangelog(apiId, changelogId),
     enabled: !!apiId && !!changelogId,
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 10 * 60 * 1000,
     retry: 2,
   });
 };
 
-// Hook to compare API versions
 export const useVersionComparison = (
   apiId: string,
   fromVersion: string,
@@ -114,23 +107,21 @@ export const useVersionComparison = (
     queryFn: () =>
       changelogService.compareVersions(apiId, fromVersion, toVersion),
     enabled: !!apiId && !!fromVersion && !!toVersion,
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 10 * 60 * 1000,
     retry: 2,
   });
 };
 
-// Hook to get change statistics
 export const useChangeStats = (apiId: string, timeRange: string = '30d') => {
   return useQuery({
     queryKey: changelogQueryKeys.stats(apiId),
     queryFn: () => changelogService.getChangeStats(apiId, timeRange),
     enabled: !!apiId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
     retry: 2,
   });
 };
 
-// Hook to create changelog
 export const useCreateChangelog = () => {
   const queryClient = useQueryClient();
 
@@ -148,12 +139,10 @@ export const useCreateChangelog = () => {
       };
     }) => changelogService.createChangelog(apiId, changelogData),
     onSuccess: (data, variables) => {
-      // Invalidate changelogs for this API
       queryClient.invalidateQueries({
         queryKey: changelogQueryKeys.changelog(variables.apiId),
       });
 
-      // Add the new changelog to the cache
       queryClient.setQueryData(
         changelogQueryKeys.changelog(variables.apiId),
         (oldData: Changelog[] | undefined) => {
@@ -170,7 +159,6 @@ export const useCreateChangelog = () => {
   });
 };
 
-// Hook to update changelog
 export const useUpdateChangelog = () => {
   const queryClient = useQueryClient();
 
@@ -190,7 +178,6 @@ export const useUpdateChangelog = () => {
       };
     }) => changelogService.updateChangelog(apiId, changelogId, changelogData),
     onSuccess: (data, variables) => {
-      // Update the specific changelog in cache
       queryClient.setQueryData(
         changelogQueryKeys.changelogDetail(
           variables.apiId,
@@ -199,7 +186,6 @@ export const useUpdateChangelog = () => {
         data
       );
 
-      // Invalidate the changelog list
       queryClient.invalidateQueries({
         queryKey: changelogQueryKeys.changelog(variables.apiId),
       });
@@ -212,7 +198,6 @@ export const useUpdateChangelog = () => {
   });
 };
 
-// Hook to delete changelog
 export const useDeleteChangelog = () => {
   const queryClient = useQueryClient();
 
@@ -225,12 +210,10 @@ export const useDeleteChangelog = () => {
       changelogId: string;
     }) => changelogService.deleteChangelog(apiId, changelogId),
     onMutate: async ({ apiId, changelogId }) => {
-      // Cancel any outgoing refetches
       await queryClient.cancelQueries({
         queryKey: changelogQueryKeys.changelog(apiId),
       });
 
-      // Optimistically remove the changelog
       queryClient.setQueryData(
         changelogQueryKeys.changelog(apiId),
         (oldData: Changelog[] | undefined) => {
@@ -240,7 +223,6 @@ export const useDeleteChangelog = () => {
       );
     },
     onError: (error: any, variables) => {
-      // Revert optimistic update
       queryClient.invalidateQueries({
         queryKey: changelogQueryKeys.changelog(variables.apiId),
       });
@@ -249,7 +231,6 @@ export const useDeleteChangelog = () => {
     onSuccess: (_, variables) => {
       toast.success('Changelog deleted successfully');
 
-      // Remove from detailed cache
       queryClient.removeQueries({
         queryKey: changelogQueryKeys.changelogDetail(
           variables.apiId,
@@ -260,12 +241,10 @@ export const useDeleteChangelog = () => {
   });
 };
 
-// Hook to export changelogs
 export const useExportChangelogs = () => {
   return useMutation({
     mutationFn: (apiId: string) => changelogService.exportChangelogs(apiId),
     onSuccess: (blob, apiId) => {
-      // Create download link
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -283,12 +262,10 @@ export const useExportChangelogs = () => {
   });
 };
 
-// Hook for real-time changelog updates
 export const useChangelogRealtime = () => {
   const queryClient = useQueryClient();
 
   const addNewChange = (apiId: string, change: ApiChange) => {
-    // Add to changes list
     queryClient.setQueryData(
       changelogQueryKeys.apiChanges(apiId),
       (oldData: ApiChange[] | undefined) => {
@@ -297,7 +274,6 @@ export const useChangelogRealtime = () => {
       }
     );
 
-    // Invalidate related queries
     queryClient.invalidateQueries({
       queryKey: changelogQueryKeys.stats(apiId),
     });

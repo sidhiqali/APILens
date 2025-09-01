@@ -66,7 +66,6 @@ const SettingsPage = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 space-y-6">
-                {/* Profile Information */}
                 <div className="bg-white rounded-lg shadow-sm border">
                   <div className="p-6 border-b border-gray-200">
                     <h3 className="text-lg font-semibold flex items-center text-gray-900">
@@ -100,7 +99,6 @@ const SettingsPage = () => {
                   </div>
                 </div>
 
-                {/* Notification Preferences */}
                 <div className="bg-white rounded-lg shadow-sm border">
                   <div className="p-6 border-b border-gray-200">
                     <h3 className="text-lg font-semibold text-gray-900">
@@ -203,7 +201,6 @@ const SettingsPage = () => {
               </div>
 
               <div className="space-y-6">
-                {/* API Key */}
                 <div className="bg-white rounded-lg shadow-sm border p-6">
                   <h3 className="text-lg font-semibold mb-4 flex items-center text-gray-900">
                     <Key size={20} className="mr-2" />
@@ -232,7 +229,6 @@ const SettingsPage = () => {
                   </div>
                 </div>
 
-                {/* Save Button */}
                 <button
                   type="submit"
                   disabled={isUpdateProfilePending}

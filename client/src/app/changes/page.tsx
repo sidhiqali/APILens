@@ -35,7 +35,6 @@ const ChangesPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
-  // Build filter params for API call
   const filterParams = {
     page: currentPage,
     limit: itemsPerPage,
@@ -58,12 +57,10 @@ const ChangesPage = () => {
   const totalChanges = changesData?.total || 0;
   const totalPages = Math.ceil(totalChanges / itemsPerPage);
 
-  // Format change type
   const formatChangeType = (type: string) => {
     return type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ');
   };
 
-  // Get severity icon and color
   const getSeverityIcon = (severity: string) => {
     switch (severity) {
       case 'critical':
@@ -139,7 +136,6 @@ const ChangesPage = () => {
     <RouteGuard requireAuth={true}>
       <Layout>
         <div className="max-w-7xl mx-auto space-y-6">
-          {/* Header */}
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">API Changes</h1>
@@ -165,7 +161,6 @@ const ChangesPage = () => {
             </div>
           </div>
 
-          {/* Summary Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="bg-white p-4 rounded-lg shadow-sm border">
               <div className="flex items-center justify-between">
@@ -209,7 +204,6 @@ const ChangesPage = () => {
             </div>
           </div>
 
-          {/* Search and Filters */}
           <div className="bg-white rounded-lg shadow-sm border">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
@@ -226,7 +220,6 @@ const ChangesPage = () => {
                 </button>
               </div>
 
-              {/* Search */}
               <div className="relative mb-4">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
@@ -238,7 +231,6 @@ const ChangesPage = () => {
                 />
               </div>
 
-              {/* Filters */}
               {showFilters && (
                 <div className="p-4 border rounded-lg bg-gray-50">
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -309,7 +301,6 @@ const ChangesPage = () => {
             </div>
           </div>
 
-          {/* Changes List */}
           <div className="bg-white rounded-lg shadow-sm border">
             {isLoading ? (
               <div className="flex items-center justify-center p-12">
@@ -386,7 +377,6 @@ const ChangesPage = () => {
               </div>
             )}
 
-            {/* Pagination */}
             {totalPages > 1 && (
               <div className="px-6 py-4 border-t border-gray-200">
                 <div className="flex items-center justify-between">

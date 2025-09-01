@@ -75,10 +75,8 @@ const NotificationToastManager: React.FC = () => {
 
   useEffect(() => {
     const unsubscribe = subscribe('notification_created', (notification: Notification) => {
-      // Add to React Query cache
       addNewNotification(notification);
 
-      // Show toast notification for high and critical severity
       if (['high', 'critical'].includes(notification.severity)) {
         toast.custom(
           (t) => (
@@ -93,7 +91,6 @@ const NotificationToastManager: React.FC = () => {
           }
         );
       } else {
-        // Show simpler toast for lower severity
         toast.success(notification.title, {
           duration: 3000,
           position: 'top-right',
@@ -107,7 +104,7 @@ const NotificationToastManager: React.FC = () => {
     };
   }, [subscribe, addNewNotification]);
 
-  return null; // This component doesn't render anything itself
+  return null;
 };
 
 export default NotificationToastManager;

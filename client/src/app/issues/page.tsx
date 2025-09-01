@@ -20,7 +20,7 @@ import { formatDistanceToNow } from 'date-fns';
 const IssuesPage = () => {
   const [filter, setFilter] = useState<'all' | 'critical' | 'health' | 'performance'>('all');
   
-  const { data: statsData, isLoading: statsLoading } = useDashboardStats();
+  const { data: statsData } = useDashboardStats();
   const { data: apisData, isLoading: apisLoading, refetch } = useApis({});
 
   const stats = statsData || {
@@ -34,7 +34,6 @@ const IssuesPage = () => {
 
   const allApis = apisData || [];
 
-  // Filter APIs based on issues
   const unhealthyApis = allApis.filter((api: any) => 
     api.healthStatus && !['healthy', 'checking'].includes(api.healthStatus)
   );
@@ -119,7 +118,6 @@ const IssuesPage = () => {
     <RouteGuard requireAuth={true}>
       <Layout>
         <div className="space-y-6">
-          {/* Header */}
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Issues & Alerts</h1>
@@ -145,7 +143,6 @@ const IssuesPage = () => {
             </div>
           </div>
 
-          {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="bg-white p-6 rounded-lg shadow-sm border">
               <div className="flex items-center justify-between">
@@ -196,7 +193,6 @@ const IssuesPage = () => {
             </div>
           </div>
 
-          {/* Filter Tabs */}
           <div className="bg-white rounded-lg shadow-sm border">
             <div className="border-b border-gray-200">
               <nav className="flex -mb-px space-x-8 px-6">
@@ -227,7 +223,6 @@ const IssuesPage = () => {
               </nav>
             </div>
 
-            {/* Issues List */}
             <div className="p-6">
               {apisLoading ? (
                 <div className="text-center py-8">

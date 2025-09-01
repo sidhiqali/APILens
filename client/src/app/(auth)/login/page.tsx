@@ -55,7 +55,6 @@ const LoginPage = () => {
     if (field === 'email') setEmail(value);
     if (field === 'password') setPassword(value);
 
-    // Clear error when user starts typing
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: '' }));
     }
@@ -65,7 +64,6 @@ const LoginPage = () => {
     <RouteGuard requireAuth={false} redirectTo="/dashboard">
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
         <div className="bg-white rounded-xl shadow-lg w-full max-w-md">
-          {/* Header */}
           <div className="text-center pt-8 pb-6 px-8">
             <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl mx-auto mb-4 flex items-center justify-center shadow-lg">
               <Activity className="text-white w-8 h-8" />
@@ -74,10 +72,8 @@ const LoginPage = () => {
             <p className="text-gray-600">Monitor your APIs and track changes</p>
           </div>
 
-          {/* Login Form */}
           <div className="px-8 pb-8">
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Email Input */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Email address
@@ -105,7 +101,6 @@ const LoginPage = () => {
                 )}
               </div>
 
-              {/* Password Input */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Password
@@ -147,7 +142,6 @@ const LoginPage = () => {
                 )}
               </div>
 
-              {/* Remember Me & Forgot Password */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <input
@@ -171,7 +165,6 @@ const LoginPage = () => {
                 </Link>
               </div>
 
-              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={isLoginPending}
@@ -187,7 +180,6 @@ const LoginPage = () => {
                 )}
               </button>
 
-              {/* Divider */}
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-gray-300" />
@@ -199,7 +191,6 @@ const LoginPage = () => {
                 </div>
               </div>
 
-              {/* Register Link */}
               <div className="text-center">
                 <Link
                   href="/register"

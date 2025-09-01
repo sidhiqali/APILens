@@ -12,7 +12,6 @@ import type {
   PaginatedNotifications,
 } from '@/services/notification.service';
 
-// Query keys for React Query
 export const notificationQueryKeys = {
   all: ['notifications'] as const,
   lists: () => [...notificationQueryKeys.all, 'list'] as const,
@@ -22,7 +21,6 @@ export const notificationQueryKeys = {
   unreadCount: () => [...notificationQueryKeys.all, 'unreadCount'] as const,
 };
 
-// Hook to get notifications with pagination
 export const useNotifications = (params?: {
   limit?: number;
   offset?: number;
@@ -31,13 +29,12 @@ export const useNotifications = (params?: {
   return useQuery({
     queryKey: notificationQueryKeys.list(params || {}),
     queryFn: () => notificationService.getUserNotifications(params),
-    staleTime: 30 * 1000, // 30 seconds
-    refetchInterval: 60 * 1000, // Auto refresh every minute
+    staleTime: 30 * 1000,
+    refetchInterval: 60 * 1000,
     retry: 3,
   });
 };
 
-// Hook for infinite scroll notifications
 export const useInfiniteNotifications = (params?: {
   limit?: number;
   unreadOnly?: boolean;
@@ -62,39 +59,35 @@ export const useInfiniteNotifications = (params?: {
   });
 };
 
-// Hook to get notification statistics
 export const useNotificationStats = () => {
   return useQuery({
     queryKey: notificationQueryKeys.stats(),
     queryFn: () => notificationService.getNotificationStats(),
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    refetchInterval: 3 * 60 * 1000, // Auto refresh every 3 minutes
+    staleTime: 2 * 60 * 1000,
+    refetchInterval: 3 * 60 * 1000,
     retry: 3,
   });
 };
 
-// Hook to get unread count
 export const useUnreadCount = () => {
   return useQuery({
     queryKey: notificationQueryKeys.unreadCount(),
     queryFn: () => notificationService.getUnreadCount(),
-    staleTime: 30 * 1000, // 30 seconds
-    refetchInterval: 60 * 1000, // Auto refresh every minute
+    staleTime: 30 * 1000,
+    refetchInterval: 60 * 1000,
     retry: 3,
   });
 };
 
-// Hook to get notification preferences
 export const useNotificationPreferences = () => {
   return useQuery({
     queryKey: notificationQueryKeys.preferences(),
     queryFn: () => notificationService.getPreferences(),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
     retry: 2,
   });
 };
 
-// Hook to mark notification as read
 export const useMarkAsRead = () => {
   const queryClient = useQueryClient();
 
@@ -102,12 +95,10 @@ export const useMarkAsRead = () => {
     mutationFn: (notificationId: string) =>
       notificationService.markAsRead(notificationId),
     onMutate: async (notificationId: string) => {
-      // Cancel any outgoing refetches
       await queryClient.cancelQueries({
         queryKey: notificationQueryKeys.all,
       });
 
-      // Optimistically update notification in infinite query data
       queryClient.setQueriesData(
         { queryKey: notificationQueryKeys.lists() },
         (oldData: any) => {
@@ -127,21 +118,18 @@ export const useMarkAsRead = () => {
         }
       );
 
-      // Update unread count
       queryClient.setQueryData(
         notificationQueryKeys.unreadCount(),
         (oldCount: number | undefined) => Math.max(0, (oldCount || 1) - 1)
       );
     },
     onError: (error: any) => {
-      // Revert optimistic update
       queryClient.invalidateQueries({
         queryKey: notificationQueryKeys.all,
       });
       toast.error(error?.message || 'Failed to mark notification as read');
     },
     onSuccess: () => {
-      // Update stats
       queryClient.invalidateQueries({
         queryKey: notificationQueryKeys.stats(),
       });
@@ -149,19 +137,16 @@ export const useMarkAsRead = () => {
   });
 };
 
-// Hook to mark all notifications as read
 export const useMarkAllAsRead = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: () => notificationService.markAllAsRead(),
     onMutate: async () => {
-      // Cancel any outgoing refetches
       await queryClient.cancelQueries({
         queryKey: notificationQueryKeys.all,
       });
 
-      // Optimistically update all notifications in infinite query data
       queryClient.setQueriesData(
         { queryKey: notificationQueryKeys.lists() },
         (oldData: any) => {
@@ -180,11 +165,9 @@ export const useMarkAllAsRead = () => {
         }
       );
 
-      // Update unread count to 0
       queryClient.setQueryData(notificationQueryKeys.unreadCount(), 0);
     },
     onError: (error: any) => {
-      // Revert optimistic update
       queryClient.invalidateQueries({
         queryKey: notificationQueryKeys.all,
       });
@@ -199,7 +182,6 @@ export const useMarkAllAsRead = () => {
   });
 };
 
-// Hook to delete notification
 export const useDeleteNotification = () => {
   const queryClient = useQueryClient();
 
@@ -207,12 +189,10 @@ export const useDeleteNotification = () => {
     mutationFn: (notificationId: string) =>
       notificationService.deleteNotification(notificationId),
     onMutate: async (notificationId: string) => {
-      // Cancel any outgoing refetches
       await queryClient.cancelQueries({
         queryKey: notificationQueryKeys.all,
       });
 
-      // Get the notification to check if it was unread from infinite query data
       const allQueriesData = queryClient.getQueriesData({
         queryKey: notificationQueryKeys.lists(),
       });
@@ -230,7 +210,6 @@ export const useDeleteNotification = () => {
         }
       }
 
-      // Optimistically remove notification from infinite query data
       queryClient.setQueriesData(
         { queryKey: notificationQueryKeys.lists() },
         (oldData: any) => {
@@ -249,7 +228,6 @@ export const useDeleteNotification = () => {
         }
       );
 
-      // Update unread count if notification was unread
       if (notification && !notification.read) {
         queryClient.setQueryData(
           notificationQueryKeys.unreadCount(),
@@ -260,7 +238,6 @@ export const useDeleteNotification = () => {
       return { notification };
     },
     onError: (error: any) => {
-      // Revert optimistic update
       queryClient.invalidateQueries({
         queryKey: notificationQueryKeys.all,
       });
@@ -275,7 +252,6 @@ export const useDeleteNotification = () => {
   });
 };
 
-// Hook to update notification preferences
 export const useUpdateNotificationPreferences = () => {
   const queryClient = useQueryClient();
 
@@ -283,7 +259,6 @@ export const useUpdateNotificationPreferences = () => {
     mutationFn: (preferences: NotificationPreferences) =>
       notificationService.updatePreferences(preferences),
     onSuccess: (data) => {
-      // Update cached preferences
       queryClient.setQueryData(notificationQueryKeys.preferences(), data);
       toast.success('Notification preferences updated');
     },
@@ -293,12 +268,10 @@ export const useUpdateNotificationPreferences = () => {
   });
 };
 
-// Hook for real-time notification updates
 export const useNotificationRealtime = () => {
   const queryClient = useQueryClient();
 
   const addNewNotification = (notification: Notification) => {
-    // Add to notification list
     queryClient.setQueriesData(
       { queryKey: notificationQueryKeys.lists() },
       (oldData: PaginatedNotifications | undefined) => {
@@ -311,7 +284,6 @@ export const useNotificationRealtime = () => {
       }
     );
 
-    // Update unread count if notification is unread
     if (!notification.read) {
       queryClient.setQueryData(
         notificationQueryKeys.unreadCount(),
@@ -319,7 +291,6 @@ export const useNotificationRealtime = () => {
       );
     }
 
-    // Invalidate stats to get fresh data
     queryClient.invalidateQueries({
       queryKey: notificationQueryKeys.stats(),
     });

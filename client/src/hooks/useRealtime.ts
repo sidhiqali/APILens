@@ -7,23 +7,19 @@ import { useNotificationRealtime } from './useNotifications';
 import { useChangelogRealtime } from './useChangelogs';
 import type { SocketEvents } from '@/services/socket.service';
 
-// Hook for managing real-time connections
 export const useRealtime = () => {
   const { user, isAuthenticated } = useAuth();
   const isConnectedRef = useRef(false);
 
-  // Real-time update hooks
   const dashboardRealtime = useDashboardRealtime();
   const notificationRealtime = useNotificationRealtime();
   const changelogRealtime = useChangelogRealtime();
 
-  // Connect to socket when authenticated
   useEffect(() => {
     if (isAuthenticated && user && !isConnectedRef.current) {
       socketService.connect(user._id);
       isConnectedRef.current = true;
 
-      // Join user-specific room
       if (socketService.isConnected) {
         socketService.joinUserRoom(user._id);
       }
@@ -37,10 +33,8 @@ export const useRealtime = () => {
     };
   }, [isAuthenticated, user]);
 
-  // Handle API change events
   const handleApiChange = useCallback(
     (data: Parameters<SocketEvents['api-change']>[0]) => {
-      // Add to recent activity
       dashboardRealtime.addRecentActivity({
         id: `change-${Date.now()}`,
         type: 'api_change',
@@ -52,7 +46,6 @@ export const useRealtime = () => {
         severity: data.severity as any,
       });
 
-      // Add to changelog
       changelogRealtime.addNewChange(data.apiId, {
         _id: `change-${Date.now()}`,
         apiId: data.apiId,
@@ -64,10 +57,8 @@ export const useRealtime = () => {
         impactScore: data.severity === 'critical' ? 10 : 5,
       });
 
-      // Invalidate dashboard stats
       dashboardRealtime.invalidateStats();
 
-      // Show toast notification
       const message = `${data.changes.length} changes detected in ${data.apiName}`;
       if (data.severity === 'critical') {
         toast.error(message, { duration: 10000 });
@@ -78,13 +69,10 @@ export const useRealtime = () => {
     [dashboardRealtime, changelogRealtime]
   );
 
-  // Handle API health update events
   const handleApiHealthUpdate = useCallback(
     (data: Parameters<SocketEvents['api-health-update']>[0]) => {
-      // Update API health in dashboard
       dashboardRealtime.updateApiHealth(data.apiId, data.status);
 
-      // Add to recent activity
       dashboardRealtime.addRecentActivity({
         id: `health-${Date.now()}`,
         type: 'api_health',
@@ -96,10 +84,8 @@ export const useRealtime = () => {
         severity: data.status === 'unhealthy' ? 'high' : 'low',
       });
 
-      // Invalidate health data
       dashboardRealtime.invalidateHealth();
 
-      // Show toast notification
       if (data.status === 'unhealthy') {
         toast.error(`${data.apiName} is now unhealthy`);
       } else if (
@@ -112,10 +98,8 @@ export const useRealtime = () => {
     [dashboardRealtime]
   );
 
-  // Handle notification events
   const handleNotification = useCallback(
     (data: Parameters<SocketEvents['notification']>[0]) => {
-      // Add notification to the store
       notificationRealtime.addNewNotification({
         _id: data.id,
         userId: user?._id || '',
@@ -130,7 +114,6 @@ export const useRealtime = () => {
         updatedAt: data.timestamp,
       });
 
-      // Show toast notification
       const toastMessage = `${data.title}: ${data.message}`;
       switch (data.severity) {
         case 'critical':
@@ -150,14 +133,11 @@ export const useRealtime = () => {
     [notificationRealtime, user]
   );
 
-  // Handle API check complete events
   const handleApiCheckComplete = useCallback(
     (data: Parameters<SocketEvents['api-check-complete']>[0]) => {
-      // Invalidate API-related queries
       changelogRealtime.invalidateChanges(data.apiId);
       dashboardRealtime.invalidateStats();
 
-      // Add activity if changes were found
       if (data.hasChanges) {
         dashboardRealtime.addRecentActivity({
           id: `check-${Date.now()}`,
@@ -173,7 +153,6 @@ export const useRealtime = () => {
     [dashboardRealtime, changelogRealtime]
   );
 
-  // Setup event listeners
   useEffect(() => {
     if (socketService.isConnected) {
       socketService.on('api-change', handleApiChange);
@@ -204,7 +183,6 @@ export const useRealtime = () => {
   };
 };
 
-// Hook for specific API real-time updates
 export const useApiRealtime = (apiId: string) => {
   const { joinApiRoom, leaveApiRoom } = useRealtime();
 
@@ -221,7 +199,6 @@ export const useApiRealtime = (apiId: string) => {
   };
 };
 
-// Hook for connection status
 export const useConnectionStatus = () => {
   const { isConnected } = useRealtime();
 
@@ -231,20 +208,15 @@ export const useConnectionStatus = () => {
   };
 };
 
-// Hook for real-time dashboard updates
 export const useRealTimeDashboard = () => {
   const { user } = useAuth();
 
   useEffect(() => {
     if (!user) return;
 
-    // Connect to real-time dashboard updates
     socketService.connect();
 
-    // Set up event listeners for dashboard-specific events
     const handleApiChange = () => {
-      // Invalidate dashboard queries when API changes occur
-      // This will be implemented when we integrate with React Query
     };
 
     socketService.on('api-change', handleApiChange);

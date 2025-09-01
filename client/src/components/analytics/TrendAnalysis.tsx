@@ -61,7 +61,6 @@ const TrendAnalysis: React.FC<TrendAnalysisProps> = ({
   >('responseTime');
   const [expandedInsight, setExpandedInsight] = useState<string | null>(null);
 
-  // Generate insights from data
   const insights = useMemo(() => {
     const allInsights: TrendInsight[] = [];
 
@@ -73,14 +72,12 @@ const TrendAnalysis: React.FC<TrendAnalysisProps> = ({
         new Date(d.timestamp).getTime()
       );
 
-      // Calculate trend metrics
       const average = values.reduce((sum, val) => sum + val, 0) / values.length;
       const standardDeviation = Math.sqrt(
         values.reduce((sum, val) => sum + Math.pow(val - average, 2), 0) /
           values.length
       );
 
-      // Linear regression for trend direction
       const n = values.length;
       const sumX = timestamps.reduce((sum, t) => sum + t, 0);
       const sumY = values.reduce((sum, val) => sum + val, 0);
@@ -91,12 +88,10 @@ const TrendAnalysis: React.FC<TrendAnalysisProps> = ({
       const intercept = (sumY - slope * sumX) / n;
       const correlation = calculateCorrelation(timestamps, values);
 
-      // Detect anomalies (values beyond 2 standard deviations)
       const anomalies = values.filter(
         (val) => Math.abs(val - average) > 2 * standardDeviation
       );
 
-      // Generate insights based on analysis
       generateTrendInsights(
         apiData,
         slope,
@@ -118,7 +113,6 @@ const TrendAnalysis: React.FC<TrendAnalysisProps> = ({
       }
     });
 
-    // Sort by severity and confidence
     return allInsights.sort((a, b) => {
       const severityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
       if (severityOrder[a.severity] !== severityOrder[b.severity]) {
@@ -156,7 +150,6 @@ const TrendAnalysis: React.FC<TrendAnalysisProps> = ({
     const strongCorrelation = Math.abs(correlation) > 0.7;
     const moderateCorrelation = Math.abs(correlation) > 0.4;
 
-    // Trend direction insights
     if (strongCorrelation) {
       if (slope > 0) {
         const severity = apiData.metric === 'uptime' ? 'low' : 'high';
@@ -195,7 +188,6 @@ const TrendAnalysis: React.FC<TrendAnalysisProps> = ({
       });
     }
 
-    // Anomaly detection
     if (anomalies.length > 0) {
       const anomalyPercentage = (anomalies.length / apiData.data.length) * 100;
       insights.push({
@@ -210,7 +202,6 @@ const TrendAnalysis: React.FC<TrendAnalysisProps> = ({
       });
     }
 
-    // Baseline comparison
     if (apiData.baseline) {
       const deviationPercentage =
         ((average - apiData.baseline) / apiData.baseline) * 100;
@@ -235,9 +226,8 @@ const TrendAnalysis: React.FC<TrendAnalysisProps> = ({
     timestamps: number[],
     insights: TrendInsight[]
   ) => {
-    // Predict next 7 days
     const lastTimestamp = timestamps[timestamps.length - 1];
-    const futureTimestamp = lastTimestamp + 7 * 24 * 60 * 60 * 1000; // 7 days ahead
+    const futureTimestamp = lastTimestamp + 7 * 24 * 60 * 60 * 1000;
     const predictedValue = slope * futureTimestamp + intercept;
 
     const currentValue = apiData.data[apiData.data.length - 1].value;
@@ -384,7 +374,6 @@ const TrendAnalysis: React.FC<TrendAnalysisProps> = ({
         className
       )}
     >
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
           <Zap className="w-6 h-6 text-purple-600" />
@@ -398,7 +387,6 @@ const TrendAnalysis: React.FC<TrendAnalysisProps> = ({
           </div>
         </div>
 
-        {/* Controls */}
         <div className="flex items-center space-x-4">
           <select
             value={selectedMetric}
@@ -426,7 +414,6 @@ const TrendAnalysis: React.FC<TrendAnalysisProps> = ({
         </div>
       </div>
 
-      {/* Insights */}
       <div className="space-y-4">
         {insights.length > 0 ? (
           insights.map((insight, index) => {
@@ -498,7 +485,6 @@ const TrendAnalysis: React.FC<TrendAnalysisProps> = ({
         )}
       </div>
 
-      {/* Legend */}
       <div className="mt-6 pt-6 border-t border-gray-200">
         <h4 className="text-sm font-medium text-gray-900 mb-3">
           Analysis Depth: {analysisDepth}

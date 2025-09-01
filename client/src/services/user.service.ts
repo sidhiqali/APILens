@@ -4,7 +4,6 @@ import { User, ApiResponse, PaginatedResponse } from '@/types';
 class UserService {
   private baseUrl = '/users';
 
-  // Get current user profile
   async getProfile(): Promise<ApiResponse<User>> {
     const response = await apiClient.get<ApiResponse<User>>(
       `${this.baseUrl}/profile`
@@ -12,7 +11,6 @@ class UserService {
     return response;
   }
 
-  // Update user profile
   async updateProfile(userData: Partial<User>): Promise<ApiResponse<User>> {
     const response = await apiClient.patch<ApiResponse<User>>(
       `${this.baseUrl}/profile`,
@@ -21,7 +19,6 @@ class UserService {
     return response;
   }
 
-  // Upload profile picture
   async uploadProfilePicture(
     file: File
   ): Promise<ApiResponse<{ profilePicture: string }>> {
@@ -40,7 +37,6 @@ class UserService {
     return response;
   }
 
-  // Delete profile picture
   async deleteProfilePicture(): Promise<ApiResponse<void>> {
     const response = await apiClient.delete<ApiResponse<void>>(
       `${this.baseUrl}/profile-picture`
@@ -48,7 +44,6 @@ class UserService {
     return response;
   }
 
-  // Get user statistics
   async getUserStats(): Promise<
     ApiResponse<{
       totalApis: number;
@@ -65,7 +60,6 @@ class UserService {
     return response;
   }
 
-  // Get user activity
   async getUserActivity(
     page = 1,
     limit = 10,
@@ -94,7 +88,6 @@ class UserService {
     return response;
   }
 
-  // User preferences
   async getUserPreferences(): Promise<
     ApiResponse<{
       theme: 'light' | 'dark' | 'system';
@@ -146,7 +139,6 @@ class UserService {
     return response;
   }
 
-  // Account management
   async deleteAccount(): Promise<ApiResponse<void>> {
     const response = await apiClient.delete<ApiResponse<void>>(
       `${this.baseUrl}/account`
@@ -161,7 +153,6 @@ class UserService {
     return response;
   }
 
-  // Admin functions (if user has admin role)
   async getAllUsers(
     page = 1,
     limit = 10,

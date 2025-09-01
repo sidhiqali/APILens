@@ -98,14 +98,12 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats, loading = false }) => {
 
   return (
     <div className="space-y-6">
-      {/* Primary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {cards.map((card, index) => (
           <StatCard key={index} {...card} />
         ))}
       </div>
 
-      {/* Secondary Stats */}
       {stats && (stats.avgResponseTime || stats.uptimePercentage) && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {additionalCards.map((card, index) => (

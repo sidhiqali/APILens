@@ -174,27 +174,32 @@ export class SmartSchedulerService {
     return hasBreakingChanges ? 'breaking' : 'schema';
   }
 
-  private async performSingleHealthCheck(api: any): Promise<{
-    healthStatus: string;
-  }> {
+  private async performSingleHealthCheck(api: any): Promise<{ healthStatus: string }> {
     try {
-      const response = await axios.get(api.openApiUrl, {
+      const baseUrl = api.openApiUrl
+        .replace(/\/[^/]*\.json.*$/, '')
+        .replace(/\/[^/]*\.yaml.*$/, '');
+
+      const healthUrl = `${baseUrl}/health`;
+      const response = await axios.get(healthUrl, {
         timeout: 10000,
         headers: { 'User-Agent': 'APILens-HealthChecker/1.0' },
       });
 
       if (response.status >= 500) {
         return { healthStatus: 'error' };
-      } else if (response.status >= 400) {
+      }
+      if (response.status >= 400) {
         return { healthStatus: 'unhealthy' };
       }
 
+      const status = String(response.data?.status || '').toLowerCase();
+      if (status === 'error') return { healthStatus: 'error' };
+      if (status === 'unhealthy') return { healthStatus: 'unhealthy' };
+      if (status === 'degraded') return { healthStatus: 'unhealthy' };
       return { healthStatus: 'healthy' };
     } catch (error) {
-      this.logger.warn(
-        `Health check failed for ${api.apiName}: ${error.message}`,
-      );
-      
+      this.logger.warn(`Health check failed for ${api.apiName}: ${error.message}`);
       return { healthStatus: 'error' };
     }
   }

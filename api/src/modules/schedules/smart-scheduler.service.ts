@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import axios from 'axios';
 import { ApisService } from '../apis/apis.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationsGateway } from '../../gateways/notifications.gateway';
@@ -12,9 +13,22 @@ export class SmartSchedulerService {
     private readonly apisService: ApisService,
     private readonly notificationsService: NotificationsService,
     private readonly notificationsGateway: NotificationsGateway,
-  ) {}
+  ) {
+    void this.initializeHealthStatuses();
+  }
 
-  @Cron('0 */6 * * *')
+  private async initializeHealthStatuses(): Promise<void> {
+    try {
+      await this.apisService.initializeApiHealthStatuses();
+      this.logger.log('Health status initialization completed');
+    } catch (error) {
+      this.logger.error(
+        `Failed to initialize health statuses: ${error.message}`,
+      );
+    }
+  }
+
+  @Cron('*/2 * * * *')
   async handleApiChecking() {
     this.logger.log('Starting API monitoring cycle...');
 
@@ -50,8 +64,6 @@ export class SmartSchedulerService {
 
   private async checkSingleApi(apiId: string): Promise<void> {
     try {
-      this.logger.debug(`Checking API: ${apiId}`);
-
       const api = await this.apisService.getApiByIdInternal(apiId);
       if (!api) {
         this.logger.error(`API not found: ${apiId}`);
@@ -69,14 +81,17 @@ export class SmartSchedulerService {
         },
       );
 
+      const healthResult = await this.performSingleHealthCheck(api);
       const result = await this.apisService.checkApiForChanges(apiId);
 
-      const healthStatus = result.hasChanges ? 'unhealthy' : 'healthy';
+      let finalHealthStatus = healthResult.healthStatus;
+      if (result.hasChanges && finalHealthStatus === 'healthy') {
+        finalHealthStatus = 'warning';
+      }
 
       await this.apisService.updateApiHealth(apiId, {
-        status: healthStatus,
+        status: finalHealthStatus,
         lastChecked: new Date(),
-        responseTime: 200,
       });
 
       this.notificationsGateway.broadcastAPIUpdate(
@@ -85,9 +100,8 @@ export class SmartSchedulerService {
         {
           apiId,
           apiName: api.apiName,
-          status: healthStatus,
-          responseTime: 200,
-          uptime: 99.9,
+          status: finalHealthStatus,
+          uptime: this.calculateUptime(api),
           lastChecked: new Date().toISOString(),
           changes: result.changes || [],
         },
@@ -118,24 +132,35 @@ export class SmartSchedulerService {
         );
       }
     } catch (error) {
-      this.logger.error(`Failed to check API ${apiId}: ${error.message}`);
+      this.logger.error(`Error checking API ${apiId}: ${error.message}`);
+      
+      try {
+        await this.apisService.updateApiHealth(apiId, {
+          status: 'error',
+          lastChecked: new Date(),
+        });
 
-      const api = await this.apisService.getApiByIdInternal(apiId);
-      if (api) {
-        this.notificationsGateway.broadcastAPIUpdate(
-          apiId,
-          api.userId.toString(),
-          {
+        const api = await this.apisService.getApiByIdInternal(apiId);
+        if (api) {
+          this.notificationsGateway.broadcastAPIUpdate(
             apiId,
-            apiName: api.apiName,
-            status: 'unhealthy',
-            lastChecked: new Date().toISOString(),
-            error: error.message,
-          },
+            api.userId.toString(),
+            {
+              apiId,
+              apiName: api.apiName,
+              status: 'error',
+              lastChecked: new Date().toISOString(),
+              error: error.message,
+            },
+          );
+        }
+
+        await this.notificationsService.notifyApiError(apiId, error.message);
+      } catch (updateError) {
+        this.logger.error(
+          `Failed to update API health after error: ${updateError.message}`,
         );
       }
-
-      await this.notificationsService.notifyApiError(apiId, error.message);
     }
   }
 
@@ -147,6 +172,50 @@ export class SmartSchedulerService {
     );
 
     return hasBreakingChanges ? 'breaking' : 'schema';
+  }
+
+  private async performSingleHealthCheck(api: any): Promise<{
+    healthStatus: string;
+  }> {
+    try {
+      const response = await axios.get(api.openApiUrl, {
+        timeout: 10000,
+        headers: { 'User-Agent': 'APILens-HealthChecker/1.0' },
+      });
+
+      if (response.status >= 500) {
+        return { healthStatus: 'error' };
+      } else if (response.status >= 400) {
+        return { healthStatus: 'unhealthy' };
+      }
+
+      return { healthStatus: 'healthy' };
+    } catch (error) {
+      this.logger.warn(
+        `Health check failed for ${api.apiName}: ${error.message}`,
+      );
+      
+      return { healthStatus: 'error' };
+    }
+  }
+
+  private calculateUptime(api: any): number {
+    const now = new Date();
+    const lastChecked = api.lastChecked ? new Date(api.lastChecked) : now;
+    const timeDiff = now.getTime() - lastChecked.getTime();
+    
+    if (
+      timeDiff < 3600000 &&
+      ['healthy', 'warning'].includes(api.healthStatus)
+    ) {
+      return 99.9;
+    } else if (['unhealthy', 'degraded'].includes(api.healthStatus)) {
+      return 95.0;
+    } else if (api.healthStatus === 'error') {
+      return 85.0;
+    }
+    
+    return 99.0;
   }
 
   @Cron(CronExpression.EVERY_HOUR)

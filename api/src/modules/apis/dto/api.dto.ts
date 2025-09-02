@@ -2,7 +2,6 @@ export class ApiHealthDto {
   id: string;
   apiName: string;
   status: 'healthy' | 'unhealthy' | 'checking' | 'error';
-  responseTime?: number;
   lastChecked: Date;
   error?: string;
   uptime?: number;

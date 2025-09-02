@@ -7,7 +7,6 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Brand colors matching your existing theme
         primary: {
           50: '#eff6ff',
           100: '#dbeafe',

@@ -216,10 +216,6 @@ export class ApisService {
 
       const previousHealthStatus = api.healthStatus;
 
-      this.logger.debug(
-        `Health status check for ${api.apiName}: previous=${previousHealthStatus}, new=${healthStatus}`,
-      );
-
       await this.apiModel.findByIdAndUpdate(apiId, {
         healthStatus,
         lastChecked: new Date(),
@@ -400,12 +396,10 @@ export class ApisService {
     const api = await this.getApiById(id, userId);
 
     try {
-      const startTime = Date.now();
       await axios.get(api.openApiUrl, {
         timeout: 10000,
         headers: { 'User-Agent': 'API-Lens/1.0' },
       });
-      const responseTime = Date.now() - startTime;
 
       await this.apiModel.findByIdAndUpdate(id, {
         healthStatus: 'healthy',
@@ -417,7 +411,6 @@ export class ApisService {
         id: api.id,
         apiName: api.apiName,
         status: 'healthy',
-        responseTime,
         lastChecked: new Date(),
         uptime: 100,
       };
@@ -612,16 +605,12 @@ export class ApisService {
     healthData: {
       status: string;
       lastChecked: Date;
-      responseTime?: number;
     },
   ): Promise<void> {
     await this.apiModel.findByIdAndUpdate(apiId, {
       $set: {
         healthStatus: healthData.status,
         lastChecked: healthData.lastChecked,
-        ...(healthData.responseTime && {
-          responseTime: healthData.responseTime,
-        }),
         updatedAt: new Date(),
       },
     });
@@ -669,23 +658,19 @@ export class ApisService {
   async validateApiUrl(url: string): Promise<{
     valid: boolean;
     accessible: boolean;
-    responseTime?: number;
     error?: string;
   }> {
     try {
       new URL(url);
 
-      const startTime = Date.now();
       const response = await axios.head(url, {
         timeout: 10000,
         validateStatus: () => true,
       });
-      const responseTime = Date.now() - startTime;
 
       return {
         valid: true,
         accessible: response.status < 500,
-        responseTime,
       };
     } catch (error) {
       return {
@@ -960,5 +945,83 @@ export class ApisService {
       issues,
       lastChecked: api.lastChecked,
     };
+  }
+
+  async fixHealthStatuses(
+    userId: Types.ObjectId,
+  ): Promise<{ message: string; updated: number }> {
+    try {
+      this.logger.log('Fixing health statuses...');
+
+      const result = await this.apiModel.updateMany(
+        { userId },
+        {
+          $set: {
+            healthStatus: 'healthy',
+            lastChecked: new Date(),
+            lastHealthCheck: new Date(),
+          },
+        },
+      );
+
+      this.logger.log(
+        `Fixed health statuses for ${result.modifiedCount} APIs.`,
+      );
+      return {
+        message: `Successfully updated ${result.modifiedCount} APIs`,
+        updated: result.modifiedCount,
+      };
+    } catch (error) {
+      this.logger.error('Error fixing health statuses:', error.message);
+      throw new Error(`Failed to fix health statuses: ${error.message}`);
+    }
+  }
+
+  async initializeApiHealthStatuses(): Promise<void> {
+    this.logger.log(
+      'Initializing health statuses for APIs without health data...',
+    );
+    
+    try {
+      const allApis = await this.apiModel.find({});
+      let needsUpdate = 0;
+
+      for (const api of allApis) {
+        const needsHealthUpdate =
+          !api.healthStatus ||
+          api.healthStatus === 'unknown' ||
+          !api.lastChecked;
+
+        if (needsHealthUpdate) {
+          needsUpdate++;
+          
+          try {
+            const initialStatus = api.isActive ? 'healthy' : 'inactive';
+
+            await this.apiModel.findByIdAndUpdate(api._id, {
+              healthStatus: initialStatus,
+              lastChecked: new Date(),
+              lastHealthCheck: new Date(),
+            });
+          } catch (error) {
+            this.logger.error(
+              `Failed to update health status for ${api.apiName}: ${error.message}`,
+            );
+          }
+        }
+      }
+
+      if (needsUpdate === 0) {
+        this.logger.log('All APIs already have proper health status');
+      } else {
+        this.logger.log(
+          `Successfully updated health status for ${needsUpdate} APIs`,
+        );
+      }
+    } catch (error) {
+      this.logger.error(
+        `Error during health status initialization: ${error.message}`,
+      );
+    }
   }
 }

@@ -20,6 +20,11 @@ import {
   LineChart,
   Line,
 } from 'recharts';
+import type { Api } from '@/types';
+
+interface StatusCount {
+  [key: string]: number;
+}
 
 const AnalyticsPage = () => {
   const { data: apis, isLoading } = useApis();
@@ -46,8 +51,8 @@ const AnalyticsPage = () => {
 
   const apiList = apis || [];
 
-  const statusCounts = apiList.reduce((acc: any, api: any) => {
-    const status = api.status || 'unknown';
+  const statusCounts = apiList.reduce((acc: StatusCount, api: Api) => {
+    const status = api.healthStatus || 'unknown';
     acc[status] = (acc[status] || 0) + 1;
     return acc;
   }, {});
@@ -64,14 +69,14 @@ const AnalyticsPage = () => {
     { name: 'Unknown', value: 1, color: '#F59E0B' }
   ];
 
-  const healthScoreData = apiList.map((api: any) => ({
-    name: api.apiName || api.name || 'Unknown',
-    score: api.healthScore || Math.floor(Math.random() * 30) + 70,
+  const healthScoreData = apiList.map((api: Api) => ({
+    name: api.apiName || 'Unknown',
+    score: 90,
   }));
 
-  const changeFrequencyData = apiList.map((api: any) => ({
-    name: api.apiName || api.name || 'Unknown',
-    changes: api.totalChanges || Math.floor(Math.random() * 20),
+  const changeFrequencyData = apiList.map((api: Api) => ({
+    name: api.apiName || 'Unknown',
+    changes: api.changeCount || 0,
   }));
 
   const displayChangeData = changeFrequencyData.length > 0 ? changeFrequencyData : [
@@ -86,17 +91,17 @@ const AnalyticsPage = () => {
     <RouteGuard requireAuth={true}>
       <Layout>
         <div className="min-h-screen bg-gray-50">
-          <div className="max-w-7xl mx-auto p-6">
+          <div className="p-6 mx-auto max-w-7xl">
             <div className="mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Analytics Dashboard</h1>
+              <h1 className="mb-2 text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
               <p className="text-gray-600">Comprehensive insights into your API ecosystem</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-4">
+              <div className="p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
                 <div className="flex items-center">
                   <div className="p-2 bg-blue-100 rounded-lg">
-                    <BarChart3 className="h-6 w-6 text-blue-600" />
+                    <BarChart3 className="w-6 h-6 text-blue-600" />
                   </div>
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">Total APIs</p>
@@ -105,10 +110,10 @@ const AnalyticsPage = () => {
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <div className="p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
                 <div className="flex items-center">
                   <div className="p-2 bg-green-100 rounded-lg">
-                    <Activity className="h-6 w-6 text-green-600" />
+                    <Activity className="w-6 h-6 text-green-600" />
                   </div>
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">Healthy APIs</p>
@@ -119,10 +124,10 @@ const AnalyticsPage = () => {
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <div className="p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
                 <div className="flex items-center">
                   <div className="p-2 bg-red-100 rounded-lg">
-                    <AlertTriangle className="h-6 w-6 text-red-600" />
+                    <AlertTriangle className="w-6 h-6 text-red-600" />
                   </div>
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">Issues</p>
@@ -133,10 +138,10 @@ const AnalyticsPage = () => {
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <div className="p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
                 <div className="flex items-center">
                   <div className="p-2 bg-yellow-100 rounded-lg">
-                    <TrendingUp className="h-6 w-6 text-yellow-600" />
+                    <TrendingUp className="w-6 h-6 text-yellow-600" />
                   </div>
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">Avg. Uptime</p>
@@ -148,7 +153,7 @@ const AnalyticsPage = () => {
 
             <div className="mb-8">
               <div className="border-b border-gray-200">
-                <nav className="-mb-px flex space-x-8">
+                <nav className="flex -mb-px space-x-8">
                   {tabs.map((tab) => {
                     const Icon = tab.icon;
                     return (
@@ -161,7 +166,7 @@ const AnalyticsPage = () => {
                             : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                         }`}
                       >
-                        <Icon className="h-4 w-4" />
+                        <Icon className="w-4 h-4" />
                         <span>{tab.label}</span>
                       </button>
                     );
@@ -172,9 +177,9 @@ const AnalyticsPage = () => {
 
             <div className="space-y-8">
               {activeTab === 'overview' && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">API Status Distribution</h3>
+                <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+                  <div className="p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
+                    <h3 className="mb-4 text-lg font-semibold text-gray-900">API Status Distribution</h3>
                     <div className="h-64">
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
@@ -198,8 +203,8 @@ const AnalyticsPage = () => {
                     </div>
                   </div>
 
-                  <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">API Change Frequency</h3>
+                  <div className="p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
+                    <h3 className="mb-4 text-lg font-semibold text-gray-900">API Change Frequency</h3>
                     <div className="h-64">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={displayChangeData}>
@@ -221,48 +226,42 @@ const AnalyticsPage = () => {
               )}
 
               {activeTab === 'status' && (
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Detailed API Status</h3>
+                <div className="p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
+                  <h3 className="mb-4 text-lg font-semibold text-gray-900">Detailed API Status</h3>
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
                         <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                             API Name
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                             Status
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                             Last Checked
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Response Time
                           </th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {apiList.map((api: any) => (
-                          <tr key={api._id}>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                              {api.apiName || api.name || 'Unknown'}
+                        {apiList.map((api: Api) => (
+                          <tr key={api.id}>
+                            <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
+                              {api.apiName || 'Unknown'}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                api.status === 'healthy' 
+                                api.healthStatus === 'healthy' 
                                   ? 'bg-green-100 text-green-800'
-                                  : api.status === 'error'
+                                  : api.healthStatus === 'error'
                                   ? 'bg-red-100 text-red-800'
                                   : 'bg-yellow-100 text-yellow-800'
                               }`}>
-                                {api.status || 'Unknown'}
+                                {api.healthStatus || 'Unknown'}
                               </span>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
                               {api.lastChecked ? new Date(api.lastChecked).toLocaleString() : 'Never'}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {api.responseTime || '--'} ms
                             </td>
                           </tr>
                         ))}
@@ -273,8 +272,8 @@ const AnalyticsPage = () => {
               )}
 
               {activeTab === 'health' && (
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Health Score by API</h3>
+                <div className="p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
+                  <h3 className="mb-4 text-lg font-semibold text-gray-900">Health Score by API</h3>
                   <div className="h-96">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={healthScoreData}>
@@ -295,8 +294,8 @@ const AnalyticsPage = () => {
               )}
 
               {activeTab === 'trends' && (
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Health Score Trends</h3>
+                <div className="p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
+                  <h3 className="mb-4 text-lg font-semibold text-gray-900">Health Score Trends</h3>
                   <div className="h-96">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={healthScoreData}>
@@ -323,7 +322,7 @@ const AnalyticsPage = () => {
               )}
             </div>
 
-            <div className="mt-12 text-center text-gray-500 text-sm">
+            <div className="mt-12 text-sm text-center text-gray-500">
               <p>Analytics data is updated in real-time. Last refresh: {new Date().toLocaleTimeString()}</p>
             </div>
           </div>

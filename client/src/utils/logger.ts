@@ -9,7 +9,7 @@ const noop: LogMethod = () => {};
 export const logger = {
   log: (isDev ? console.log : noop) as LogMethod,
   warn: (isDev ? console.warn : noop) as LogMethod,
-  error: console.error as LogMethod, // keep errors in production
+  error: console.error as LogMethod, 
 };
 
 export default logger;

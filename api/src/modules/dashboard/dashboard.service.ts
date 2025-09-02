@@ -155,7 +155,6 @@ export class DashboardService {
       unreadNotifications,
       recentNotifications,
       mostActiveApi,
-      avgResponseTime: 0,
       uptimePercentage,
     };
   }

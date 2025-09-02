@@ -61,12 +61,6 @@ export class DashboardStatsDto {
     changeCount: number;
   } | null;
 
-  @ApiProperty({
-    description: 'Average response time in milliseconds',
-    example: 245,
-  })
-  avgResponseTime: number;
-
   @ApiProperty({ description: 'API uptime percentage', example: 98.5 })
   uptimePercentage: number;
 }
@@ -139,13 +133,6 @@ export class ApiHealthSummaryDto {
     example: 'healthy',
   })
   status: 'healthy' | 'unhealthy' | 'checking' | 'error';
-
-  @ApiProperty({
-    description: 'Response time in milliseconds',
-    example: 150,
-    required: false,
-  })
-  responseTime?: number;
 
   @ApiProperty({
     description: 'Last health check timestamp',

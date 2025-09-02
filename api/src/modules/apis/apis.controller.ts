@@ -418,6 +418,13 @@ export class ApisController {
     };
   }
 
+  @Post('fix-health-statuses')
+  async fixHealthStatuses(
+    @Request() req: any,
+  ): Promise<{ message: string; updated: number }> {
+    return this.apisService.fixHealthStatuses(req.user.userId);
+  }
+
   @Post('check-all')
   @ApiOperation({
     summary: 'Trigger check for all APIs',
@@ -502,7 +509,6 @@ export class ApisController {
       properties: {
         valid: { type: 'boolean' },
         accessible: { type: 'boolean' },
-        responseTime: { type: 'number' },
         error: { type: 'string' },
       },
     },

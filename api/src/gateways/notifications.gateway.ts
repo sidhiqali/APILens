@@ -44,7 +44,7 @@ export class NotificationsGateway
         return;
       }
 
-      const payload = this.jwtService.verify(token) as any;
+      const payload = this.jwtService.verify(token);
       const userId = payload?.sub || payload?.userId;
       if (!userId) {
         this.logger.warn(`Client ${client.id} provided token without user id`);

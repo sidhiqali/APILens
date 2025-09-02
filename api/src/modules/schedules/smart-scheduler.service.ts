@@ -133,7 +133,7 @@ export class SmartSchedulerService {
       }
     } catch (error) {
       this.logger.error(`Error checking API ${apiId}: ${error.message}`);
-      
+
       try {
         await this.apisService.updateApiHealth(apiId, {
           status: 'error',
@@ -174,7 +174,9 @@ export class SmartSchedulerService {
     return hasBreakingChanges ? 'breaking' : 'schema';
   }
 
-  private async performSingleHealthCheck(api: any): Promise<{ healthStatus: string }> {
+  private async performSingleHealthCheck(
+    api: any,
+  ): Promise<{ healthStatus: string }> {
     try {
       const baseUrl = api.openApiUrl
         .replace(/\/[^/]*\.json.*$/, '')
@@ -199,7 +201,9 @@ export class SmartSchedulerService {
       if (status === 'degraded') return { healthStatus: 'unhealthy' };
       return { healthStatus: 'healthy' };
     } catch (error) {
-      this.logger.warn(`Health check failed for ${api.apiName}: ${error.message}`);
+      this.logger.warn(
+        `Health check failed for ${api.apiName}: ${error.message}`,
+      );
       return { healthStatus: 'error' };
     }
   }
@@ -208,7 +212,7 @@ export class SmartSchedulerService {
     const now = new Date();
     const lastChecked = api.lastChecked ? new Date(api.lastChecked) : now;
     const timeDiff = now.getTime() - lastChecked.getTime();
-    
+
     if (
       timeDiff < 3600000 &&
       ['healthy', 'warning'].includes(api.healthStatus)
@@ -219,7 +223,7 @@ export class SmartSchedulerService {
     } else if (api.healthStatus === 'error') {
       return 85.0;
     }
-    
+
     return 99.0;
   }
 

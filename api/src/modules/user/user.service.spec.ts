@@ -47,12 +47,21 @@ describe('UserService.updateProfile', () => {
   it('throws NotFound when user missing', async () => {
     const model: any = { findById: jest.fn().mockResolvedValue(null) };
     const service = new UserService(model);
-    await expect(service.updateProfile('u1', { email: 'x@y.com' })).rejects.toBeInstanceOf(NotFoundException);
+    await expect(
+      service.updateProfile('u1', { email: 'x@y.com' }),
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it('throws Conflict when email already in use', async () => {
-    const userDoc: any = { _id: 'u1', email: 'a@a.com', isActive: true, save: jest.fn() };
+    const userDoc: any = {
+      _id: 'u1',
+      email: 'a@a.com',
+      isActive: true,
+      save: jest.fn(),
+    };
     const { service } = makeService(userDoc, true);
-    await expect(service.updateProfile('u1', { email: 'a2@a.com' })).rejects.toBeInstanceOf(ConflictException);
+    await expect(
+      service.updateProfile('u1', { email: 'a2@a.com' }),
+    ).rejects.toBeInstanceOf(ConflictException);
   });
 });

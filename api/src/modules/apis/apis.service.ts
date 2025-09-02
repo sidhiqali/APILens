@@ -34,16 +34,32 @@ export class ApisService {
   ) {}
 
   async getAllApis(userId: string): Promise<ApiResponseDto[]> {
+    const userObjectId = new Types.ObjectId(userId);
     const apis = await this.apiModel
-      .find({ userId: new Types.ObjectId(userId) })
-      .select(
-        '_id apiName openApiUrl description tags isActive healthStatus checkFrequency lastChecked userId createdAt updatedAt version',
-      )
+      .find({ userId: userObjectId })
       .sort({ createdAt: -1 })
-      .lean()
-      .maxTimeMS(10000);
+      .lean();
 
-    return apis.map((api) => this.toResponseDto(api));
+    // Get specification change counts for all APIs in a single aggregation
+    const apiIds = apis.map((api) => api._id);
+    const changeCounts = await this.apiChangeModel.aggregate([
+      { $match: { apiId: { $in: apiIds } } },
+      { $group: { _id: '$apiId', count: { $sum: 1 } } },
+    ]);
+
+    // Create a map for quick lookup
+    const changeCountMap = new Map();
+    changeCounts.forEach((item) => {
+      changeCountMap.set(item._id.toString(), item.count);
+    });
+
+    // Merge change counts with API data
+    const apisWithChangeCounts = apis.map((api) => ({
+      ...api,
+      changeCount: changeCountMap.get((api._id as any).toString()) || 0,
+    }));
+
+    return apisWithChangeCounts.map((api) => this.toResponseDto(api));
   }
 
   async getApisToCheck(): Promise<Api[]> {
@@ -450,28 +466,26 @@ export class ApisService {
   async getApiStats(userId: string): Promise<ApiStatsDto> {
     const userObjectId = new Types.ObjectId(userId);
 
-    const [
-      totalApis,
-      activeApis,
-      healthyApis,
-      unhealthyApis,
-      totalChangesResult,
-    ] = await Promise.all([
-      this.apiModel.countDocuments({ userId: userObjectId }),
-      this.apiModel.countDocuments({ userId: userObjectId, isActive: true }),
-      this.apiModel.countDocuments({
-        userId: userObjectId,
-        healthStatus: 'healthy',
-      }),
-      this.apiModel.countDocuments({
-        userId: userObjectId,
-        healthStatus: { $in: ['unhealthy', 'error'] },
-      }),
-      this.apiModel.aggregate([
-        { $match: { userId: userObjectId } },
-        { $group: { _id: null, total: { $sum: '$changeCount' } } },
-      ]),
-    ]);
+    // Get user's API IDs for change counting
+    const userApis = await this.apiModel
+      .find({ userId: userObjectId }, '_id')
+      .lean();
+    const apiIds = userApis.map((api: any) => api._id);
+
+    const [totalApis, activeApis, healthyApis, unhealthyApis, totalChanges] =
+      await Promise.all([
+        this.apiModel.countDocuments({ userId: userObjectId }),
+        this.apiModel.countDocuments({ userId: userObjectId, isActive: true }),
+        this.apiModel.countDocuments({
+          userId: userObjectId,
+          healthStatus: 'healthy',
+        }),
+        this.apiModel.countDocuments({
+          userId: userObjectId,
+          healthStatus: { $in: ['unhealthy', 'error'] },
+        }),
+        this.apiChangeModel.countDocuments({ apiId: { $in: apiIds } }),
+      ]);
 
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -486,7 +500,7 @@ export class ApisService {
       healthyApis,
       unhealthyApis,
       recentChanges,
-      totalChanges: totalChangesResult[0]?.total || 0,
+      totalChanges,
     };
   }
 
@@ -607,13 +621,13 @@ export class ApisService {
       lastChecked: Date;
     },
   ): Promise<void> {
-    await this.apiModel.findByIdAndUpdate(apiId, {
-      $set: {
-        healthStatus: healthData.status,
-        lastChecked: healthData.lastChecked,
-        updatedAt: new Date(),
-      },
-    });
+    const updateData = {
+      healthStatus: healthData.status,
+      lastChecked: healthData.lastChecked,
+      updatedAt: new Date(),
+    };
+
+    await this.apiModel.findByIdAndUpdate(apiId, { $set: updateData });
   }
 
   async updateApiHealthScores(): Promise<void> {
@@ -981,7 +995,7 @@ export class ApisService {
     this.logger.log(
       'Initializing health statuses for APIs without health data...',
     );
-    
+
     try {
       const allApis = await this.apiModel.find({});
       let needsUpdate = 0;
@@ -994,7 +1008,7 @@ export class ApisService {
 
         if (needsHealthUpdate) {
           needsUpdate++;
-          
+
           try {
             const initialStatus = api.isActive ? 'healthy' : 'inactive';
 

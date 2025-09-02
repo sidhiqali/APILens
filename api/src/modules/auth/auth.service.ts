@@ -244,8 +244,7 @@ export class AuthService {
         this.configService.get<string>('JWT_REFRESH_SECRET') ||
         this.configService.get<string>('jwt.secret') ||
         this.configService.get<string>('JWT_SECRET'),
-      expiresIn:
-        this.configService.get<string>('jwt.refreshExpiresIn') || '7d',
+      expiresIn: this.configService.get<string>('jwt.refreshExpiresIn') || '7d',
     });
 
     return { accessToken, refreshToken };

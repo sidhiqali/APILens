@@ -46,12 +46,14 @@ export class APIDetailViewProvider implements vscode.WebviewViewProvider {
         try {
             const api = await this.apiService.getApi(apiId);
             const changelogs = await this.apiService.getChangelogs({ apiId, limit: 10 });
+            const issues = await this.apiService.getApiHealthIssues(apiId);
             
             this.sendMessage({
                 type: 'apiDetailData',
                 data: {
                     api,
-                    changelogs
+                    changelogs,
+                    issues
                 }
             });
         } catch (error: any) {
@@ -271,6 +273,7 @@ export class APIDetailViewProvider implements vscode.WebviewViewProvider {
         function renderApiDetail() {
             const api = currentData.api || {};
             const changelogs = currentData.changelogs || [];
+            const issues = currentData.issues || [];
             
             const content = document.getElementById('content');
             content.innerHTML = \`
@@ -319,6 +322,20 @@ export class APIDetailViewProvider implements vscode.WebviewViewProvider {
                         \`).join('') :
                         '<div style="color: var(--vscode-descriptionForeground); font-style: italic;">No recent changes</div>'
                     }
+                </div>
+                
+                <div class="changelog-section" id="issues-section" style="margin-top:16px;">
+                    <h3>Active Issues</h3>
+                    \${issues.length > 0 ? issues.map(iss => \`
+                        <div class="changelog-item">
+                            <div class="changelog-header">
+                                <span class="changelog-type">\${(iss.severity || iss.priority || 'medium').toString().toUpperCase()}</span>
+                                <span class="changelog-date">\${new Date(iss.timestamp || iss.createdAt || Date.now()).toLocaleString()}</span>
+                            </div>
+                            <div><strong>\${iss.title || 'Issue'}</strong></div>
+                            <div style="font-size:12px; color: var(--vscode-descriptionForeground)">\${iss.description || ''}</div>
+                        </div>
+                    \`).join('') : '<div style="color: var(--vscode-descriptionForeground); font-style: italic;">No active issues</div>'}
                 </div>
             \`;
         }

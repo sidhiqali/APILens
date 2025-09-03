@@ -77,6 +77,13 @@ export function activate(context: vscode.ExtensionContext) {
         webviewProvider.navigateTo('/changes');
     });
 
+    // Allow webview to open API detail by id
+    const showApiDetailCommand = vscode.commands.registerCommand('apilens.showApiDetail', (id: string) => {
+        if (id) {
+            apiDetailProvider.showApiDetail(id);
+        }
+    });
+
     // Start Phase 3 services
     webSocketService.connect();
     statusBarService.show();
@@ -142,7 +149,8 @@ export function activate(context: vscode.ExtensionContext) {
         addApiCommand,
         viewAnalyticsCommand,
         viewNotificationsCommand,
-        viewChangesCommand
+        viewChangesCommand,
+        showApiDetailCommand
     );
 
     // Auto-refresh setup

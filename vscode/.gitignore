@@ -3,6 +3,7 @@ dist/
 out/
 node_modules/
 build/
+*.vsix
 
 # Logs
 logs

@@ -137,6 +137,11 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
             case 'getChangelogs':
                 await this.handleGetChangelogs(message.params);
                 break;
+            case 'openApiDetail':
+                try {
+                    await vscode.commands.executeCommand('apilens.showApiDetail', message.id);
+                } catch {}
+                break;
             case 'updateSettings':
                 await this.handleUpdateSettings(message.data);
                 break;
@@ -2383,6 +2388,22 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
                 case 'openApiUrlTestResult':
                     handleOpenApiUrlTestResult(message.data);
                     break;
+                case 'notificationsData':
+                    try {
+                        appData.notifications = message.data || [];
+                        if (currentTab === 'notifications') {
+                            renderNotifications();
+                        }
+                    } catch {}
+                    break;
+                case 'analyticsData':
+                    try {
+                        appData.analytics = message.data || {};
+                        if (currentTab === 'analytics') {
+                            renderAnalytics();
+                        }
+                    } catch {}
+                    break;
             }
         });
         
@@ -3783,6 +3804,9 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
                 }
             }
         }
+
+        // Override navigation to open API Detail panel in VS Code
+        function goToApi(apiId) { vscode.postMessage({ type: 'openApiDetail', id: apiId }); }
         
         function renderNotifications() {
             if (!appData.notifications) {
@@ -3871,7 +3895,7 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
             
             return sortedNotifications.map(notification => \`
                 <div class="notification-item \${notification.type || 'info'} \${notification.priority || 'medium'} \${notification.isRead ? 'read' : 'unread'}" 
-                     data-notification-id="\${notification._id || notification.id}">
+                     data-notification-id="\${notification._id || notification.id}" onclick="openNotification('\${notification._id || notification.id}')" style="cursor:pointer;">
                     <div class="notification-header">
                         <div class="notification-icon">
                             \${getNotificationIcon(notification.type, notification.priority)}
@@ -3891,11 +3915,11 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
                         </div>
                         <div class="notification-actions-quick">
                             \${!notification.isRead ? \`
-                                <button class="btn-icon" onclick="markNotificationAsRead('\${notification._id || notification.id}')" title="Mark as read">
+                                <button class="btn-icon" onclick="event.stopPropagation(); markNotificationAsRead('\${notification._id || notification.id}')" title="Mark as read">
                                     ✓
                                 </button>
                             \` : ''}
-                            <button class="btn-icon" onclick="deleteNotification('\${notification._id || notification.id}')" title="Delete">
+                            <button class="btn-icon" onclick="event.stopPropagation(); deleteNotification('\${notification._id || notification.id}')" title="Delete">
                                 ×
                             </button>
                         </div>
@@ -3930,26 +3954,7 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
                         \` : ''}
                     </div>
                     
-                    <div class="notification-actions">
-                        \${notification.apiId ? \`
-                            <button class="btn-secondary btn-sm" onclick="goToApi('\${notification.apiId}')">
-                                View API
-                            </button>
-                        \` : ''}
-                        \${notification.changelogId ? \`
-                            <button class="btn-secondary btn-sm" onclick="viewChangeDetails('\${notification.changelogId}')">
-                                View Changes
-                            </button>
-                        \` : ''}
-                        \${notification.url ? \`
-                            <button class="btn-secondary btn-sm" onclick="openUrl('\${notification.url}')">
-                                Open Link
-                            </button>
-                        \` : ''}
-                        <button class="btn-secondary btn-sm" onclick="archiveNotification('\${notification._id || notification.id}')">
-                            Archive
-                        </button>
-                    </div>
+                    <div class="notification-actions"></div>
                 </div>
             \`).join('');
         }
@@ -4044,12 +4049,10 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
             }
         }
         
-        function archiveNotification(notificationId) {
-            const notificationElement = document.querySelector(\`[data-notification-id="\${notificationId}"]\`);
-            if (notificationElement) {
-                notificationElement.style.opacity = '0.5';
-                // You could also send a message to backend to archive
-                // Archive notification implementation
+        function openNotification(notificationId) {
+            const n = (appData.notifications || []).find(x => (x._id || x.id) === notificationId);
+            if (n && n.apiId) {
+                vscode.postMessage({ type: 'openApiDetail', id: n.apiId });
             }
         }
         

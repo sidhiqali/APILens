@@ -20,7 +20,11 @@
     "changelog",
     "tracking"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onView:apilens.main",
+    "onView:apilens.apiDetail",
+    "onCommand:apilens.showApiDetail"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
@@ -59,6 +63,11 @@
         "title": "View Changes",
         "category": "APILens",
         "icon": "$(git-compare)"
+      },
+      {
+        "command": "apilens.showApiDetail",
+        "title": "Show API Detail",
+        "category": "APILens"
       },
       {
         "command": "apilens.registerApiFromFile",

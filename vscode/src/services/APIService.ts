@@ -219,6 +219,15 @@ export class APIService {
         }
     }
 
+    async getApiHealthIssues(apiId: string): Promise<any[]> {
+        try {
+            const response = await this.api.get(`/apis/${apiId}/health-issues`);
+            return response.data?.issues || response.data || [];
+        } catch (error) {
+            throw this.handleError(error);
+        }
+    }
+
     async getAnalytics(params?: {
         startDate?: string;
         endDate?: string;

@@ -46,14 +46,14 @@ export class APIDetailViewProvider implements vscode.WebviewViewProvider {
         try {
             const api = await this.apiService.getApi(apiId);
             const changelogs = await this.apiService.getChangelogs({ apiId, limit: 10 });
-            const issues = await this.apiService.getApiHealthIssues(apiId);
+            // const issues = await this.apiService.getApiHealthIssues(apiId);
             
             this.sendMessage({
                 type: 'apiDetailData',
                 data: {
                     api,
                     changelogs,
-                    issues
+                    issues: [] // Temporary placeholder
                 }
             });
         } catch (error: any) {

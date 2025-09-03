@@ -51,7 +51,6 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
 
     public refresh() {
         this.handleGetDashboard().catch(() => {
-            // Dashboard refresh failed - user might need to login
         });
     }
 
@@ -73,6 +72,8 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
         try {
             const isAuthenticated = await this.apiService.isAuthenticated();
             
+            console.log('VS Code Extension: Is authenticated:', isAuthenticated);
+            
             if (isAuthenticated) {
                 this.sendMessage({ type: 'authStatus', data: { isAuthenticated: true } });
                 this.handleGetDashboard();
@@ -80,6 +81,7 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
                 this.sendMessage({ type: 'authStatus', data: { isAuthenticated: false } });
             }
         } catch (error) {
+            console.error('VS Code Extension: Auth check error:', error);
             this.sendMessage({ type: 'authStatus', data: { isAuthenticated: false } });
         }
     }
@@ -106,6 +108,9 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
                 break;
             case 'getDashboardStats':
                 await this.handleGetDashboardStats();
+                break;
+            case 'getIssues':
+                await this.handleGetIssues();
                 break;
             case 'getApis':
                 await this.handleGetApis(message.params);
@@ -134,13 +139,17 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
             case 'markNotificationRead':
                 await this.handleMarkNotificationRead(message.id);
                 break;
+            case 'markAllNotificationsRead':
+                await this.handleMarkAllNotificationsRead();
+                break;
+            case 'deleteNotification':
+                await this.handleDeleteNotification(message.id);
+                break;
+            case 'markNotificationRead':
+                await this.handleMarkNotificationRead(message.id);
+                break;
             case 'getChangelogs':
                 await this.handleGetChangelogs(message.params);
-                break;
-            case 'openApiDetail':
-                try {
-                    await vscode.commands.executeCommand('apilens.showApiDetail', message.id);
-                } catch {}
                 break;
             case 'updateSettings':
                 await this.handleUpdateSettings(message.data);
@@ -170,16 +179,22 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
 
     private async handleGetDashboard() {
         try {
+            console.log('VS Code Extension: Getting dashboard data...');
             const [stats, apis] = await Promise.all([
                 this.apiService.getDashboardStats(),
                 this.apiService.getApis()
             ]);
+            
+            console.log('VS Code Extension: Dashboard stats:', stats);
+            console.log('VS Code Extension: APIs for dashboard:', apis?.length || 0, 'apis');
+            console.log('VS Code Extension: Sample API:', apis?.[0]);
             
             this.sendMessage({ 
                 type: 'dashboardData', 
                 data: { stats, apis } 
             });
         } catch (error: any) {
+            console.error('VS Code Extension: Error getting dashboard:', error);
             this.sendMessage({ 
                 type: 'error', 
                 error: error.message 
@@ -188,7 +203,6 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
     }
 
     private async handleAddApi() {
-        // Open VS Code input for API URL
         const url = await vscode.window.showInputBox({
             prompt: 'Enter API URL (e.g., https://api.example.com/openapi.json)',
             placeHolder: 'https://api.example.com/openapi.json',
@@ -358,6 +372,67 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
         }
     }
 
+    private async handleGetIssues() {
+        try {
+            console.log('VS Code Extension: Getting issues data...');
+            const [apis, notifications] = await Promise.all([
+                this.apiService.getApis({}),
+                this.apiService.getNotifications({ unreadOnly: false })
+            ]);
+            
+            console.log('VS Code Extension: APIs received:', apis?.length || 0, 'apis');
+            console.log('VS Code Extension: First API:', apis?.[0]);
+            console.log('VS Code Extension: Notifications received:', notifications?.length || 0, 'notifications');
+            
+            const healthIssues = (apis || []).filter((api: any) => {
+                const status = (api.healthStatus || '').toLowerCase();
+                console.log(`VS Code Extension: API ${api.apiName || api.name} has status: ${status}`);
+                return ['unhealthy', 'error', 'warning', 'degraded'].includes(status);
+            }).map((api: any, index: number) => ({
+                id: `health-${api._id || api.id}-${index}`,
+                apiId: api._id || api.id,
+                priority: api.healthStatus === 'unhealthy' ? 'critical' : 'medium',
+                type: 'health',
+                title: `Health Issue: ${api.apiName || api.name || 'Unknown API'}`,
+                description: `API health check failed. Status: ${api.healthStatus}`,
+                createdAt: api.lastChecked || new Date().toISOString(),
+                isRead: false,
+                details: {
+                    apiName: api.apiName || api.name,
+                    healthStatus: api.healthStatus,
+                    lastChecked: api.lastChecked,
+                    url: api.openApiUrl || api.url
+                }
+            }));
+
+            console.log('VS Code Extension: Health issues found:', healthIssues.length);
+
+            const alertNotifications = (notifications || [])
+                .filter((notif: any) => ['critical', 'high', 'medium'].includes(notif.priority))
+                .map((notif: any) => ({
+                    id: notif._id || notif.id || `notif-${Math.random().toString(36).substr(2, 9)}`,
+                    apiId: notif.apiId,
+                    priority: notif.priority || 'medium',
+                    type: notif.type || 'alert',
+                    title: notif.title || notif.message || 'API Alert',
+                    description: notif.content || notif.description || '',
+                    createdAt: notif.createdAt || new Date().toISOString(),
+                    isRead: notif.isRead || false,
+                    details: notif.details
+                }));
+
+            console.log('VS Code Extension: Alert notifications found:', alertNotifications.length);
+
+            const allIssues = [...healthIssues, ...alertNotifications];
+            
+            console.log('VS Code Extension: Total issues to send:', allIssues.length);
+            this.sendMessage({ type: 'issuesData', data: allIssues });
+        } catch (error: any) {
+            console.error('VS Code Extension: Error getting issues:', error);
+            this.sendMessage({ type: 'error', error: error.message });
+        }
+    }
+
     private async handleGetNotifications(params: any) {
         try {
             const notifications = await this.apiService.getNotifications(params);
@@ -376,12 +451,28 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
     private async handleMarkNotificationRead(id: string) {
         try {
             await this.apiService.markNotificationAsRead(id);
-            this.sendMessage({ type: 'notificationMarkedRead', id });
+            await this.handleGetNotifications({});
         } catch (error: any) {
-            this.sendMessage({ 
-                type: 'error', 
-                error: error.message 
-            });
+            this.sendMessage({ type: 'error', error: error.message });
+        }
+    }
+
+    private async handleMarkAllNotificationsRead() {
+        try {
+            await this.apiService.markAllNotificationsAsRead();
+            await this.handleGetNotifications({});
+        } catch (error: any) {
+            this.sendMessage({ type: 'error', error: error.message });
+        }
+    }
+
+    private async handleDeleteNotification(id: string) {
+        try {
+            // For now, we'll just mark as read since delete might not be implemented
+            await this.apiService.markNotificationAsRead(id);
+            await this.handleGetNotifications({});
+        } catch (error: any) {
+            this.sendMessage({ type: 'error', error: error.message });
         }
     }
 
@@ -939,6 +1030,224 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
             gap: 0.5rem;
             margin-top: 1rem;
             flex-wrap: wrap;
+        }
+
+        /* Issues & Alerts Styles */
+        .issues-container {
+            padding: 1.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .issues-header {
+            margin-bottom: 2rem;
+        }
+
+        .issues-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .issues-filters {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            padding: 0.5rem;
+            border: 1px solid var(--vscode-input-border);
+            border-radius: 4px;
+            background: var(--vscode-input-background);
+            color: var(--vscode-input-foreground);
+            font-size: 0.9rem;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--vscode-focusBorder);
+        }
+
+        .issues-list {
+            space-y: 1rem;
+        }
+
+        .issue-item {
+            border: 1px solid var(--vscode-widget-border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            background: var(--vscode-editor-background);
+            transition: all 0.2s ease;
+        }
+
+        .issue-item:hover {
+            border-color: var(--vscode-focusBorder);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .issue-item.unread {
+            border-left: 4px solid var(--vscode-charts-blue);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .issue-item.critical {
+            border-left: 4px solid var(--vscode-errorForeground);
+        }
+
+        .issue-item.high {
+            border-left: 4px solid var(--vscode-charts-orange);
+        }
+
+        .issue-item.medium {
+            border-left: 4px solid var(--vscode-charts-yellow);
+        }
+
+        .issue-item.low {
+            border-left: 4px solid var(--vscode-charts-green);
+        }
+
+        .issue-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .issue-priority {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .priority-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .priority-badge.critical {
+            background: var(--vscode-errorBackground);
+            color: var(--vscode-errorForeground);
+        }
+
+        .priority-badge.high {
+            background: rgba(255, 165, 0, 0.15);
+            color: #ff8c00;
+        }
+
+        .priority-badge.medium {
+            background: rgba(255, 193, 7, 0.15);
+            color: #ffc107;
+        }
+
+        .priority-badge.low {
+            background: var(--vscode-terminal-ansiGreen);
+            color: var(--vscode-editor-background);
+        }
+
+        .issue-meta {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            font-size: 0.8rem;
+            color: var(--vscode-descriptionForeground);
+        }
+
+        .issue-api {
+            font-weight: 600;
+            color: var(--vscode-foreground);
+        }
+
+        .unread-indicator {
+            background: var(--vscode-charts-blue);
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .issue-content {
+            margin-bottom: 1rem;
+        }
+
+        .issue-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--vscode-foreground);
+            margin-bottom: 0.5rem;
+        }
+
+        .issue-description {
+            color: var(--vscode-descriptionForeground);
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+
+        .issue-details {
+            background: var(--vscode-textBlockQuote-background);
+            border: 1px solid var(--vscode-textBlockQuote-border);
+            border-radius: 4px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .issue-details-content {
+            background: none;
+            border: none;
+            color: var(--vscode-foreground);
+            font-size: 0.8rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+
+        .issue-error-code {
+            margin: 0.5rem 0;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+        }
+
+        .issue-error-code code {
+            background: var(--vscode-textPreformat-background);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            color: var(--vscode-textPreformat-foreground);
+        }
+
+        .issue-recommendation {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 4px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .issue-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-sm {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+        }
+
+        .btn-danger {
+            background: var(--vscode-errorBackground);
+            color: var(--vscode-errorForeground);
+            border: 1px solid var(--vscode-errorForeground);
+        }
+
+        .btn-danger:hover {
+            background: var(--vscode-errorForeground);
+            color: var(--vscode-editor-background);
         }
 
         /* Analytics Styles */
@@ -2362,6 +2671,12 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
                         renderApisList();
                     }
                     break;
+                case 'issuesData':
+                    appData.issues = message.data || [];
+                    if (currentTab === 'issues') {
+                        renderIssues();
+                    }
+                    break;
                 case 'changelogsData':
                     // Handle paginated response - extract the changes array
                     if (Array.isArray(message.data)) {
@@ -2387,22 +2702,6 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
                     break;
                 case 'openApiUrlTestResult':
                     handleOpenApiUrlTestResult(message.data);
-                    break;
-                case 'notificationsData':
-                    try {
-                        appData.notifications = message.data || [];
-                        if (currentTab === 'notifications') {
-                            renderNotifications();
-                        }
-                    } catch {}
-                    break;
-                case 'analyticsData':
-                    try {
-                        appData.analytics = message.data || {};
-                        if (currentTab === 'analytics') {
-                            renderAnalytics();
-                        }
-                    } catch {}
                     break;
             }
         });
@@ -3557,8 +3856,8 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
         }
         
         function renderIssues() {
-            if (!appData.notifications) {
-                vscode.postMessage({ type: 'getNotifications', params: { type: 'alert' } });
+            if (!appData.issues) {
+                vscode.postMessage({ type: 'getIssues' });
                 document.getElementById('content-body').innerHTML = \`
                     <div class="loading-content">
                         <div class="loading-spinner">⏳</div>
@@ -3568,11 +3867,34 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
                 return;
             }
             
-            const alerts = (appData.notifications || []).filter(n => n.type === 'alert' || n.priority === 'high' || n.priority === 'critical');
+            const issues = Array.isArray(appData.issues) ? appData.issues : [];
+            const criticalCount = issues.filter(i => i.priority === 'critical').length;
+            const highCount = issues.filter(i => i.priority === 'high').length;
+            const mediumCount = issues.filter(i => i.priority === 'medium').length;
+            const unreadCount = issues.filter(i => !i.isRead).length;
             
             document.getElementById('content-body').innerHTML = \`
                 <div class="issues-container">
                     <div class="issues-header">
+                        <div class="issues-stats">
+                            <div class="stat-card critical">
+                                <span class="stat-number">\${criticalCount}</span>
+                                <span class="stat-label">Critical</span>
+                            </div>
+                            <div class="stat-card high">
+                                <span class="stat-number">\${highCount}</span>
+                                <span class="stat-label">High</span>
+                            </div>
+                            <div class="stat-card medium">
+                                <span class="stat-number">\${mediumCount}</span>
+                                <span class="stat-label">Medium</span>
+                            </div>
+                            <div class="stat-card unread">
+                                <span class="stat-number">\${unreadCount}</span>
+                                <span class="stat-label">Unread</span>
+                            </div>
+                        </div>
+                        
                         <div class="issues-filters">
                             <select id="priority-filter" class="filter-select">
                                 <option value="">All Priority</option>
@@ -3583,50 +3905,29 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
                             </select>
                             <select id="issue-type-filter" class="filter-select">
                                 <option value="">All Types</option>
-                                <option value="api_error">API Errors</option>
-                                <option value="health_check">Health Check Failures</option>
-                                <option value="breaking_change">Breaking Changes</option>
-                                <option value="performance">Performance Issues</option>
-                                <option value="security">Security Alerts</option>
+                                <option value="health">Health Check</option>
+                                <option value="breaking_change">Breaking Change</option>
+                                <option value="performance">Performance</option>
+                                <option value="security">Security</option>
+                                <option value="error">API Error</option>
                             </select>
                             <select id="status-filter" class="filter-select">
                                 <option value="">All Status</option>
-                                <option value="unresolved">Unresolved</option>
-                                <option value="resolved">Resolved</option>
-                                <option value="investigating">Investigating</option>
+                                <option value="unread">Unread</option>
+                                <option value="read">Read</option>
                             </select>
-                            <button class="btn-secondary" onclick="markAllAsRead()">Mark All as Read</button>
-                        </div>
-                        <div class="issues-stats">
-                            <div class="stat-card critical">
-                                <span class="stat-number">\${alerts.filter(a => a.priority === 'critical').length}</span>
-                                <span class="stat-label">Critical</span>
-                            </div>
-                            <div class="stat-card high">
-                                <span class="stat-number">\${alerts.filter(a => a.priority === 'high').length}</span>
-                                <span class="stat-label">High</span>
-                            </div>
-                            <div class="stat-card medium">
-                                <span class="stat-number">\${alerts.filter(a => a.priority === 'medium').length}</span>
-                                <span class="stat-label">Medium</span>
-                            </div>
-                            <div class="stat-card unread">
-                                <span class="stat-number">\${alerts.filter(a => !a.isRead).length}</span>
-                                <span class="stat-label">Unread</span>
-                            </div>
+                            <button class="btn-secondary" onclick="markAllIssuesAsRead()">Mark All as Read</button>
+                            <button class="btn-secondary" onclick="refreshIssues()">🔄 Refresh</button>
                         </div>
                     </div>
                     
                     <div class="issues-list">
-                        \${renderIssuesList(alerts)}
+                        \${renderIssuesList(issues)}
                     </div>
                 </div>
             \`;
             
-            // Add event listeners
-            document.getElementById('priority-filter').addEventListener('change', filterIssues);
-            document.getElementById('issue-type-filter').addEventListener('change', filterIssues);
-            document.getElementById('status-filter').addEventListener('change', filterIssues);
+            addIssueEventListeners();
         }
         
         function renderIssuesList(issues) {
@@ -3726,44 +4027,106 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
         }
         
         function filterIssues() {
-            const priorityFilter = document.getElementById('priority-filter').value;
-            const typeFilter = document.getElementById('issue-type-filter').value;
-            const statusFilter = document.getElementById('status-filter').value;
+            const priorityFilter = document.getElementById('priority-filter');
+            const typeFilter = document.getElementById('issue-type-filter');
+            const statusFilter = document.getElementById('status-filter');
+            
+            if (!priorityFilter || !typeFilter || !statusFilter) return;
+            
+            const priorityValue = priorityFilter.value;
+            const typeValue = typeFilter.value;
+            const statusValue = statusFilter.value;
             
             const issueItems = document.querySelectorAll('.issue-item');
+            let visibleCount = 0;
+            
             issueItems.forEach(item => {
                 const issueId = item.dataset.issueId;
-                const issue = (appData.notifications || []).find(n => (n._id || n.id) === issueId);
+                const issue = (appData.issues || []).find(i => (i._id || i.id) === issueId);
                 if (!issue) return;
                 
-                const matchesPriority = !priorityFilter || issue.priority === priorityFilter;
-                const matchesType = !typeFilter || issue.type === typeFilter;
-                const matchesStatus = !statusFilter || 
-                    (statusFilter === 'unresolved' && !issue.isResolved) ||
-                    (statusFilter === 'resolved' && issue.isResolved) ||
-                    (statusFilter === 'investigating' && issue.status === 'investigating');
+                const matchesPriority = !priorityValue || issue.priority === priorityValue;
+                const matchesType = !typeValue || issue.type === typeValue;
+                const matchesStatus = !statusValue || 
+                    (statusValue === 'read' && issue.isRead) ||
+                    (statusValue === 'unread' && !issue.isRead);
                 
-                item.style.display = matchesPriority && matchesType && matchesStatus ? '' : 'none';
+                const shouldShow = matchesPriority && matchesType && matchesStatus;
+                item.style.display = shouldShow ? '' : 'none';
+                if (shouldShow) visibleCount++;
             });
+            
+            updateIssuesCount(visibleCount);
+        }
+        
+        function updateIssuesCount(count) {
+            const issuesList = document.querySelector('.issues-list');
+            if (issuesList && count === 0) {
+                issuesList.innerHTML = \`
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔍</div>
+                        <div>No issues match your filters</div>
+                        <div style="margin-top: 0.5rem; font-size: 0.8rem;">Try adjusting your filter criteria</div>
+                    </div>
+                \`;
+            }
+        }
+        
+        function addIssueEventListeners() {
+            const priorityFilter = document.getElementById('priority-filter');
+            const typeFilter = document.getElementById('issue-type-filter');
+            const statusFilter = document.getElementById('status-filter');
+            
+            if (priorityFilter) priorityFilter.addEventListener('change', filterIssues);
+            if (typeFilter) typeFilter.addEventListener('change', filterIssues);
+            if (statusFilter) statusFilter.addEventListener('change', filterIssues);
+        }
+        
+        function markAllIssuesAsRead() {
+            const unreadIssues = document.querySelectorAll('.issue-item.unread');
+            if (unreadIssues.length === 0) {
+                showNotification('No unread issues to mark', 'info');
+                return;
+            }
+            
+            unreadIssues.forEach(item => {
+                const issueId = item.dataset.issueId;
+                markIssueAsRead(issueId);
+            });
+            
+            showNotification(\`Marked \${unreadIssues.length} issues as read\`, 'success');
+        }
+        
+        function refreshIssues() {
+            appData.issues = null;
+            vscode.postMessage({ type: 'getIssues' });
+            showNotification('Refreshing issues...', 'info');
         }
         
         function markIssueAsRead(issueId) {
+            if (!issueId) return;
+            
             vscode.postMessage({ type: 'markNotificationRead', id: issueId });
-            // Update UI immediately
+            
             const issueElement = document.querySelector(\`[data-issue-id="\${issueId}"]\`);
             if (issueElement) {
                 issueElement.classList.remove('unread');
                 issueElement.classList.add('read');
                 const unreadIndicator = issueElement.querySelector('.unread-indicator');
                 if (unreadIndicator) unreadIndicator.remove();
+                
+                const markButton = issueElement.querySelector('button[onclick*="markIssueAsRead"]');
+                if (markButton) markButton.style.display = 'none';
+            }
+            
+            const issue = (appData.issues || []).find(i => (i._id || i.id) === issueId);
+            if (issue) {
+                issue.isRead = true;
             }
         }
         
         function markAllAsRead() {
-            const unreadIssues = document.querySelectorAll('.issue-item.unread');
-            unreadIssues.forEach(item => {
-                markIssueAsRead(item.dataset.issueId);
-            });
+            markAllIssuesAsRead();
         }
         
         function viewIssueDetails(issueId) {
@@ -3804,9 +4167,6 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
                 }
             }
         }
-
-        // Override navigation to open API Detail panel in VS Code
-        function goToApi(apiId) { vscode.postMessage({ type: 'openApiDetail', id: apiId }); }
         
         function renderNotifications() {
             if (!appData.notifications) {
@@ -3895,7 +4255,7 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
             
             return sortedNotifications.map(notification => \`
                 <div class="notification-item \${notification.type || 'info'} \${notification.priority || 'medium'} \${notification.isRead ? 'read' : 'unread'}" 
-                     data-notification-id="\${notification._id || notification.id}" onclick="openNotification('\${notification._id || notification.id}')" style="cursor:pointer;">
+                     data-notification-id="\${notification._id || notification.id}">
                     <div class="notification-header">
                         <div class="notification-icon">
                             \${getNotificationIcon(notification.type, notification.priority)}
@@ -3915,11 +4275,11 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
                         </div>
                         <div class="notification-actions-quick">
                             \${!notification.isRead ? \`
-                                <button class="btn-icon" onclick="event.stopPropagation(); markNotificationAsRead('\${notification._id || notification.id}')" title="Mark as read">
+                                <button class="btn-icon" onclick="markNotificationAsRead('\${notification._id || notification.id}')" title="Mark as read">
                                     ✓
                                 </button>
                             \` : ''}
-                            <button class="btn-icon" onclick="event.stopPropagation(); deleteNotification('\${notification._id || notification.id}')" title="Delete">
+                            <button class="btn-icon" onclick="deleteNotification('\${notification._id || notification.id}')" title="Delete">
                                 ×
                             </button>
                         </div>
@@ -3954,7 +4314,26 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
                         \` : ''}
                     </div>
                     
-                    <div class="notification-actions"></div>
+                    <div class="notification-actions">
+                        \${notification.apiId ? \`
+                            <button class="btn-secondary btn-sm" onclick="goToApi('\${notification.apiId}')">
+                                View API
+                            </button>
+                        \` : ''}
+                        \${notification.changelogId ? \`
+                            <button class="btn-secondary btn-sm" onclick="viewChangeDetails('\${notification.changelogId}')">
+                                View Changes
+                            </button>
+                        \` : ''}
+                        \${notification.url ? \`
+                            <button class="btn-secondary btn-sm" onclick="openUrl('\${notification.url}')">
+                                Open Link
+                            </button>
+                        \` : ''}
+                        <button class="btn-secondary btn-sm" onclick="archiveNotification('\${notification._id || notification.id}')">
+                            Archive
+                        </button>
+                    </div>
                 </div>
             \`).join('');
         }
@@ -4043,16 +4422,18 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
         function deleteNotification(notificationId) {
             const notificationElement = document.querySelector(\`[data-notification-id="\${notificationId}"]\`);
             if (notificationElement) {
-                notificationElement.style.display = 'none';
-                // You could also send a message to backend to delete permanently
-                // vscode.postMessage({ type: 'deleteNotification', id: notificationId });
+                notificationElement.classList.add('removing');
+                setTimeout(() => (notificationElement.style.display = 'none'), 200);
             }
+            vscode.postMessage({ type: 'deleteNotification', id: notificationId });
         }
         
-        function openNotification(notificationId) {
-            const n = (appData.notifications || []).find(x => (x._id || x.id) === notificationId);
-            if (n && n.apiId) {
-                vscode.postMessage({ type: 'openApiDetail', id: n.apiId });
+        function archiveNotification(notificationId) {
+            const notificationElement = document.querySelector(\`[data-notification-id="\${notificationId}"]\`);
+            if (notificationElement) {
+                notificationElement.style.opacity = '0.5';
+                // You could also send a message to backend to archive
+                // Archive notification implementation
             }
         }
         

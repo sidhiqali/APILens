@@ -40,20 +40,16 @@ export class ApisService {
       .sort({ createdAt: -1 })
       .lean();
 
-    // Get specification change counts for all APIs in a single aggregation
     const apiIds = apis.map((api) => api._id);
     const changeCounts = await this.apiChangeModel.aggregate([
       { $match: { apiId: { $in: apiIds } } },
       { $group: { _id: '$apiId', count: { $sum: 1 } } },
     ]);
-
-    // Create a map for quick lookup
     const changeCountMap = new Map();
     changeCounts.forEach((item) => {
       changeCountMap.set(item._id.toString(), item.count);
     });
 
-    // Merge change counts with API data
     const apisWithChangeCounts = apis.map((api) => ({
       ...api,
       changeCount: changeCountMap.get((api._id as any).toString()) || 0,

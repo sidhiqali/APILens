@@ -75,7 +75,7 @@ export class VSCodeRouter {
         
         return routeParts.every((part, index) => {
             if (part.startsWith(':')) {
-                return true; // Parameter match
+                return true;
             }
             return part === pathParts[index];
         });

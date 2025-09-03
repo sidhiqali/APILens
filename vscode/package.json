@@ -207,6 +207,8 @@
     "@types/js-yaml": "^4.0.9",
     "@types/node": "18.x",
     "@types/vscode": "^1.80.0",
+    "@types/webidl-conversions": "^7.0.3",
+    "@types/whatwg-url": "^13.0.0",
     "@typescript-eslint/eslint-plugin": "^6.4.1",
     "@typescript-eslint/parser": "^6.4.1",
     "eslint": "^8.47.0",

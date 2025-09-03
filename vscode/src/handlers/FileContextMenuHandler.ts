@@ -259,7 +259,6 @@ export class FileContextMenuHandler {
     }
 
     private extractBaseUrl(spec: any): string {
-        // Try to extract base URL from OpenAPI spec
         if (spec.servers && spec.servers.length > 0) {
             return spec.servers[0].url;
         }

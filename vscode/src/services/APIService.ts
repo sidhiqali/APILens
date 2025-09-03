@@ -54,13 +54,9 @@ export class APIService {
     }
 
     private setupInterceptors() {
-        // Attach token if available
         this.api.interceptors.request.use(
             async (config) => {
-                const token = await this.getStoredToken();
-                if (token) {
-                    config.headers.Authorization = `Bearer ${token}`;
-                }
+                // Don't add Authorization header - use session cookies instead
                 return config;
             },
             (error) => Promise.reject(error)
@@ -81,7 +77,11 @@ export class APIService {
     async login(email: string, password: string): Promise<AuthResponse> {
         try {
             const response = await this.api.post('/auth/login', { email, password });
-            await this.storeAuth(response.data);
+            // Session-based auth - store user data but no token needed
+            await this.storeAuth({
+                user: response.data.user,
+                message: response.data.message
+            });
             return response.data;
         } catch (error) {
             throw this.handleError(error);
@@ -92,7 +92,6 @@ export class APIService {
         try {
             await this.api.post('/auth/logout');
         } catch (error) {
-            // ignore
         } finally {
             await this.clearAuth();
         }
@@ -101,7 +100,7 @@ export class APIService {
     async getProfile(): Promise<any> {
         try {
             const response = await this.api.get('/auth/profile');
-            return response.data.user;
+            return response.data.user || response.data.data;
         } catch (error) {
             throw this.handleError(error);
         }
@@ -109,8 +108,8 @@ export class APIService {
 
     async validateSession(): Promise<boolean> {
         try {
-            await this.getProfile();
-            return true;
+            const response = await this.api.get('/auth/profile');
+            return !!(response.data && response.data.user);
         } catch {
             return false;
         }
@@ -219,15 +218,6 @@ export class APIService {
         }
     }
 
-    async getApiHealthIssues(apiId: string): Promise<any[]> {
-        try {
-            const response = await this.api.get(`/apis/${apiId}/health-issues`);
-            return response.data?.issues || response.data || [];
-        } catch (error) {
-            throw this.handleError(error);
-        }
-    }
-
     async getAnalytics(params?: {
         startDate?: string;
         endDate?: string;
@@ -320,16 +310,16 @@ export class APIService {
     private async storeAuth(authData: any): Promise<void> {
         if (this.context) {
             await this.context.globalState.update('apilens.user', authData.user);
-            await this.context.globalState.update('apilens.token', authData.token);
             await this.context.globalState.update('apilens.isAuthenticated', true);
+            // Don't store token for session-based auth
         }
     }
 
     private async clearAuth(): Promise<void> {
         if (this.context) {
             await this.context.globalState.update('apilens.user', undefined);
-            await this.context.globalState.update('apilens.token', undefined);
             await this.context.globalState.update('apilens.isAuthenticated', false);
+            // Don't need to clear token for session-based auth
         }
     }
 
@@ -341,9 +331,7 @@ export class APIService {
     }
 
     async getStoredToken(): Promise<string | undefined> {
-        if (this.context) {
-            return this.context.globalState.get('apilens.token');
-        }
+        // Session-based auth - no token needed
         return undefined;
     }
 

@@ -1,4 +1,174 @@
-// APILens - Backend API Code
+// APILens 
+
+APILens/
+├── api/
+│   ├── .env
+│   ├── .env.example
+│   ├── .gitignore
+│   ├── .prettierrc
+│   ├── api.log
+│   ├── eslint.config.mjs
+│   ├── nest-cli.json
+│   ├── package.json
+│   ├── README.md
+│   ├── tsconfig.build.json
+│   ├── tsconfig.json
+│   ├── mocks/
+│   │   ├── README.md
+│   │   ├── openapi/
+│   │   │   ├── chat/
+│   │   │   │   └── v1-realtime.yaml
+│   │   │   ├── enhanced/
+│   │   │   ├── inventory/
+│   │   │   │   ├── v1.yaml
+│   │   │   │   └── v2.yaml
+│   │   │   ├── iot/
+│   │   │   │   └── v3-devices.yaml
+│   │   │   ├── ml/
+│   │   │   │   └── v2-platform.yaml
+│   │   │   ├── notifications/
+│   │   │   │   ├── v1.yaml
+│   │   │   │   └── v2.yaml
+│   │   │   ├── orders/
+│   │   │   │   ├── v1.yaml
+│   │   │   │   └── v2.yaml
+│   │   │   ├── payments/
+│   │   │   │   ├── v1-enhanced.yaml
+│   │   │   │   ├── v1.yaml
+│   │   │   │   └── v2.yaml
+│   │   │   ├── users/
+│   │   │   │   ├── v1-enhanced.yaml
+│   │   │   │   ├── v1.yaml
+│   │   │   │   └── v2.yaml
+│   │   │   └── weather/
+│   │   │       ├── v1.yaml
+│   │   │       └── v2.yaml
+│   │   ├── orchestrator/
+│   │   │   ├── prismauto.config.js
+│   │   │   └── start-mocks.js
+│   │   ├── postman/
+│   │   │   └── Mock-APIs-Direct-Testing.postman_collection.json
+│   │   └── scripts/
+│   │       ├── register-apis.js
+│   │       └── validate-demo.js
+│   ├── scripts/
+│   ├── src/
+│   │   ├── app.controller.spec.ts
+│   │   ├── app.controller.ts
+│   │   ├── app.module.ts
+│   │   ├── app.service.ts
+│   │   ├── main.ts
+│   │   ├── common/
+│   │   │   ├── filters/
+│   │   │   │   └── http-exception.filter.ts
+│   │   │   └── interceptors/
+│   │   │       └── logging.interceptor.ts
+│   │   ├── config/
+│   │   │   └── configuration.ts
+│   │   ├── gateways/
+│   │   │   └── notifications.gateway.ts
+│   │   ├── modules/
+│   │   │   ├── apis/
+│   │   │   │   ├── apis.controller.spec.ts
+│   │   │   │   ├── apis.controller.ts
+│   │   │   │   ├── apis.module.ts
+│   │   │   │   ├── apis.service.spec.ts
+│   │   │   │   ├── apis.service.ts
+│   │   │   │   ├── change-detector.service.ts
+│   │   │   │   └── dto/
+│   │   │   ├── auth/
+│   │   │   │   ├── auth.controller.ts
+│   │   │   │   ├── auth.module.ts
+│   │   │   │   ├── auth.service.spec.ts
+│   │   │   │   ├── auth.service.ts
+│   │   │   │   ├── dto/
+│   │   │   │   ├── guards/
+│   │   │   │   └── Strategy/
+│   │   │   ├── changelogs/
+│   │   │   │   ├── changelogs.controller.spec.ts
+│   │   │   │   ├── changelogs.controller.ts
+│   │   │   │   ├── changelogs.module.ts
+│   │   │   │   ├── changelogs.service.spec.ts
+│   │   │   │   └── changelogs.service.ts
+│   │   │   ├── dashboard/
+│   │   │   │   ├── dashboard.controller.ts
+│   │   │   │   ├── dashboard.module.ts
+│   │   │   │   ├── dashboard.service.ts
+│   │   │   │   └── dto/
+│   │   │   ├── health/
+│   │   │   │   ├── health.controller.spec.ts
+│   │   │   │   ├── health.controller.ts
+│   │   │   │   ├── health.module.ts
+│   │   │   │   ├── health.service.spec.ts
+│   │   │   │   └── health.service.ts
+│   │   │   ├── notifications/
+│   │   │   │   ├── email.service.ts
+│   │   │   │   ├── notifications.controller.spec.ts
+│   │   │   │   └── ...
+│   │   │   ├── schedules/
+│   │   │   │   └── ...
+│   │   │   ├── user/
+│   │   │   │   └── ...
+│   │   │   └── websocket/
+│   │   │       └── ...
+│   │   ├── Schemas/
+│   │   │   ├── api-change.schema.ts
+│   │   │   ├── api-snapshot.schema.ts
+│   │   │   ├── api.schema.ts
+│   │   │   ├── changelog-schema.ts
+│   │   │   ├── notification.schema.ts
+│   │   │   └── user.schema.ts
+│   │   ├── types/
+│   │   │   ├── api.type.ts
+│   │   │   ├── auth.type.ts
+│   │   │   ├── jwt.type.ts
+│   │   │   └── user.type.ts
+│   │   └── utils/
+│   ├── test/
+│   │   ├── app.e2e-spec.ts
+│   │   └── jest-e2e.json
+│   └── utils/
+│       ├── api-diff.ts
+│       └── user.ts
+├── client/
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── apis/
+│   │   │   │   └── page.tsx
+│   │   │   └── ...
+│   │   ├── components/
+│   │   │   ├── layout/
+│   │   │   │   └── Layout.tsx
+│   │   │   ├── search/
+│   │   │   │   └── FilterPanel.tsx
+│   │   │   └── RouteGuard.tsx
+│   │   ├── hooks/
+│   │   │   └── useApis.ts
+│   │   ├── lib/
+│   │   │   └── axios.ts
+│   │   ├── providers/
+│   │   │   └── WebSocketProvider.tsx
+│   │   ├── services/
+│   │   │   └── api.service.ts
+│   │   └── types/
+│   │       └── index.ts
+│   └── ...
+└── vscode/
+    ├── package.json
+    ├── README.md
+    └── src/
+        ├── extension.ts
+        ├── handlers/
+        │   └── FileContextMenuHandler.ts
+        ├── providers/
+        │   ├── APIDetailViewProvider.ts
+        │   └── WebviewProvider.ts
+        └── services/
+            ├── APIService.ts
+            └──
+
+
+//Backend API Code
 
 // DATABASE SCHEMAS
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';

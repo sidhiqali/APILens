@@ -299,12 +299,11 @@ export class ApisController {
     @Request() req,
     @Query('limit') limit?: string,
   ) {
-    const changes = await this.changeDetectorService.getApiChangeHistory(
+    return this.apisService.issueAnalyzerService.getRecentChangesForApi(
       id,
       req.user.userId,
       limit ? parseInt(limit, 10) : 20,
     );
-    return changes;
   }
 
   @Get(':id/health-issues')

@@ -14,7 +14,7 @@ import {
   useGetApiChanges,
   useGetApiIssues,
 } from '@/hooks/useChangelog';
-import { HealthIssuesExpander } from '@/components';
+import { HealthIssuesExpander, ChangeDetailModal } from '@/components';
 import {
   Activity,
   AlertTriangle,
@@ -27,6 +27,7 @@ import {
   Edit,
   TrendingUp,
   Loader2,
+  Eye,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import logger from '@/utils/logger';
@@ -59,6 +60,8 @@ const ApiDetailPage = ({ params }: Props) => {
 
   const [activeTab, setActiveTab] = useState('overview');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [selectedChange, setSelectedChange] = useState<any>(null);
+  const [isChangeModalOpen, setIsChangeModalOpen] = useState(false);
 
   useEffect(() => {
     const tab = searchParams.get('tab');
@@ -348,20 +351,73 @@ const ApiDetailPage = ({ params }: Props) => {
                     ) : apiChanges && apiChanges.length > 0 ? (
                       <div className="space-y-4">
                         {apiChanges.slice(0, 5).map((change: any, index: number) => (
-                          <div key={index} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+                          <div 
+                            key={index} 
+                            className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+                            onClick={() => {
+                              setSelectedChange(change);
+                              setIsChangeModalOpen(true);
+                            }}
+                          >
                             <div className="flex-shrink-0">
-                              <div className="w-2 h-2 mt-2 bg-blue-500 rounded-full"></div>
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                change.severity === 'critical' ? 'bg-red-100' :
+                                change.severity === 'high' ? 'bg-orange-100' :
+                                change.severity === 'medium' ? 'bg-yellow-100' :
+                                'bg-blue-100'
+                              }`}>
+                                {change.severity === 'critical' || change.breaking ? (
+                                  <AlertTriangle className={`w-4 h-4 ${
+                                    change.severity === 'critical' ? 'text-red-600' : 'text-orange-600'
+                                  }`} />
+                                ) : (
+                                  <Activity className="w-4 h-4 text-blue-600" />
+                                )}
+                              </div>
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900">
-                                {change.type || 'Schema Change'}
-                              </p>
-                              <p className="text-sm text-gray-600">
-                                {change.description || 'API schema has been updated'}
-                              </p>
-                              <p className="text-xs text-gray-500 mt-1">
-                                {change.timestamp ? new Date(change.timestamp).toLocaleString() : 'Recently'}
-                              </p>
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center space-x-2 mb-1">
+                                    <p className="text-sm font-medium text-gray-900">
+                                      {change.changeType || change.type || 'Schema Change'}
+                                    </p>
+                                    {(change.severity || change.breaking) && (
+                                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                        change.severity === 'critical' ? 'bg-red-100 text-red-800' :
+                                        change.severity === 'high' ? 'bg-orange-100 text-orange-800' :
+                                        change.severity === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                                        change.breaking ? 'bg-red-100 text-red-800' :
+                                        'bg-blue-100 text-blue-800'
+                                      }`}>
+                                        {change.severity || (change.breaking ? 'breaking' : 'change')}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-sm text-gray-600 mb-1">
+                                    {change.summary || change.description || 'API schema has been updated'}
+                                  </p>
+                                  {change.changes && change.changes.length > 0 && (
+                                    <p className="text-xs text-gray-500 mb-1">
+                                      {change.changes.length} detailed change{change.changes.length !== 1 ? 's' : ''} • 
+                                      {change.changes.filter((c: any) => c.changeType === 'added').length > 0 && 
+                                        ` ${change.changes.filter((c: any) => c.changeType === 'added').length} added`}
+                                      {change.changes.filter((c: any) => c.changeType === 'removed').length > 0 && 
+                                        ` ${change.changes.filter((c: any) => c.changeType === 'removed').length} removed`}
+                                      {change.changes.filter((c: any) => c.changeType === 'modified').length > 0 && 
+                                        ` ${change.changes.filter((c: any) => c.changeType === 'modified').length} modified`}
+                                    </p>
+                                  )}
+                                  <p className="text-xs text-gray-500">
+                                    {change.detectedAt ? new Date(change.detectedAt).toLocaleString() :
+                                     change.timestamp ? new Date(change.timestamp).toLocaleString() : 
+                                     change.createdAt ? new Date(change.createdAt).toLocaleString() : 'Recently'}
+                                  </p>
+                                </div>
+                                <div className="flex-shrink-0 ml-2">
+                                  <Eye className="w-4 h-4 text-gray-400" />
+                                </div>
+                              </div>
                             </div>
                           </div>
                         ))}
@@ -611,37 +667,115 @@ const ApiDetailPage = ({ params }: Props) => {
                           {index !== apiChanges.length - 1 && (
                             <div className="absolute left-4 top-8 w-0.5 h-full bg-gray-200" />
                           )}
-                          <div className="flex items-start space-x-4">
+                          <div 
+                            className="flex items-start space-x-4 cursor-pointer group"
+                            onClick={() => {
+                              setSelectedChange(change);
+                              setIsChangeModalOpen(true);
+                            }}
+                          >
                             <div className="flex-shrink-0">
                               <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                change.severity === 'critical' ? 'bg-red-100' :
+                                change.severity === 'high' ? 'bg-orange-100' :
+                                change.severity === 'medium' ? 'bg-yellow-100' :
                                 change.breaking ? 'bg-red-100' : 'bg-blue-100'
                               }`}>
-                                {change.breaking ? (
-                                  <AlertTriangle className="w-4 h-4 text-red-600" />
+                                {change.severity === 'critical' || change.breaking ? (
+                                  <AlertTriangle className={`w-4 h-4 ${
+                                    change.severity === 'critical' ? 'text-red-600' : 'text-red-600'
+                                  }`} />
                                 ) : (
                                   <Activity className="w-4 h-4 text-blue-600" />
                                 )}
                               </div>
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center space-x-2 mb-2">
-                                <h4 className="text-sm font-semibold text-gray-900">
-                                  {change.type || 'Schema Change'}
-                                </h4>
-                                {change.breaking && (
-                                  <span className="px-2 py-1 text-xs font-medium text-red-800 bg-red-100 rounded-full">
-                                    Breaking
+                            <div className="flex-1 min-w-0 group-hover:bg-gray-50 p-3 rounded-lg transition-colors">
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center space-x-2">
+                                  <h4 className="text-sm font-semibold text-gray-900">
+                                    {change.changeType || change.type || 'Schema Change'}
+                                  </h4>
+                                  {(change.severity || change.breaking) && (
+                                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                      change.severity === 'critical' ? 'bg-red-100 text-red-800' :
+                                      change.severity === 'high' ? 'bg-orange-100 text-orange-800' :
+                                      change.severity === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                                      change.breaking ? 'bg-red-100 text-red-800' :
+                                      'bg-blue-100 text-blue-800'
+                                    }`}>
+                                      {change.severity || (change.breaking ? 'Breaking' : 'Change')}
+                                    </span>
+                                  )}
+                                  <span className="text-xs text-gray-500">
+                                    {change.detectedAt ? new Date(change.detectedAt).toLocaleString() : 
+                                     change.timestamp ? new Date(change.timestamp).toLocaleString() : 
+                                     change.createdAt ? new Date(change.createdAt).toLocaleString() : 'Unknown time'}
                                   </span>
-                                )}
-                                <span className="text-xs text-gray-500">
-                                  {change.timestamp ? new Date(change.timestamp).toLocaleString() : 
-                                   change.createdAt ? new Date(change.createdAt).toLocaleString() : 'Unknown time'}
-                                </span>
+                                </div>
+                                <Eye className="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
                               </div>
                               <p className="text-sm text-gray-600 mb-3">
-                                {change.description || 'API schema has been updated with new changes.'}
+                                {change.summary || change.description || 'API schema has been updated with new changes.'}
                               </p>
-                              {change.details && (
+                              
+                              {/* Show change summary */}
+                              {change.changes && change.changes.length > 0 && (
+                                <div className="mb-3">
+                                  <div className="flex items-center space-x-4 text-xs text-gray-500 mb-2">
+                                    <span className="font-medium">Changes:</span>
+                                    {change.changes.filter((c: any) => c.changeType === 'added').length > 0 && (
+                                      <span className="flex items-center space-x-1">
+                                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                        <span>{change.changes.filter((c: any) => c.changeType === 'added').length} added</span>
+                                      </span>
+                                    )}
+                                    {change.changes.filter((c: any) => c.changeType === 'removed').length > 0 && (
+                                      <span className="flex items-center space-x-1">
+                                        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                                        <span>{change.changes.filter((c: any) => c.changeType === 'removed').length} removed</span>
+                                      </span>
+                                    )}
+                                    {change.changes.filter((c: any) => c.changeType === 'modified').length > 0 && (
+                                      <span className="flex items-center space-x-1">
+                                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                        <span>{change.changes.filter((c: any) => c.changeType === 'modified').length} modified</span>
+                                      </span>
+                                    )}
+                                  </div>
+                                  
+                                  {/* Show first few change details */}
+                                  <div className="space-y-2">
+                                    {change.changes.slice(0, 3).map((detail: any, detailIndex: number) => (
+                                      <div key={detailIndex} className="p-2 bg-white rounded border text-xs">
+                                        <div className="flex items-center space-x-2 mb-1">
+                                          <span className={`inline-block w-2 h-2 rounded-full ${
+                                            detail.changeType === 'removed' ? 'bg-red-400' :
+                                            detail.changeType === 'added' ? 'bg-green-400' : 'bg-blue-400'
+                                          }`}></span>
+                                          <span className="font-medium text-gray-700">{detail.path}</span>
+                                          <span className={`px-1 py-0.5 text-xs rounded ${
+                                            detail.changeType === 'added' ? 'bg-green-100 text-green-800' :
+                                            detail.changeType === 'removed' ? 'bg-red-100 text-red-800' :
+                                            'bg-blue-100 text-blue-800'
+                                          }`}>
+                                            {detail.changeType}
+                                          </span>
+                                        </div>
+                                        <p className="text-gray-600">{detail.description}</p>
+                                      </div>
+                                    ))}
+                                    {change.changes.length > 3 && (
+                                      <p className="text-xs text-gray-500 mt-2">
+                                        ... and {change.changes.length - 3} more changes (click to view all)
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Legacy details display for older changes */}
+                              {change.details && !change.changes && (
                                 <div className="p-3 bg-gray-50 rounded-lg">
                                   <h5 className="text-xs font-medium text-gray-700 mb-2">Change Details:</h5>
                                   <div className="space-y-1">
@@ -782,6 +916,13 @@ const ApiDetailPage = ({ params }: Props) => {
             </div>
           </div>
         )}
+
+        {/* Change Detail Modal */}
+        <ChangeDetailModal
+          isOpen={isChangeModalOpen}
+          onClose={() => setIsChangeModalOpen(false)}
+          change={selectedChange}
+        />
       </Layout>
     </RouteGuard>
   );

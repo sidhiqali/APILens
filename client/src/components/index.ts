@@ -51,3 +51,4 @@ export {
 } from './analytics';
 
 export { HealthIssuesExpander } from './HealthIssuesExpander';
+export { ChangeDetailModal } from './modals/ChangeDetailModal';

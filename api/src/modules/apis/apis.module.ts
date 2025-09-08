@@ -10,6 +10,7 @@ import {
   ApiSnapshotSchema,
 } from 'src/Schemas/api-snapshot.schema';
 import { ChangeDetectorService } from './change-detector.service';
+import { IssueAnalyzerService } from './issue-analyzer.service';
 import { SmartSchedulerService } from '../schedules/smart-scheduler.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import {
@@ -36,6 +37,7 @@ import { WebSocketModule } from '../websocket/websocket.module';
   providers: [
     ApisService,
     ChangeDetectorService,
+    IssueAnalyzerService,
     SmartSchedulerService,
     NotificationsService,
     EmailService,

@@ -24,6 +24,9 @@ interface NotificationCreateDto {
 export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
 
+  // Feature flag to disable database storage to save MongoDB quota
+  private readonly DISABLE_DB_STORAGE = true;
+
   constructor(
     @InjectModel(Notification.name)
     private notificationModel: Model<Notification>,
@@ -142,6 +145,30 @@ export class NotificationsService {
     data: NotificationCreateDto,
   ): Promise<void> {
     try {
+      // Skip database storage if disabled (to save MongoDB quota)
+      if (this.DISABLE_DB_STORAGE) {
+        this.logger.log(
+          `Notification skipped (DB storage disabled): ${data.title}`,
+        );
+
+        // Still broadcast real-time notification without storing in DB
+        this.notificationsGateway.broadcastNotification(data.userId, {
+          id: `temp-${Date.now()}`, // Temporary ID since we're not storing in DB
+          userId: data.userId,
+          apiId: data.apiId,
+          type: data.type,
+          title: data.title,
+          message: data.message,
+          severity: data.severity,
+          metadata: data.metadata,
+          createdAt: new Date().toISOString(),
+        });
+
+        this.logger.log(`Real-time notification broadcasted: ${data.title}`);
+        return;
+      }
+
+      // Original database storage logic (when enabled)
       const notification = await this.notificationModel.create({
         userId: new Types.ObjectId(data.userId),
         apiId: data.apiId ? new Types.ObjectId(data.apiId) : undefined,
@@ -258,6 +285,11 @@ export class NotificationsService {
     status: 'pending' | 'sent' | 'failed',
     error?: string,
   ): Promise<void> {
+    // Skip if database storage is disabled
+    if (this.DISABLE_DB_STORAGE) {
+      return;
+    }
+
     await this.notificationModel.findByIdAndUpdate(
       notificationId,
       {
@@ -287,6 +319,20 @@ export class NotificationsService {
     limit: number;
     totalPages: number;
   }> {
+    // Return empty results if database storage is disabled
+    if (this.DISABLE_DB_STORAGE) {
+      this.logger.log(
+        'User notifications request skipped (DB storage disabled)',
+      );
+      return {
+        notifications: [],
+        total: 0,
+        page: 1,
+        limit: options.limit || 50,
+        totalPages: 0,
+      };
+    }
+
     const limit = options.limit || 50;
     const offset = options.offset || 0;
     const page = Math.floor(offset / limit) + 1;
@@ -319,6 +365,11 @@ export class NotificationsService {
   }
 
   async markAsRead(notificationId: string, userId: string): Promise<void> {
+    if (this.DISABLE_DB_STORAGE) {
+      this.logger.log('Mark as read skipped (DB storage disabled)');
+      return;
+    }
+
     await this.notificationModel.findOneAndUpdate(
       {
         _id: new Types.ObjectId(notificationId),
@@ -332,6 +383,11 @@ export class NotificationsService {
   }
 
   async markAllAsRead(userId: string): Promise<void> {
+    if (this.DISABLE_DB_STORAGE) {
+      this.logger.log('Mark all as read skipped (DB storage disabled)');
+      return;
+    }
+
     await this.notificationModel.updateMany(
       {
         userId: new Types.ObjectId(userId),
@@ -348,6 +404,11 @@ export class NotificationsService {
     notificationId: string,
     userId: string,
   ): Promise<void> {
+    if (this.DISABLE_DB_STORAGE) {
+      this.logger.log('Delete notification skipped (DB storage disabled)');
+      return;
+    }
+
     await this.notificationModel.findOneAndDelete({
       _id: new Types.ObjectId(notificationId),
       userId: new Types.ObjectId(userId),
@@ -360,6 +421,19 @@ export class NotificationsService {
     byType: Record<string, number>;
     bySeverity: Record<string, number>;
   }> {
+    // Return zero stats if database storage is disabled
+    if (this.DISABLE_DB_STORAGE) {
+      this.logger.log(
+        'Notification stats request skipped (DB storage disabled)',
+      );
+      return {
+        total: 0,
+        unread: 0,
+        byType: {},
+        bySeverity: {},
+      };
+    }
+
     const userObjectId = new Types.ObjectId(userId);
 
     const [total, unread, byType, bySeverity] = await Promise.all([

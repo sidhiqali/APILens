@@ -17,6 +17,7 @@ import { ApiHealthDto, ApiStatsDto } from './dto/api.dto';
 import { Changelog } from 'src/Schemas/changelog-schema';
 import { ApiSnapshot } from 'src/Schemas/api-snapshot.schema';
 import { ChangeDetectorService } from './change-detector.service';
+import { IssueAnalyzerService } from './issue-analyzer.service';
 import { ApiChange } from 'src/Schemas/api-change.schema';
 import { NotificationsService } from '../notifications/notifications.service';
 
@@ -30,6 +31,7 @@ export class ApisService {
     @InjectModel(ApiSnapshot.name) private snapshotModel: Model<ApiSnapshot>,
     @InjectModel(ApiChange.name) private apiChangeModel: Model<ApiChange>,
     private changeDetectorService: ChangeDetectorService,
+    public issueAnalyzerService: IssueAnalyzerService,
     private notificationsService: NotificationsService,
   ) {}
 
@@ -833,128 +835,12 @@ export class ApisService {
   }
 
   async getApiHealthIssues(id: string, userId: string): Promise<any> {
-    const api = await this.apiModel
-      .findById(id)
-      .select('_id userId apiName healthStatus lastError lastChecked')
-      .lean()
-      .maxTimeMS(5000);
-
-    if (!api) {
-      throw new NotFoundException('API not found');
+    try {
+      return await this.issueAnalyzerService.analyzeApiIssues(id, userId);
+    } catch (error) {
+      this.logger.error(`Error getting health issues for API ${id}: ${error.message}`);
+      throw new NotFoundException(error.message);
     }
-    if (api.userId.toString() !== userId) {
-      throw new ForbiddenException('Access denied');
-    }
-
-    const issues: any[] = [];
-
-    if (api.healthStatus === 'unhealthy' || api.healthStatus === 'error') {
-      const recentChanges = await this.apiChangeModel
-        .find({ apiId: new Types.ObjectId(id) })
-        .select('changeType severity changes detectedAt summary')
-        .sort({ detectedAt: -1 })
-        .limit(5)
-        .lean()
-        .maxTimeMS(5000);
-
-      if (api.lastError) {
-        issues.push({
-          id: 'api_error',
-          type: 'availability',
-          severity: 'critical',
-          title: 'API Connection Failed',
-          description: api.lastError,
-          timestamp: api.lastChecked,
-          details: {
-            metric: 'availability',
-            current: 0,
-            threshold: 100,
-            suggestions: [
-              'Check if the API server is running',
-              'Verify the OpenAPI URL is accessible',
-              'Check network connectivity',
-            ],
-          },
-        });
-      }
-
-      if (recentChanges.length > 0) {
-        const breakingChanges = recentChanges.filter(
-          (change) => change.changeType === 'breaking',
-        );
-
-        if (breakingChanges.length > 0) {
-          issues.push({
-            id: 'breaking_changes',
-            type: 'breaking_change',
-            severity: 'high',
-            title: 'Breaking Changes Detected',
-            description: `${breakingChanges.length} breaking changes found in recent updates`,
-            timestamp: breakingChanges[0].detectedAt,
-            details: {
-              changes: breakingChanges[0].changes,
-              affectedEndpoints: breakingChanges[0].changes
-                .map((c) => c.path)
-                .filter((path) => path.includes('/')),
-              suggestions: [
-                'Review API documentation for migration guide',
-                'Update client applications to handle changes',
-                'Consider API versioning strategy',
-              ],
-            },
-          });
-        }
-
-        const schemaChanges = recentChanges.filter(
-          (change) => change.changeType === 'modified',
-        );
-        if (schemaChanges.length > 0) {
-          issues.push({
-            id: 'schema_changes',
-            type: 'schema',
-            severity: 'medium',
-            title: 'Schema Modifications',
-            description: `${schemaChanges.length} schema changes detected`,
-            timestamp: schemaChanges[0].detectedAt,
-            details: {
-              changes: schemaChanges[0].changes.slice(0, 3),
-              suggestions: [
-                'Validate client compatibility',
-                'Test data contracts',
-                'Update API documentation',
-              ],
-            },
-          });
-        }
-      }
-
-      if (issues.length === 0) {
-        issues.push({
-          id: 'general_unhealthy',
-          type: 'performance',
-          severity: 'medium',
-          title: 'API Health Degraded',
-          description: 'API is reporting an unhealthy status',
-          timestamp: api.lastChecked,
-          details: {
-            suggestions: [
-              'Run manual health check',
-              'Review recent API changes',
-              'Check server performance metrics',
-            ],
-          },
-        });
-      }
-    }
-
-    return {
-      apiId: id,
-      apiName: api.apiName,
-      healthStatus: api.healthStatus,
-      issueCount: issues.length,
-      issues,
-      lastChecked: api.lastChecked,
-    };
   }
 
   async fixHealthStatuses(

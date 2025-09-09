@@ -1,11 +1,5 @@
 #!/usr/bin/env node
 
-/**
- * APILens Mock Universe Auto-Registration Script
- * 
- * Automatically registers all 6 mock APIs with APILens using different monitoring frequencies.
- * Run this after starting the mock universe to quickly set up all APIs for demo.
- */
 
 const axios = require('axios');
 

@@ -3,13 +3,6 @@ info:
   title: Payments API
   version: "1.0.0"
   description: Payment processing API - Version 1 (API Key Authentication)
-components:
-  securitySchemes:
-    ApiKeyAuth:
-      type: apiKey
-      in: header
-      name: X-API-Key
-      description: API key for authentication
 
 paths:
   /health:
@@ -92,6 +85,12 @@ paths:
                 message: "Amount must be a positive integer in cents"
 
 components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for authentication
   schemas:
     CreatePaymentRequest:
       type: object

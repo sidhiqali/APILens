@@ -57,7 +57,10 @@ export class ApisService {
       changeCount: changeCountMap.get((api._id as any).toString()) || 0,
     }));
 
-    return apisWithChangeCounts.map((api) => this.toResponseDto(api));
+    const updatedApis =
+      await this.updateHealthStatusFromChanges(apisWithChangeCounts);
+
+    return updatedApis.map((api) => this.toResponseDto(api));
   }
 
   async getApisToCheck(): Promise<Api[]> {
@@ -227,6 +230,17 @@ export class ApisService {
         newSpec,
         apiId,
       );
+
+      // Update health status based on changes if changes are detected
+      if (changeResult.hasChanges) {
+        const changeBasedHealthStatus = this.mapChangeToHealthStatus(
+          changeResult.severity,
+        );
+        healthStatus = this.getWorseHealthStatus(
+          healthStatus,
+          changeBasedHealthStatus,
+        );
+      }
 
       const previousHealthStatus = api.healthStatus;
 
@@ -838,7 +852,9 @@ export class ApisService {
     try {
       return await this.issueAnalyzerService.analyzeApiIssues(id, userId);
     } catch (error) {
-      this.logger.error(`Error getting health issues for API ${id}: ${error.message}`);
+      this.logger.error(
+        `Error getting health issues for API ${id}: ${error.message}`,
+      );
       throw new NotFoundException(error.message);
     }
   }
@@ -919,5 +935,109 @@ export class ApisService {
         `Error during health status initialization: ${error.message}`,
       );
     }
+  }
+
+  /**
+   * Maps change severity to health status
+   */
+  private mapChangeToHealthStatus(
+    severity: 'low' | 'medium' | 'high' | 'critical',
+  ): string {
+    const statusMapping = {
+      low: 'healthy',
+      medium: 'warning',
+      high: 'unhealthy',
+      critical: 'error',
+    };
+    return statusMapping[severity] || 'healthy';
+  }
+
+  private getWorseHealthStatus(current: string, candidate: string): string {
+    const statusPriority = {
+      healthy: 0,
+      warning: 1,
+      checking: 1,
+      unhealthy: 2,
+      degraded: 2,
+      error: 3,
+    };
+
+    const currentPriority = statusPriority[current] || 0;
+    const candidatePriority = statusPriority[candidate] || 0;
+
+    return candidatePriority > currentPriority ? candidate : current;
+  }
+
+  async updateHealthStatusFromChanges(apis: any[]): Promise<any[]> {
+    const updatedApis: any[] = [];
+
+    for (const api of apis) {
+      const recentChanges = await this.apiChangeModel
+        .find({ apiId: api._id })
+        .sort({ detectedAt: -1 })
+        .limit(10)
+        .exec();
+
+      if (recentChanges.length > 0) {
+        let worstSeverity = 'low';
+        let hasBreakingChanges = false;
+
+        for (const change of recentChanges) {
+          if (change.changeType === 'breaking') {
+            hasBreakingChanges = true;
+          }
+
+          const severityPriority = { low: 1, medium: 2, high: 3, critical: 4 };
+          if (
+            severityPriority[change.severity] > severityPriority[worstSeverity]
+          ) {
+            worstSeverity = change.severity;
+          }
+        }
+
+        let newHealthStatus = api.healthStatus || 'healthy';
+
+        if (hasBreakingChanges) {
+          if (worstSeverity === 'critical') {
+            newHealthStatus = 'error';
+          } else if (worstSeverity === 'high') {
+            newHealthStatus = 'unhealthy';
+          } else if (worstSeverity === 'medium') {
+            newHealthStatus = 'warning';
+          }
+        } else {
+          if (worstSeverity === 'critical') {
+            newHealthStatus = 'unhealthy';
+          } else if (worstSeverity === 'high') {
+            newHealthStatus = 'warning';
+          }
+        }
+
+        const statusPriority = {
+          healthy: 0,
+          warning: 1,
+          unhealthy: 2,
+          error: 3,
+        };
+        const currentPriority = statusPriority[api.healthStatus] || 0;
+        const newPriority = statusPriority[newHealthStatus] || 0;
+
+        if (newPriority > currentPriority) {
+          await this.apiModel.findByIdAndUpdate(api._id, {
+            healthStatus: newHealthStatus,
+            lastStatusUpdate: new Date(),
+          });
+
+          api.healthStatus = newHealthStatus;
+          this.logger.log(
+            `${api.apiName} status updated: ${api.healthStatus} → ${newHealthStatus} (severity: ${worstSeverity}, breaking: ${hasBreakingChanges})`,
+          );
+        }
+      }
+
+      updatedApis.push(api);
+    }
+
+    return updatedApis;
   }
 }

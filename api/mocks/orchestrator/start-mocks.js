@@ -6,6 +6,7 @@ const net = require('net');
 const http = require('http');
 const url = require('url');
 
+
 const config = require('./prismauto.config.js');
 
 // Cross-platform binary detection
@@ -280,36 +281,21 @@ function updateSpecServer(name, newSpecPath) {
   }
 }
 
-// Setup version switching logic
+
 function setupVersionSwitching(apiConfig) {
-  const { name, port, v1, v2, flipAfterMs, flipBackEveryMs, description } = apiConfig;
+  const { name, description, port, v1, v2, flipAfterMs } = apiConfig;
+  console.log(`⏰ ${name} will flip to v2 in ${flipAfterMs/1000}s`);
   
-  // One-time flip to v2
   if (flipAfterMs && flipAfterMs > 0) {
     setTimeout(() => {
       log(`🔄 ${name} flipping to v2 (${description})...`);
       killPrism(name);
       setTimeout(() => {
         startPrism(name, port, v2, 'v2');
-        updateSpecServer(name, v2); // Update spec server too
+        updateSpecServer(name, v2);
+        log(`✅ ${name} permanently upgraded to v2 - no reverting back!`);
       }, 1000);
     }, flipAfterMs);
-  }
-  
-  // Periodic flip back and forth (optional feature)
-  if (flipBackEveryMs && flipBackEveryMs > 0) {
-    let currentVersion = 'v1';
-    setInterval(() => {
-      currentVersion = currentVersion === 'v1' ? 'v2' : 'v1';
-      const specPath = currentVersion === 'v1' ? v1 : v2;
-      
-      log(`🔄 ${name} toggling to ${currentVersion}...`);
-      killPrism(name);
-      setTimeout(() => {
-        startPrism(name, port, specPath, currentVersion);
-        updateSpecServer(name, specPath);
-      }, 1000);
-    }, flipBackEveryMs);
   }
 }
 

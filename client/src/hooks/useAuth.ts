@@ -99,20 +99,30 @@ export const useAuthHooks = () => {
           response.message ||
             'Registration successful! Please check your email for verification link.',
           {
-            duration: 5000,
+            duration: 6000,
             position: 'top-center',
+            style: {
+              background: '#10B981',
+              color: '#fff',
+              fontWeight: '500',
+            },
           }
         );
-        setTimeout(() => {
-          router.push('/login');
-        }, 2000);
       }
     },
     onError: (error: any) => {
       const errorMessage =
         error.response?.data?.message || 'Registration failed';
       setError(errorMessage);
-      toast.error(errorMessage);
+      toast.error(errorMessage, {
+        duration: 5000,
+        position: 'top-center',
+        style: {
+          background: '#EF4444',
+          color: '#fff',
+          fontWeight: '500',
+        },
+      });
     },
     onSettled: () => {
       setLoading(false);

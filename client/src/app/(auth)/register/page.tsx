@@ -11,7 +11,9 @@ import {
   Loader2, 
   Mail, 
   Lock,
-  AlertCircle
+  AlertCircle,
+  CheckCircle2,
+  ArrowRight
 } from 'lucide-react';
 
 const RegisterPage = () => {
@@ -21,8 +23,9 @@ const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isRegistrationSuccess, setIsRegistrationSuccess] = useState(false);
   
-  const { register, isRegisterPending } = useAuthHooks();
+  const { register, isRegisterPending, registerMutation, resendVerification, isResendVerificationPending } = useAuthHooks();
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -59,6 +62,13 @@ const RegisterPage = () => {
     register({ email, password, role: 'user' });
   };
 
+  // Track registration success
+  React.useEffect(() => {
+    if (registerMutation.isSuccess && !isRegistrationSuccess) {
+      setIsRegistrationSuccess(true);
+    }
+  }, [registerMutation.isSuccess, isRegistrationSuccess]);
+
   const handleInputChange = (field: string, value: string) => {
     if (field === 'email') setEmail(value);
     if (field === 'password') setPassword(value);
@@ -82,7 +92,58 @@ const RegisterPage = () => {
           </div>
 
           <div className="px-8 pb-8">
-            <form onSubmit={handleSubmit} className="space-y-6">
+            {isRegistrationSuccess ? (
+              // Success State
+              <div className="text-center space-y-6">
+                <div className="w-20 h-20 bg-green-100 rounded-full mx-auto flex items-center justify-center mb-6">
+                  <CheckCircle2 className="text-green-600 w-10 h-10" />
+                </div>
+                
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-3">
+                    Account Created Successfully!
+                  </h2>
+                  <p className="text-gray-600 mb-6">
+                    We&apos;ve sent a verification email to <strong>{email}</strong>
+                  </p>
+                </div>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
+                  <h3 className="font-semibold text-blue-900 mb-2 flex items-center">
+                    <Mail className="w-4 h-4 mr-2" />
+                    Next Steps:
+                  </h3>
+                  <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
+                    <li>Check your email inbox (and spam folder)</li>
+                    <li>Click the verification link in the email</li>
+                    <li>Return here to sign in to your account</li>
+                  </ol>
+                </div>
+
+                <div className="space-y-3">
+                  <Link
+                    href="/login"
+                    className="w-full flex items-center justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+                  >
+                    Continue to Sign In
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Link>
+                  
+                  <p className="text-sm text-gray-500">
+                    Didn&apos;t receive the email?{' '}
+                    <button 
+                      className="text-blue-600 hover:text-blue-500 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={() => resendVerification()}
+                      disabled={isResendVerificationPending}
+                    >
+                      {isResendVerificationPending ? 'Sending...' : 'Resend verification email'}
+                    </button>
+                  </p>
+                </div>
+              </div>
+            ) : (
+              // Registration Form
+              <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Email address
@@ -241,6 +302,7 @@ const RegisterPage = () => {
                 </Link>
               </div>
             </form>
+            )}
           </div>
         </div>
       </div>

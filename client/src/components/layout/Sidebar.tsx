@@ -82,11 +82,12 @@ const Sidebar = ({
       href: '/notifications',
       icon: Bell,
     },
-    {
-      title: 'Analytics',
-      href: '/analytics',
-      icon: BarChart3,
-    },
+    // Analytics temporarily disabled - contains hardcoded data
+    // {
+    //   title: 'Analytics',
+    //   href: '/analytics',
+    //   icon: BarChart3,
+    // },
     {
       title: 'Settings',
       href: '/settings',

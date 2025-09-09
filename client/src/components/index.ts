@@ -41,14 +41,15 @@ export { default as CriticalAlerts } from './dashboard/CriticalAlerts';
 export { default as HealthMonitor } from './dashboard/HealthMonitor';
 export { default as QuickActions } from './dashboard/QuickActions';
 
-export {
-  APIPerformanceChart,
-  TimeSeriesChart,
-  TrendAnalysis,
-  ComparisonView,
-  HealthScoreCard,
-  MetricsHeatmap,
-} from './analytics';
+// Analytics components temporarily disabled - contain hardcoded data
+// export {
+//   APIPerformanceChart,
+//   TimeSeriesChart,
+//   TrendAnalysis,
+//   ComparisonView,
+//   HealthScoreCard,
+//   MetricsHeatmap,
+// } from './analytics';
 
 export { HealthIssuesExpander } from './HealthIssuesExpander';
 export { ChangeDetailModal } from './modals/ChangeDetailModal';

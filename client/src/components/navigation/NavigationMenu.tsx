@@ -12,8 +12,8 @@ import {
   BarChart3,
   Users,
   Shield,
-  Calendar,
-  FileText,
+  // Calendar, // Temporarily disabled with analytics
+  // FileText, // Temporarily disabled with analytics
   LogOut,
   ChevronDown,
   ChevronRight,
@@ -119,32 +119,33 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
       icon: Bell,
       badge: unreadCount,
     },
-    {
-      id: 'analytics',
-      label: 'Analytics',
-      href: '/analytics',
-      icon: BarChart3,
-      children: [
-        {
-          id: 'analytics-overview',
-          label: 'Overview',
-          href: '/analytics',
-          icon: BarChart3,
-        },
-        {
-          id: 'analytics-reports',
-          label: 'Reports',
-          href: '/analytics/reports',
-          icon: FileText,
-        },
-        {
-          id: 'analytics-trends',
-          label: 'Trends',
-          href: '/analytics/trends',
-          icon: Calendar,
-        },
-      ],
-    },
+    // Analytics section temporarily disabled 
+    // {
+    //   id: 'analytics',
+    //   label: 'Analytics',
+    //   href: '/analytics',
+    //   icon: BarChart3,
+    //   children: [
+    //     {
+    //       id: 'analytics-overview',
+    //       label: 'Overview',
+    //       href: '/analytics',
+    //       icon: BarChart3,
+    //     },
+    //     {
+    //       id: 'analytics-reports',
+    //       label: 'Reports',
+    //       href: '/analytics/reports',
+    //       icon: FileText,
+    //     },
+    //     {
+    //       id: 'analytics-trends',
+    //       label: 'Trends',
+    //       href: '/analytics/trends',
+    //       icon: Calendar,
+    //     },
+    //   ],
+    // },
     {
       id: 'team',
       label: 'Team',

@@ -65,15 +65,15 @@ const BreadcrumbNavigation: React.FC<BreadcrumbNavigationProps> = ({
       apis: 'APIs',
       'add-api': 'Add API',
       notifications: 'Notifications',
-      analytics: 'Analytics',
+      // analytics: 'Analytics', // Temporarily disabled
       team: 'Team',
       settings: 'Settings',
       profile: 'Profile',
       security: 'Security',
       members: 'Members',
       permissions: 'Permissions',
-      reports: 'Reports',
-      trends: 'Trends',
+      // reports: 'Reports', // Temporarily disabled
+      // trends: 'Trends', // Temporarily disabled
       monitoring: 'Monitoring',
       changelogs: 'Change Logs',
       dashboard: 'Dashboard',
@@ -168,7 +168,7 @@ export const EnhancedBreadcrumb: React.FC<EnhancedBreadcrumbProps> = ({
       apis: 'API Management',
       'add-api': 'Add New API',
       notifications: 'Notifications',
-      analytics: 'Analytics',
+      // analytics: 'Analytics', // Temporarily disabled
       team: 'Team Management',
       settings: 'Settings',
       profile: 'Profile Settings',

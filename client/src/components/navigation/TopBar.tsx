@@ -137,7 +137,7 @@ const TopBar: React.FC<TopBarProps> = ({
       apis: 'API Management',
       'add-api': 'Add New API',
       notifications: 'Notifications',
-      analytics: 'Analytics',
+      // analytics: 'Analytics', // Temporarily disabled
       team: 'Team Management',
       settings: 'Settings',
     };

@@ -1,20 +1,20 @@
 import * as vscode from 'vscode';
 import { APIService, ApiData, DashboardStats } from '../services/APIService';
-import { router, RouteParams } from '../lib/router';
 
 export class APILensWebviewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = 'apilens.main';
     private _view?: vscode.WebviewView;
     private activeApiDetailTab: string = 'overview';
+    private selectedApiId: string | null = null;
+    private selectedApiDetails: any = null;
+    private selectedApiChanges: any[] = [];
+    private selectedApiIssues: any[] = [];
 
     constructor(
         private readonly context: vscode.ExtensionContext,
         private readonly apiService: APIService
     ) {
         this.apiService.setContext(context);
-        router.onRouteChange((route, params) => {
-            this.handleRouteChange(route, params);
-        });
     }
 
     public resolveWebviewView(
@@ -55,15 +55,7 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
         });
     }
 
-    public navigateTo(path: string) {
-        router.navigate(path);
-    }
-
-    private handleRouteChange(route: string, params: RouteParams) {
-        this.sendMessage({ type: 'routeChanged', route, params });
-    }
-
-    private sendMessage(message: any) {
+    public sendMessage(message: any) {
         if (this._view) {
             this._view.webview.postMessage(message);
         }
@@ -103,9 +95,6 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
                 break;
             case 'logout':
                 await this.handleLogout();
-                break;
-            case 'navigate':
-                router.navigate(message.path);
                 break;
             case 'getDashboardStats':
                 await this.handleGetDashboardStats();
@@ -267,7 +256,7 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
             await this.apiService.logout();
             this.sendMessage({ type: 'logoutSuccess' });
             this.sendMessage({ type: 'authStatus', data: { isAuthenticated: false } });
-            router.navigate('/login');
+            // After logout, the webview will handle showing login screen
         } catch (error: any) {
             this.sendMessage({ 
                 type: 'logoutError', 
@@ -3392,13 +3381,14 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
                 case 'loginResponse':
                     handleLoginResponse(message.data);
                     break;
-                case 'routeChanged':
-                    handleRouteChanged(message.route, message.params);
-                    break;
                 case 'apiDetailData':
                     appData.currentApiDetail = message.data;
-                    if (currentTab.startsWith('api-detail')) {
-                        renderApiDetail(message.data);
+                    appData.selectedApiId = message.data.selectedApiId;
+                    appData.selectedApiDetails = message.data.selectedApiDetails;
+                    appData.selectedApiChanges = message.data.selectedApiChanges;
+                    appData.selectedApiIssues = message.data.selectedApiIssues;
+                    if (currentTab === 'api-details') {
+                        renderApiDetailsTab();
                     }
                     break;
                 case 'dashboardData':
@@ -4281,6 +4271,131 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
             if (confirm(\`Are you sure you want to delete \${selectedIds.length} APIs? This action cannot be undone.\`)) {
                 selectedIds.forEach(id => deleteApi(id));
             }
+        }
+        
+        function renderApiDetailsTab() {
+            // Check if we have a selected API
+            if (!appData.selectedApiId) {
+                document.getElementById('content-body').innerHTML = \`
+                    <div class="empty-state-large">
+                        <div class="empty-icon">📋</div>
+                        <h3>No API Selected</h3>
+                        <p>Please select an API from the APIs tab to view detailed information.</p>
+                        <button class="btn btn-primary" onclick="switchTab('apis')">Browse APIs</button>
+                    </div>
+                \`;
+                return;
+            }
+
+            // Check if we have API details loaded
+            if (!appData.selectedApiDetails) {
+                document.getElementById('content-body').innerHTML = \`
+                    <div class="loading-content">
+                        <div class="loading-spinner">⏳</div>
+                        <div>Loading API details...</div>
+                    </div>
+                \`;
+                // Request the details
+                vscode.postMessage({ type: 'getApiDetail', apiId: appData.selectedApiId });
+                return;
+            }
+
+            const api = appData.selectedApiDetails;
+            const recentChanges = appData.selectedApiChanges || [];
+            const issues = appData.selectedApiIssues || [];
+
+            document.getElementById('content-body').innerHTML = \`
+                <div class="api-details-tab-container">
+                    <!-- API Header Section -->
+                    <div class="api-details-header">
+                        <div class="api-title-section">
+                            <h2 class="api-title">\${api.apiName}</h2>
+                            <div class="api-status-badge status-\${api.healthStatus}">
+                                \${getStatusIcon(api.healthStatus)} \${api.healthStatus.toUpperCase()}
+                            </div>
+                        </div>
+                        <div class="api-meta-info">
+                            <span class="api-type">\${api.type}</span>
+                            \${api.version ? \`<span class="api-version">v\${api.version}</span>\` : ''}
+                            <span class="api-last-checked">Last checked: \${formatDateTime(api.lastChecked)}</span>
+                        </div>
+                        \${api.description ? \`<p class="api-description">\${api.description}</p>\` : ''}
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="api-quick-actions">
+                        <button class="btn btn-primary" onclick="checkApiNow('\${api.id}')">
+                            <span class="btn-icon">🔄</span>
+                            Check Now
+                        </button>
+                        <button class="btn btn-secondary" onclick="toggleApiStatus('\${api.id}', \${!api.isActive})">
+                            <span class="btn-icon">\${api.isActive ? '⏸️' : '▶️'}</span>
+                            \${api.isActive ? 'Pause' : 'Resume'}
+                        </button>
+                        <button class="btn btn-link" onclick="editApi('\${api.id}')">
+                            <span class="btn-icon">✏️</span>
+                            Edit
+                        </button>
+                        <button class="btn btn-link" onclick="openExternal('\${api.id}')">
+                            <span class="btn-icon">🔗</span>
+                            Open
+                        </button>
+                    </div>
+
+                    <!-- Content Summary -->
+                    <div class="api-details-summary">
+                        <div class="summary-grid">
+                            <div class="summary-card">
+                                <h4>📊 Overview</h4>
+                                <div class="summary-stats">
+                                    <div class="stat-item">
+                                        <span class="stat-label">Status:</span>
+                                        <span class="stat-value">\${api.isActive ? 'Active' : 'Paused'}</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">Health:</span>
+                                        <span class="stat-value">\${api.healthStatus}</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">Changes:</span>
+                                        <span class="stat-value">\${recentChanges.length}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="summary-card">
+                                <h4>🔄 Recent Changes</h4>
+                                \${recentChanges.length > 0 ? \`
+                                    <div class="recent-changes-preview">
+                                        \${recentChanges.slice(0, 3).map(change => \`
+                                            <div class="change-preview-item">
+                                                <span class="change-type \${change.severity}">\${change.type}</span>
+                                                <span class="change-date">\${formatDateTime(change.timestamp)}</span>
+                                            </div>
+                                        \`).join('')}
+                                        \${recentChanges.length > 3 ? \`<div class="more-changes">+\${recentChanges.length - 3} more</div>\` : ''}
+                                    </div>
+                                \` : '<p class="empty-text">No recent changes</p>'}
+                            </div>
+
+                            <div class="summary-card">
+                                <h4>⚠️ Health Issues</h4>
+                                \${issues.length > 0 ? \`
+                                    <div class="issues-preview">
+                                        \${issues.slice(0, 3).map(issue => \`
+                                            <div class="issue-preview-item severity-\${issue.severity}">
+                                                <span class="issue-type">\${issue.type}</span>
+                                                <span class="issue-severity">\${issue.severity}</span>
+                                            </div>
+                                        \`).join('')}
+                                        \${issues.length > 3 ? \`<div class="more-issues">+\${issues.length - 3} more</div>\` : ''}
+                                    </div>
+                                \` : '<p class="empty-text">No health issues</p>'}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            \`;
         }
         
         function renderChanges() {
@@ -6103,381 +6218,6 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
                         <div>Loading dashboard...</div>
                     </div>
                 \`;
-            }
-        }
-        
-        function handleRouteChanged(route, params) {
-            // Handle route changes from the extension router
-            if (route.startsWith('/apis/') && params.id) {
-                // Navigate to API detail view
-                currentTab = \`api-detail-\${params.id}\`;
-                updateContentHeader(\`API Details\`, \`Detailed view for API\`);
-                
-                // Request API detail data
-                vscode.postMessage({ type: 'getApiDetail', apiId: params.id });
-                
-                // Update navigation state (optional visual feedback)
-                document.querySelectorAll('.nav-item').forEach(item => {
-                    item.classList.remove('active');
-                });
-            }
-        }
-
-        function renderApiDetail(data) {
-            const { api, changelogs, issues } = data;
-            
-            const content = \`
-                <div class="api-detail-container">
-                    <!-- API Header -->
-                    <div class="api-detail-header">
-                        <div class="api-header-info">
-                            <h1 class="api-title">\${api.apiName || 'Unknown API'}</h1>
-                            <div class="api-status-badges">
-                                <span class="api-status-badge \${api.healthStatus || 'unknown'}">\${api.healthStatus || 'unknown'}</span>
-                                <span class="api-active-badge \${api.isActive ? 'active' : 'inactive'}">\${api.isActive ? 'Active' : 'Inactive'}</span>
-                            </div>
-                            <p class="api-description">\${api.description || 'No description available'}</p>
-                        </div>
-                        <div class="api-actions">
-                            <button class="btn btn-primary" onclick="checkApiNow('\${api._id || api.id}')">Check Now</button>
-                            <button class="btn btn-secondary" onclick="toggleApiStatus('\${api._id || api.id}')">\${api.isActive ? 'Pause' : 'Resume'}</button>
-                            <button class="btn btn-secondary" onclick="editApi('\${api._id || api.id}')">Edit</button>
-                            <button class="btn btn-link" onclick="openApiUrl('\${api.openApiUrl || api.url}')">View OpenAPI ↗</button>
-                        </div>
-                    </div>
-
-                    <!-- Tab Navigation -->
-                    <div class="api-detail-tabs">
-                        <button class="tab-button active" data-tab="overview" onclick="switchApiDetailTab('overview')">
-                            📊 Overview
-                        </button>
-                        <button class="tab-button" data-tab="changes" onclick="switchApiDetailTab('changes')">
-                            🔄 Changes (\${changelogs ? changelogs.length : 0})
-                        </button>
-                        <button class="tab-button" data-tab="settings" onclick="switchApiDetailTab('settings')">
-                            ⚙️ Settings
-                        </button>
-                    </div>
-
-                    <!-- Tab Content -->
-                    <div class="api-detail-content">
-                        <div id="overview-tab" class="tab-content active">
-                            \${renderOverviewTab(api, changelogs, issues)}
-                        </div>
-                        <div id="changes-tab" class="tab-content">
-                            \${renderChangesTab(api, changelogs)}
-                        </div>
-                        <div id="settings-tab" class="tab-content">
-                            \${renderSettingsTab(api)}
-                        </div>
-                    </div>
-                </div>
-            \`;
-            
-            document.getElementById('content-body').innerHTML = content;
-        }
-
-        function editApi(apiId) {
-            // Navigate to add-api form with edit parameter
-            switchTab('add-api');
-            // You could pass apiId as a parameter to pre-populate the form
-        }
-
-        function openApiUrl(url) {
-            if (url) {
-                vscode.postMessage({ type: 'openExternal', url: url });
-            }
-        }
-
-        function switchApiDetailTab(tabName) {
-            // Update tab buttons
-            document.querySelectorAll('.tab-button').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            document.querySelector(\`[data-tab="\${tabName}"]\`).classList.add('active');
-            
-            // Update tab content
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            document.getElementById(\`\${tabName}-tab\`).classList.add('active');
-        }
-
-        function renderOverviewTab(api, changelogs, issues) {
-            return \`
-                <!-- API Info Grid -->
-                <div class="api-info-section">
-                    <h3>API Information</h3>
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <label>URL</label>
-                            <span class="info-value">\${api.openApiUrl || api.url || 'N/A'}</span>
-                        </div>
-                        <div class="info-item">
-                            <label>Check Frequency</label>
-                            <span class="info-value">\${api.checkFrequency || 'N/A'} minutes</span>
-                        </div>
-                        <div class="info-item">
-                            <label>Last Checked</label>
-                            <span class="info-value">\${api.lastChecked ? new Date(api.lastChecked).toLocaleString() : 'Never'}</span>
-                        </div>
-                        <div class="info-item">
-                            <label>Created</label>
-                            <span class="info-value">\${api.createdAt ? new Date(api.createdAt).toLocaleDateString() : 'Unknown'}</span>
-                        </div>
-                        <div class="info-item">
-                            <label>Version</label>
-                            <span class="info-value">\${api.version || 'N/A'}</span>
-                        </div>
-                        <div class="info-item">
-                            <label>Type</label>
-                            <span class="info-value">\${api.type || 'OpenAPI'}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Recent Changes -->
-                <div class="changes-section">
-                    <div class="section-header">
-                        <h3>Recent Changes</h3>
-                        <button class="btn btn-link" onclick="switchApiDetailTab('changes')">View All Changes</button>
-                    </div>
-                    \${changelogs && changelogs.length > 0 ? \`
-                        <div class="changes-list">
-                            \${changelogs.slice(0, 5).map(change => \`
-                                <div class="change-item">
-                                    <div class="change-header">
-                                        <span class="change-type">\${change.changeType || change.type || 'Change'}</span>
-                                        <span class="change-severity \${change.severity || (change.breaking ? 'critical' : 'minor')}">\${change.severity || (change.breaking ? 'Breaking' : 'Minor')}</span>
-                                        <span class="change-date">\${new Date(change.detectedAt || change.timestamp || change.createdAt).toLocaleString()}</span>
-                                    </div>
-                                    <p class="change-description">\${change.summary || change.description || 'API schema has been updated'}</p>
-                                </div>
-                            \`).join('')}
-                        </div>
-                    \` : \`
-                        <div class="empty-state-small">
-                            <p>No changes detected yet. Changes will appear here once monitoring begins.</p>
-                        </div>
-                    \`}
-                </div>
-
-                <!-- Active Issues -->
-                <div class="issues-section">
-                    <div class="section-header">
-                        <h3>Active Issues</h3>
-                        <button class="btn btn-link" onclick="switchTab('issues')">View All Issues</button>
-                    </div>
-                    \${issues && issues.length > 0 ? \`
-                        <div class="issues-list">
-                            \${issues.slice(0, 3).map(issue => \`
-                                <div class="issue-item">
-                                    <div class="issue-header">
-                                        <span class="issue-severity \${issue.severity || issue.priority || 'medium'}">\${issue.severity || issue.priority || 'Medium'}</span>
-                                        <span class="issue-type">\${issue.type || 'Health Issue'}</span>
-                                        <span class="issue-date">\${new Date(issue.timestamp || issue.createdAt || Date.now()).toLocaleString()}</span>
-                                    </div>
-                                    <h4 class="issue-title">\${issue.title || 'API Issue'}</h4>
-                                    <p class="issue-description">\${issue.description || 'No description available'}</p>
-                                </div>
-                            \`).join('')}
-                        </div>
-                    \` : \`
-                        <div class="empty-state-small">
-                            <p>No active issues. This API is running smoothly.</p>
-                        </div>
-                    \`}
-                </div>
-            \`;
-        }
-
-        function renderChangesTab(api, changelogs) {
-            return \`
-                <div class="changes-tab-content">
-                    <!-- Changes Stats -->
-                    <div class="changes-stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-icon">🔄</div>
-                            <div class="stat-content">
-                                <div class="stat-number">\${changelogs ? changelogs.length : 0}</div>
-                                <div class="stat-label">Total Changes</div>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon">⚠️</div>
-                            <div class="stat-content">
-                                <div class="stat-number">\${changelogs ? changelogs.filter(c => c.breaking || c.severity === 'critical').length : 0}</div>
-                                <div class="stat-label">Breaking Changes</div>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon">📅</div>
-                            <div class="stat-content">
-                                <div class="stat-number">\${changelogs ? changelogs.filter(c => {
-                                    const changeDate = new Date(c.detectedAt || c.timestamp || c.createdAt);
-                                    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-                                    return changeDate > weekAgo;
-                                }).length : 0}</div>
-                                <div class="stat-label">Last 7 Days</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Changes Timeline -->
-                    <div class="changes-timeline-section">
-                        <h3>Change History</h3>
-                        \${changelogs && changelogs.length > 0 ? \`
-                            <div class="changes-timeline">
-                                \${changelogs.map((change, index) => \`
-                                    <div class="timeline-item">
-                                        <div class="timeline-marker \${change.severity || (change.breaking ? 'critical' : 'minor')}"></div>
-                                        <div class="timeline-content">
-                                            <div class="change-header">
-                                                <span class="change-type">\${change.changeType || change.type || 'Change'}</span>
-                                                <span class="change-severity \${change.severity || (change.breaking ? 'critical' : 'minor')}">\${change.severity || (change.breaking ? 'Breaking' : 'Minor')}</span>
-                                                <span class="change-date">\${new Date(change.detectedAt || change.timestamp || change.createdAt).toLocaleString()}</span>
-                                            </div>
-                                            <h4 class="change-title">\${change.summary || change.description || 'API schema has been updated'}</h4>
-                                            \${change.changes && Array.isArray(change.changes) ? \`
-                                                <div class="change-details">
-                                                    <p class="change-details-summary">\${change.changes.length} detailed change\${change.changes.length !== 1 ? 's' : ''}:</p>
-                                                    <ul class="change-details-list">
-                                                        \${change.changes.slice(0, 3).map(detail => \`
-                                                            <li class="change-detail-item">
-                                                                <span class="detail-type \${detail.changeType || 'modified'}">\${detail.changeType || 'modified'}</span>
-                                                                <span class="detail-path">\${detail.path}</span>
-                                                                <span class="detail-description">\${detail.description}</span>
-                                                            </li>
-                                                        \`).join('')}
-                                                        \${change.changes.length > 3 ? \`
-                                                            <li class="change-detail-more">... and \${change.changes.length - 3} more changes</li>
-                                                        \` : ''}
-                                                    </ul>
-                                                </div>
-                                            \` : ''}
-                                            \${change.affectedEndpoints && change.affectedEndpoints.length > 0 ? \`
-                                                <div class="affected-endpoints">
-                                                    <span class="endpoints-label">Affected endpoints:</span>
-                                                    <span class="endpoints-list">\${change.affectedEndpoints.slice(0, 3).join(', ')}\${change.affectedEndpoints.length > 3 ? \` +\${change.affectedEndpoints.length - 3} more\` : ''}</span>
-                                                </div>
-                                            \` : ''}
-                                        </div>
-                                    </div>
-                                \`).join('')}
-                            </div>
-                        \` : \`
-                            <div class="empty-state-large">
-                                <div class="empty-icon">🔄</div>
-                                <h4>No Changes Yet</h4>
-                                <p>This API hasn't been monitored long enough to detect changes. Check back later to see the change history.</p>
-                                <p class="empty-meta">Monitoring frequency: Every \${api.checkFrequency || 'N/A'} minutes</p>
-                            </div>
-                        \`}
-                    </div>
-                </div>
-            \`;
-        }
-
-        function renderSettingsTab(api) {
-            return \`
-                <div class="settings-tab-content">
-                    <div class="settings-form">
-                        <h3>API Configuration</h3>
-                        
-                        <div class="form-section">
-                            <div class="form-group">
-                                <label for="api-name">API Name</label>
-                                <input type="text" id="api-name" value="\${api.apiName || ''}" placeholder="Enter API name">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="api-description">Description</label>
-                                <textarea id="api-description" placeholder="Enter API description" rows="3">\${api.description || ''}</textarea>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="api-url">OpenAPI URL</label>
-                                <input type="url" id="api-url" value="\${api.openApiUrl || api.url || ''}" placeholder="https://api.example.com/openapi.json">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="check-frequency">Check Frequency (minutes)</label>
-                                <input type="number" id="check-frequency" value="\${api.checkFrequency || 5}" min="1" max="1440">
-                                <small>How often to check for API changes</small>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="api-tags">Tags (comma separated)</label>
-                                <input type="text" id="api-tags" value="\${api.tags ? api.tags.join(', ') : ''}" placeholder="production, user-api, v2">
-                            </div>
-                        </div>
-
-                        <div class="form-section">
-                            <h4>Monitoring Options</h4>
-                            
-                            <div class="form-group checkbox">
-                                <input type="checkbox" id="is-active" \${api.isActive ? 'checked' : ''}>
-                                <label for="is-active">Enable monitoring for this API</label>
-                            </div>
-                        </div>
-
-                        <div class="form-actions">
-                            <button class="btn btn-primary" onclick="saveApiSettings('\${api._id || api.id}')">Save Changes</button>
-                            <button class="btn btn-secondary" onclick="exportApiData('\${api._id || api.id}')">Export Data</button>
-                            <button class="btn btn-danger" onclick="deleteApiConfirm('\${api._id || api.id}')">Delete API</button>
-                        </div>
-                    </div>
-
-                    <div class="settings-danger-zone">
-                        <h4>Danger Zone</h4>
-                        <p>These actions cannot be undone. Please be careful.</p>
-                        <div class="danger-actions">
-                            <button class="btn btn-danger-outline" onclick="resetApiData('\${api._id || api.id}')">Reset Change History</button>
-                        </div>
-                    </div>
-                </div>
-            \`;
-        }
-
-        function saveApiSettings(apiId) {
-            const formData = {
-                apiName: document.getElementById('api-name').value,
-                description: document.getElementById('api-description').value,
-                openApiUrl: document.getElementById('api-url').value,
-                checkFrequency: parseInt(document.getElementById('check-frequency').value),
-                tags: document.getElementById('api-tags').value.split(',').map(tag => tag.trim()).filter(tag => tag),
-                isActive: document.getElementById('is-active').checked
-            };
-            
-            vscode.postMessage({ 
-                type: 'updateApi', 
-                apiId: apiId,
-                data: formData 
-            });
-        }
-
-        function exportApiData(apiId) {
-            vscode.postMessage({ 
-                type: 'exportApiData', 
-                apiId: apiId 
-            });
-        }
-
-        function deleteApiConfirm(apiId) {
-            if (confirm('Are you sure you want to delete this API? This action cannot be undone and will remove all monitoring data.')) {
-                vscode.postMessage({ 
-                    type: 'deleteApi', 
-                    id: apiId 
-                });
-            }
-        }
-
-        function resetApiData(apiId) {
-            if (confirm('Are you sure you want to reset all change history for this API? This action cannot be undone.')) {
-                vscode.postMessage({ 
-                    type: 'resetApiData', 
-                    apiId: apiId 
-                });
             }
         }
         

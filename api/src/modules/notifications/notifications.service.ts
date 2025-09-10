@@ -25,7 +25,7 @@ export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
 
   // Feature flag to disable database storage to save MongoDB quota
-  private readonly DISABLE_DB_STORAGE = false;
+  private readonly DISABLE_DB_STORAGE = true;
 
   constructor(
     @InjectModel(Notification.name)

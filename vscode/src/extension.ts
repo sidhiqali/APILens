@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { APILensWebviewProvider } from './providers/WebviewProvider';
-import { APIDetailViewProvider } from './providers/APIDetailViewProvider';
 import { APIService } from './services/APIService';
 import { WebSocketService } from './services/WebSocketService';
 import { StatusBarService } from './services/StatusBarService';
@@ -8,7 +7,6 @@ import { FileSystemService } from './services/FileSystemService';
 import { FileContextMenuHandler } from './handlers/FileContextMenuHandler';
 
 let webviewProvider: APILensWebviewProvider;
-let apiDetailProvider: APIDetailViewProvider;
 let apiService: APIService;
 let webSocketService: WebSocketService;
 let statusBarService: StatusBarService;
@@ -25,7 +23,6 @@ export function activate(context: vscode.ExtensionContext) {
     
     // Initialize providers
     webviewProvider = new APILensWebviewProvider(context, apiService);
-    apiDetailProvider = new APIDetailViewProvider(context, apiService);
     
     // Initialize handlers
     fileContextMenuHandler = new FileContextMenuHandler(context, fileSystemService, apiService);
@@ -34,16 +31,6 @@ export function activate(context: vscode.ExtensionContext) {
     const mainProvider = vscode.window.registerWebviewViewProvider(
         'apilens.main',
         webviewProvider,
-        {
-            webviewOptions: {
-                retainContextWhenHidden: true
-            }
-        }
-    );
-
-    const apiDetailProviderDisposable = vscode.window.registerWebviewViewProvider(
-        'apilens.apiDetail',
-        apiDetailProvider,
         {
             webviewOptions: {
                 retainContextWhenHidden: true
@@ -62,17 +49,29 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
     const addApiCommand = vscode.commands.registerCommand('apilens.addApi', () => {
-        webviewProvider.navigateTo('/add-api');
+        webviewProvider.show();
+        // Switch to add-api tab via message
+        setTimeout(() => {
+            webviewProvider.sendMessage({ type: 'switchTab', tab: 'add-api' });
+        }, 100);
     });
 
     const viewChangesCommand = vscode.commands.registerCommand('apilens.viewChanges', () => {
-        webviewProvider.navigateTo('/changes');
+        webviewProvider.show();
+        // Switch to changes tab via message  
+        setTimeout(() => {
+            webviewProvider.sendMessage({ type: 'switchTab', tab: 'changes' });
+        }, 100);
     });
 
-    // Allow webview to open API detail by id
+    // Show API detail in the API Details tab
     const showApiDetailCommand = vscode.commands.registerCommand('apilens.showApiDetail', (id: string) => {
         if (id) {
-            apiDetailProvider.showApiDetail(id);
+            webviewProvider.show();
+            // Use the existing showApiDetail handler
+            setTimeout(() => {
+                webviewProvider.sendMessage({ type: 'showApiDetail', apiId: id });
+            }, 100);
         }
     });
 
@@ -105,7 +104,12 @@ export function activate(context: vscode.ExtensionContext) {
                 'View Details'
             ).then(selection => {
                 if (selection === 'View Details') {
-                    apiDetailProvider.showApiDetail(data.apiId);
+                    // Open the main webview and navigate to API details
+                    vscode.commands.executeCommand('apilens.openPanel');
+                    webviewProvider.sendMessage({
+                        type: 'navigateToApi',
+                        apiId: data.apiId
+                    });
                 }
             });
         }
@@ -120,7 +124,12 @@ export function activate(context: vscode.ExtensionContext) {
                 'View Details'
             ).then(selection => {
                 if (selection === 'View Details') {
-                    apiDetailProvider.showApiDetail(data.apiId);
+                    // Open the main webview and navigate to API details
+                    vscode.commands.executeCommand('apilens.openPanel');
+                    webviewProvider.sendMessage({
+                        type: 'navigateToApi',
+                        apiId: data.apiId
+                    });
                 }
             });
         }
@@ -135,7 +144,6 @@ export function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(
         mainProvider,
-        apiDetailProviderDisposable,
         openPanelCommand,
         refreshCommand,
         addApiCommand,

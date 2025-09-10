@@ -21,11 +21,7 @@
     "changelog",
     "tracking"
   ],
-  "activationEvents": [
-    "onView:apilens.main",
-    "onView:apilens.apiDetail",
-    "onCommand:apilens.showApiDetail"
-  ],
+  "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
@@ -54,24 +50,22 @@
         "icon": "$(git-compare)"
       },
       {
-        "command": "apilens.showApiDetail",
-        "title": "Show API Detail",
-        "category": "APILens"
-      },
-      {
         "command": "apilens.registerApiFromFile",
         "title": "Register API with APILens",
-        "category": "APILens"
+        "category": "APILens",
+        "icon": "$(database)"
       },
       {
         "command": "apilens.importApiSpec",
         "title": "Import to APILens",
-        "category": "APILens"
+        "category": "APILens",
+        "icon": "$(cloud-upload)"
       },
       {
         "command": "apilens.validateOpenAPI",
         "title": "Validate OpenAPI Spec",
-        "category": "APILens"
+        "category": "APILens",
+        "icon": "$(check)"
       }
     ],
     "viewsContainers": {
@@ -90,21 +84,8 @@
           "name": "APILens Dashboard",
           "type": "webview"
         }
-      ],
-      "explorer": [
-        {
-          "id": "apilens.apiDetail",
-          "name": "API Details",
-          "when": "apilens.hasApis"
-        }
       ]
     },
-    "viewsWelcome": [
-      {
-        "view": "apilens.apiDetail",
-        "contents": "No API selected.\n[Open APILens](command:apilens.openPanel) to select an API for detailed view."
-      }
-    ],
     "menus": {
       "commandPalette": [
         {

@@ -79,6 +79,17 @@ const apis = [
     frequency: '20s',
     expectedChange: 'Multiple changes: new /webhooks endpoint + 429 responses + header changes',
     flipTime: '60 seconds'
+  },
+  {
+    name: 'Catalog API',
+    description: 'Product catalog API - manual-change demo (no auto flip)',
+    baseUrl: 'http://localhost:4107',
+    specUrl: 'http://localhost:5107/openapi.json',
+    category: 'Catalog',
+    tags: ['catalog', 'products', 'manual-demo'],
+    frequency: '30s',
+    expectedChange: 'Manually edit spec: rename name→title, q→search, offset→cursor',
+    flipTime: 'manual'
   }
 ];
 

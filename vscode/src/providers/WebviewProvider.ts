@@ -130,6 +130,9 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
             case 'checkApiNow':
                 await this.handleCheckApiNow(message.id);
                 break;
+            case 'showApiDetail':
+                await this.handleShowApiDetail(message.apiId);
+                break;
             case 'getAnalytics':
                 await this.handleGetAnalytics(message.params);
                 break;
@@ -354,6 +357,15 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
                 type: 'error', 
                 error: error.message 
             });
+        }
+    }
+
+    private async handleShowApiDetail(apiId: string) {
+        try {
+            // Execute VSCode command to show API details in sidebar
+            await vscode.commands.executeCommand('apilens.showApiDetail', apiId);
+        } catch (error: any) {
+            console.error('Error showing API detail:', error);
         }
     }
 
@@ -2615,14 +2627,6 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
                         <span class="nav-icon">⚠️</span>
                         <span class="nav-text">Issues & Alerts</span>
                     </a>
-                    <a href="#" class="nav-item" data-tab="notifications">
-                        <span class="nav-icon">🔔</span>
-                        <span class="nav-text">Notifications</span>
-                    </a>
-                    <a href="#" class="nav-item" data-tab="analytics">
-                        <span class="nav-icon">📈</span>
-                        <span class="nav-text">Analytics</span>
-                    </a>
                     <a href="#" class="nav-item" data-tab="settings">
                         <span class="nav-icon">⚙️</span>
                         <span class="nav-text">Settings</span>
@@ -2751,14 +2755,6 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
                 case 'issues':
                     updateContentHeader('Issues & Alerts', 'Monitor critical issues, health problems, and performance alerts');
                     renderIssues();
-                    break;
-                case 'notifications':
-                    updateContentHeader('Notifications', 'View and manage your API notifications');
-                    renderNotifications();
-                    break;
-                case 'analytics':
-                    updateContentHeader('Analytics Dashboard', 'Comprehensive insights into your API ecosystem');
-                    renderAnalytics();
                     break;
                 case 'settings':
                     updateContentHeader('Settings', 'Manage your account and notification preferences');
@@ -3514,7 +3510,11 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
         }
         
         function viewApiDetails(apiId) {
-            // Future implementation for API details view
+            // Call VSCode command to show API details in the sidebar
+            vscode.postMessage({ 
+                type: 'showApiDetail', 
+                apiId: apiId 
+            });
         }
         
         function selectAllApis() {

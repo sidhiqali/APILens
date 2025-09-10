@@ -48,18 +48,6 @@
         "icon": "$(add)"
       },
       {
-        "command": "apilens.viewAnalytics",
-        "title": "View Analytics",
-        "category": "APILens",
-        "icon": "$(graph)"
-      },
-      {
-        "command": "apilens.viewNotifications",
-        "title": "View Notifications",
-        "category": "APILens",
-        "icon": "$(bell)"
-      },
-      {
         "command": "apilens.viewChanges",
         "title": "View Changes",
         "category": "APILens",
@@ -127,12 +115,6 @@
         },
         {
           "command": "apilens.addApi"
-        },
-        {
-          "command": "apilens.viewAnalytics"
-        },
-        {
-          "command": "apilens.viewNotifications"
         },
         {
           "command": "apilens.viewChanges"

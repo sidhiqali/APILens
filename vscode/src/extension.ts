@@ -65,14 +65,6 @@ export function activate(context: vscode.ExtensionContext) {
         webviewProvider.navigateTo('/add-api');
     });
 
-    const viewAnalyticsCommand = vscode.commands.registerCommand('apilens.viewAnalytics', () => {
-        webviewProvider.navigateTo('/analytics');
-    });
-
-    const viewNotificationsCommand = vscode.commands.registerCommand('apilens.viewNotifications', () => {
-        webviewProvider.navigateTo('/notifications');
-    });
-
     const viewChangesCommand = vscode.commands.registerCommand('apilens.viewChanges', () => {
         webviewProvider.navigateTo('/changes');
     });
@@ -147,8 +139,6 @@ export function activate(context: vscode.ExtensionContext) {
         openPanelCommand,
         refreshCommand,
         addApiCommand,
-        viewAnalyticsCommand,
-        viewNotificationsCommand,
         viewChangesCommand,
         showApiDetailCommand
     );

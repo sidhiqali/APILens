@@ -1,0 +1,90 @@
+openapi: 3.0.3
+info:
+	title: Catalog API
+	version: 2.0.0
+	description: Product catalog service v2 (breaking and non-breaking changes)
+servers:
+	- url: http://localhost:4107
+paths:
+	/products:
+		get:
+			summary: List products
+			description: Returns a paginated list of products with cursor-based pagination
+			parameters:
+				- in: query
+					name: search
+					schema:
+						type: string
+					description: Renamed from q to search
+				- in: query
+					name: limit
+					schema:
+						type: integer
+						default: 25
+					description: Page size (default changed)
+				- in: query
+					name: cursor
+					schema:
+						type: string
+					description: Cursor token for pagination (replaces offset)
+			responses:
+				'200':
+					description: A list of products with pagination container
+					content:
+						application/json:
+							schema:
+								type: object
+								required: [data, nextCursor, hasMore]
+								properties:
+									data:
+										type: array
+										items:
+											$ref: '#/components/schemas/Product'
+									nextCursor:
+										type: string
+										nullable: true
+									hasMore:
+										type: boolean
+	/products/{id}:
+		get:
+			summary: Get product by ID
+			parameters:
+				- in: path
+					name: id
+					required: true
+					schema:
+						type: string
+			responses:
+				'200':
+					description: Product details (with renamed field)
+					content:
+						application/json:
+							schema:
+								$ref: '#/components/schemas/Product'
+				'404':
+					description: Not found
+components:
+	schemas:
+		Product:
+			type: object
+			required: [id, title, price, currency]
+			properties:
+				id:
+					type: string
+					example: prod_123
+				title:
+					type: string
+					example: Wireless Mouse
+					description: Renamed from name to title
+				price:
+					type: number
+					format: float
+					example: 29.99
+				currency:
+					type: string
+					example: USD
+				availability:
+					type: string
+					enum: [in_stock, out_of_stock, preorder]
+					description: Replaces boolean inStock for richer states
+

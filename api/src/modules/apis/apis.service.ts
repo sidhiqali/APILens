@@ -169,10 +169,35 @@ export class ApisService {
 
       const response = await axios.get(api.openApiUrl, {
         timeout: 10000,
-        headers: { 'User-Agent': 'API-Lens/1.0' },
+        headers: {
+          'User-Agent': 'API-Lens/1.0',
+          Accept: 'application/json, application/yaml, text/yaml, */*',
+        },
+        validateStatus: (s) => s < 500,
       });
 
-      const newSpec = response.data;
+      if (response.status >= 400) {
+        throw new Error(
+          `Spec fetch HTTP ${response.status}: ${response.statusText}`,
+        );
+      }
+
+      const contentType = String(response.headers?.['content-type'] || '');
+      let newSpec: any = response.data;
+      try {
+        if (typeof response.data === 'string') {
+          if (response.data.trim().startsWith('{')) {
+            newSpec = JSON.parse(response.data);
+          } else {
+            newSpec = yaml.parse(response.data.toString());
+          }
+        }
+      } catch (parseErr) {
+        this.logger.error(
+          `Failed to parse spec for ${api.apiName} (ct=${contentType}): ${parseErr.message}`,
+        );
+        throw new Error(`Failed to parse OpenAPI spec: ${parseErr.message}`);
+      }
       const oldSpec = api.latestSpec;
 
       const baseUrl = api.openApiUrl
@@ -290,7 +315,11 @@ export class ApisService {
 
       return { hasChanges: false };
     } catch (error) {
-      this.logger.error(`Error checking API ${api.apiName}: ${error.message}`);
+      const status = error?.response?.status;
+      const detail = status ? ` (status ${status})` : '';
+      this.logger.error(
+        `Error checking API ${api.apiName}${detail}: ${error.message}`,
+      );
 
       const previousHealthStatus = api.healthStatus;
 

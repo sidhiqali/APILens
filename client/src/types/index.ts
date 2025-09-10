@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export interface User {
   _id: string;
   email: string;
@@ -123,6 +124,12 @@ export interface PaginatedResponse<T> extends ApiResponse<T[]> {
     total: number;
     totalPages: number;
   };
+}
+
+export interface CheckNowResponse {
+  message: string;
+  hasChanges: boolean;
+  changes?: Array<unknown>;
 }
 
 export interface LoginRequest {

@@ -3,13 +3,6 @@ info:
   title: Payments API
   version: "2.0.0"
   description: Payment processing API - Version 2 (Breaking Changes - JWT Required)
-components:
-  securitySchemes:
-    BearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-      description: "BREAKING: JWT token required (replaces API key)"
 
 paths:
   /payments:
@@ -105,6 +98,12 @@ paths:
                 message: "Valid Bearer JWT token is required"
 
 components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "BREAKING: JWT token required (replaces API key)"
   schemas:
     CreatePaymentRequest:
       type: object
@@ -133,7 +132,7 @@ components:
         - customerEmail
         - merchantId
     
-    Payment:
+  Payment:
       type: object
       properties:
         id:

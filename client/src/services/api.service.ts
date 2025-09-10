@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { apiClient } from '@/lib/axios';
 import {
   Api,
@@ -5,6 +6,7 @@ import {
   UpdateApiRequest,
   ApiResponse,
   PaginatedResponse,
+  CheckNowResponse,
 } from '@/types';
 
 class ApiService {
@@ -204,11 +206,7 @@ class ApiService {
     return await apiClient.post(`${this.baseUrl}/${id}/test`);
   }
 
-  async checkNow(id: string): Promise<{
-    message: string;
-    hasChanges: boolean;
-    changes?: any[];
-  }> {
+  async checkNow(id: string): Promise<CheckNowResponse> {
     return await apiClient.post(`${this.baseUrl}/${id}/check-now`);
   }
 

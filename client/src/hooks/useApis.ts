@@ -1,7 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { apiService } from '@/services/api.service';
 import { dashboardService } from '@/services/dashboard.service';
+import { dashboardQueryKeys } from '@/hooks/useDashboard';
+import type { CheckNowResponse } from '@/types';
 import { CreateApiRequest, UpdateApiRequest } from '@/types';
 
 export const apiQueryKeys = {
@@ -233,21 +236,42 @@ export const useToggleApiStatus = () => {
 export const useCheckApi = () => {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: (id: string) => apiService.checkApi(id),
+  return useMutation<CheckNowResponse, unknown, string, { apiName?: string }>({
+    mutationFn: (id: string) => apiService.checkNow(id),
     onMutate: async (id) => {
       const apis = queryClient.getQueryData(apiQueryKeys.lists()) as any[];
       const api = apis?.find((api: any) => api.id === id);
       return { apiName: api?.apiName };
     },
-    onSuccess: (response, id, context: any) => {
-      if (response.success) {
+    onSuccess: (response, id, context) => {
+      const apiName = context?.apiName || 'API';
+      const changesCount = Array.isArray(response?.changes)
+        ? response.changes!.length
+        : 0;
+      const hasChanges = Boolean(response?.hasChanges);
+      if (hasChanges) {
+        // Refresh related API data
         queryClient.invalidateQueries({ queryKey: apiQueryKeys.detail(id) });
         queryClient.invalidateQueries({ queryKey: apiQueryKeys.changes(id) });
         queryClient.invalidateQueries({ queryKey: apiQueryKeys.lists() });
-        
-        const apiName = context?.apiName || 'API';
-        toast.success(`"${apiName}" check completed successfully`);
+
+        // invalidate legacy/simple keys used by detail pages
+        queryClient.invalidateQueries({ queryKey: ['apiChanges', id] });
+        queryClient.invalidateQueries({ queryKey: ['changelog', id] });
+        queryClient.invalidateQueries({ queryKey: ['apiSnapshots', id] });
+        queryClient.invalidateQueries({ queryKey: ['apiIssues', id] });
+
+        // Refresh dashboard stats regardless of which hook the page uses
+        queryClient.invalidateQueries({ queryKey: apiQueryKeys.dashboardStats() });
+        queryClient.invalidateQueries({ queryKey: dashboardQueryKeys.stats() });
+        queryClient.invalidateQueries({ queryKey: dashboardQueryKeys.recentActivity() });
+        queryClient.invalidateQueries({ queryKey: dashboardQueryKeys.apiHealth() });
+      }
+
+      if (hasChanges) {
+        toast.success(`"${apiName}": ${changesCount} change${changesCount === 1 ? '' : 's'} detected`);
+      } else {
+        toast.success('No changes detected');
       }
     },
     onError: (error: any, _id, context: any) => {

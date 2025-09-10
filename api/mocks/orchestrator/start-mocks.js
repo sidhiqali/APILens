@@ -7,7 +7,27 @@ const http = require('http');
 const url = require('url');
 
 
-const config = require('./prismauto.config.js');
+// Initialize timer before any logging
+const startTime = Date.now();
+
+let config = require('./prismauto.config.js');
+const CONFIG_PATH = path.resolve(__dirname, 'prismauto.config.js');
+if (Array.isArray(config) && !config.find(c => (c.name || '').toLowerCase() === 'catalog')) {
+  config.push({
+    name: 'catalog',
+    port: 4107,
+    v1: '../openapi/catalog/v1.yaml',
+    v2: '../openapi/catalog/v2.yaml',
+    flipAfterMs: 0,
+    flipBackEveryMs: 0,
+    description: 'Manual-change demo: rename fields, params, add properties'
+  });
+  console.warn('[config] Catalog was missing in prismauto.config.js — injected default Catalog config');
+}
+
+const CONFIG_NAMES = Array.isArray(config) ? config.map(c => c.name).join(', ') : '(invalid config)';
+log(`Using config: ${CONFIG_PATH}`);
+log(`APIs configured (${Array.isArray(config) ? config.length : 0}): ${CONFIG_NAMES}`);
 
 // Cross-platform binary detection
 const BIN = process.platform === 'win32' ? 'npx.cmd' : 'npx';
@@ -15,7 +35,9 @@ const PRISM_ARGS = ['prism', 'mock', '--dynamic'];
 
 const processes = new Map();
 const specServers = new Map(); // For OpenAPI spec servers
-const startTime = Date.now();
+const debounceTimers = new Map();
+const STABLE_HEALTH = new Set(['payments', 'catalog']);
+const WATCH_SPECS = new Set(['catalog']);
 
 // Utility functions
 function r(p) { 
@@ -198,7 +220,9 @@ function createSpecServer(name, port, currentSpecPath) {
         }
       } catch (error) {
         res.writeHead(500);
-        res.end(`Error reading spec: ${error.message}`);
+        res.end(
+          `Error reading spec (file: ${activeSpecPath}): ${error.message}. If you edited YAML manually, validate it (e.g., online YAML validator).`
+        );
       }
     } else if (parsedUrl.pathname === '/health') {
       res.setHeader('Content-Type', 'application/json');
@@ -214,10 +238,12 @@ function createSpecServer(name, port, currentSpecPath) {
       const t = (Date.now() + offset) % cycleMs;
 
       let selectedStatus = 'healthy';
-      if (t < 15_000) selectedStatus = 'healthy';
-      else if (t < 30_000) selectedStatus = 'degraded';
-      else if (t < 45_000) selectedStatus = 'unhealthy';
-      else selectedStatus = 'error';
+      if (!STABLE_HEALTH.has(key)) {
+        if (t < 15_000) selectedStatus = 'healthy';
+        else if (t < 30_000) selectedStatus = 'degraded';
+        else if (t < 45_000) selectedStatus = 'unhealthy';
+        else selectedStatus = 'error';
+      }
 
       const reasons = {
         degraded: ['High response times detected', 'Database queries running slowly'],
@@ -253,7 +279,7 @@ function createSpecServer(name, port, currentSpecPath) {
                   Math.random() * 0.15 + 0.05
       };
       
-      const statusCode = selectedStatus === 'healthy' ? 200 : selectedStatus === 'degraded' ? 200 : selectedStatus === 'unhealthy' ? 503 : 500;
+  const statusCode = selectedStatus === 'healthy' ? 200 : selectedStatus === 'degraded' ? 200 : selectedStatus === 'unhealthy' ? 503 : 500;
       
       res.writeHead(statusCode);
       res.end(JSON.stringify(responseData, null, 2));
@@ -296,6 +322,34 @@ function setupVersionSwitching(apiConfig) {
         log(`✅ ${name} permanently upgraded to v2 - no reverting back!`);
       }, 1000);
     }, flipAfterMs);
+  }
+}
+
+// Watch a spec file (primarily for manual edit demos) and restart Prism when it changes
+function watchSpecFile(apiConfig) {
+  const { name, port, v1 } = apiConfig;
+  const key = name.toLowerCase();
+  if (!WATCH_SPECS.has(key)) return;
+
+  const abs = r(v1);
+  if (!fs.existsSync(abs)) return;
+
+  log(`👀 Watching spec for ${name}: ${abs}`);
+  try {
+    fs.watch(abs, { persistent: true }, () => {
+      const existing = debounceTimers.get(abs);
+      if (existing) clearTimeout(existing);
+      const timer = setTimeout(() => {
+        log(`✏️  Detected changes in ${name} spec. Restarting Prism to apply updates...`);
+        killPrism(name);
+        setTimeout(() => {
+          startPrism(name, port, v1, 'v1');
+        }, 300);
+      }, 250);
+      debounceTimers.set(abs, timer);
+    });
+  } catch (e) {
+    console.error(`Failed to watch ${name} spec:`, e.message);
   }
 }
 
@@ -387,6 +441,7 @@ async function run() {
       startPrism(apiConfig.name, apiConfig.port, apiConfig.v1, 'v1');
       createSpecServer(apiConfig.name, apiConfig.port, apiConfig.v1);
       setupVersionSwitching(apiConfig);
+  watchSpecFile(apiConfig);
     }
     
     log('All mock servers started');

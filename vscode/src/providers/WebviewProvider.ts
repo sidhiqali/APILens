@@ -5,6 +5,7 @@ import { router, RouteParams } from '../lib/router';
 export class APILensWebviewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = 'apilens.main';
     private _view?: vscode.WebviewView;
+    private activeApiDetailTab: string = 'overview';
 
     constructor(
         private readonly context: vscode.ExtensionContext,
@@ -133,6 +134,9 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
             case 'showApiDetail':
                 await this.handleShowApiDetail(message.apiId);
                 break;
+            case 'getApiDetail':
+                await this.handleGetApiDetail(message.apiId);
+                break;
             case 'getAnalytics':
                 await this.handleGetAnalytics(message.params);
                 break;
@@ -156,6 +160,21 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
                 break;
             case 'updateSettings':
                 await this.handleUpdateSettings(message.data);
+                break;
+            case 'openExternal':
+                await this.handleOpenExternal(message.url);
+                break;
+            case 'switchApiDetailTab':
+                this.handleSwitchApiDetailTab(message.tab);
+                break;
+            case 'updateApi':
+                this.handleUpdateApi(message.apiId, message.data);
+                break;
+            case 'exportApiData':
+                this.handleExportApiData(message.apiId);
+                break;
+            case 'resetApiData':
+                this.handleResetApiData(message.apiId);
                 break;
         }
     }
@@ -369,6 +388,26 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
         }
     }
 
+    private async handleGetApiDetail(apiId: string) {
+        try {
+            const [api, changelogs, issues] = await Promise.all([
+                this.apiService.getApi(apiId),
+                this.apiService.getChangelogs({ apiId, limit: 10 }),
+                this.apiService.getApiIssues(apiId)
+            ]);
+            
+            this.sendMessage({ 
+                type: 'apiDetailData', 
+                data: { api, changelogs, issues }
+            });
+        } catch (error: any) {
+            this.sendMessage({ 
+                type: 'error', 
+                error: error.message 
+            });
+        }
+    }
+
     private async handleGetAnalytics(params: any) {
         try {
             const analytics = await this.apiService.getAnalytics(params);
@@ -512,6 +551,121 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
             this.sendMessage({ 
                 type: 'error', 
                 error: error.message 
+            });
+        }
+    }
+
+    private async handleOpenExternal(url: string) {
+        try {
+            if (url) {
+                await vscode.env.openExternal(vscode.Uri.parse(url));
+            }
+        } catch (error: any) {
+            vscode.window.showErrorMessage(`Failed to open URL: ${error.message}`);
+        }
+    }
+
+    private handleSwitchApiDetailTab(tab: string) {
+        this.activeApiDetailTab = tab;
+        this.sendMessage({
+            type: 'tabSwitched',
+            data: { activeTab: tab }
+        });
+    }
+
+    private async handleUpdateApi(apiId: string, data: any) {
+        try {
+            // Update API via API service
+            await this.apiService.updateApi(apiId, data);
+            
+            // Refresh the API details
+            await this.handleGetApiDetail(apiId);
+            
+            vscode.window.showInformationMessage('API updated successfully');
+            
+            this.sendMessage({
+                type: 'apiUpdated',
+                data: { success: true, apiId }
+            });
+        } catch (error) {
+            console.error('Error updating API:', error);
+            vscode.window.showErrorMessage('Failed to update API');
+            this.sendMessage({
+                type: 'apiUpdated',
+                data: { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
+            });
+        }
+    }
+
+    private async handleExportApiData(apiId: string) {
+        try {
+            // Get API details for export
+            const api = await this.apiService.getApi(apiId);
+            const changelogs = await this.apiService.getChangelogs({ apiId });
+            const issues = await this.apiService.getApiIssues(apiId);
+            
+            const exportData = {
+                api,
+                changelogs,
+                issues,
+                exportedAt: new Date().toISOString()
+            };
+            
+            // Save to file
+            const uri = await vscode.window.showSaveDialog({
+                defaultUri: vscode.Uri.file(`${api.apiName}-export.json`),
+                filters: {
+                    'JSON': ['json']
+                }
+            });
+            
+            if (uri) {
+                await vscode.workspace.fs.writeFile(uri, Buffer.from(JSON.stringify(exportData, null, 2)));
+                vscode.window.showInformationMessage(`API data exported to ${uri.fsPath}`);
+                
+                this.sendMessage({
+                    type: 'apiExported',
+                    data: { success: true, path: uri.fsPath }
+                });
+            }
+        } catch (error) {
+            console.error('Error exporting API data:', error);
+            vscode.window.showErrorMessage('Failed to export API data');
+            this.sendMessage({
+                type: 'apiExported',
+                data: { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
+            });
+        }
+    }
+
+    private async handleResetApiData(apiId: string) {
+        try {
+            const result = await vscode.window.showWarningMessage(
+                'Are you sure you want to reset this API\'s data? This will delete all changelogs and historical data.',
+                { modal: true },
+                'Reset Data'
+            );
+            
+            if (result === 'Reset Data') {
+                // Reset API data via API service
+                await this.apiService.resetApiData(apiId);
+                
+                // Refresh the API details
+                await this.handleGetApiDetail(apiId);
+                
+                vscode.window.showInformationMessage('API data reset successfully');
+                
+                this.sendMessage({
+                    type: 'apiReset',
+                    data: { success: true, apiId }
+                });
+            }
+        } catch (error) {
+            console.error('Error resetting API data:', error);
+            vscode.window.showErrorMessage('Failed to reset API data');
+            this.sendMessage({
+                type: 'apiReset',
+                data: { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
             });
         }
     }
@@ -1732,6 +1886,581 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
             padding: 2rem;
         }
 
+        /* API Detail Styles */
+        .api-detail-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        .api-detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--vscode-panel-border);
+        }
+
+        .api-header-info {
+            flex: 1;
+        }
+
+        .api-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--vscode-foreground);
+            margin: 0 0 1rem 0;
+        }
+
+        .api-status-badges {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .api-status-badge, .api-active-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: capitalize;
+        }
+
+        .api-status-badge.healthy {
+            background: rgba(22, 163, 74, 0.1);
+            color: rgb(22, 163, 74);
+        }
+
+        .api-status-badge.unhealthy, .api-status-badge.error {
+            background: rgba(239, 68, 68, 0.1);
+            color: rgb(239, 68, 68);
+        }
+
+        .api-status-badge.warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: rgb(245, 158, 11);
+        }
+
+        .api-status-badge.unknown {
+            background: rgba(107, 114, 128, 0.1);
+            color: rgb(107, 114, 128);
+        }
+
+        .api-active-badge.active {
+            background: rgba(22, 163, 74, 0.1);
+            color: rgb(22, 163, 74);
+        }
+
+        .api-active-badge.inactive {
+            background: rgba(107, 114, 128, 0.1);
+            color: rgb(107, 114, 128);
+        }
+
+        .api-description {
+            color: var(--vscode-descriptionForeground);
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .api-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        /* API Detail Tabs */
+        .api-detail-tabs {
+            border-bottom: 1px solid var(--vscode-panel-border);
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 0;
+        }
+
+        .tab-button {
+            background: none;
+            border: none;
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            color: var(--vscode-descriptionForeground);
+            font-size: 0.9rem;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .tab-button:hover {
+            background: var(--vscode-list-hoverBackground);
+            color: var(--vscode-foreground);
+        }
+
+        .tab-button.active {
+            color: var(--vscode-button-background);
+            border-bottom-color: var(--vscode-button-background);
+            background: var(--vscode-list-activeSelectionBackground);
+        }
+
+        .api-detail-content {
+            position: relative;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Changes Tab Styles */
+        .changes-tab-content {
+            space-y: 2rem;
+        }
+
+        .changes-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .changes-timeline-section h3 {
+            margin: 0 0 1.5rem 0;
+            color: var(--vscode-foreground);
+        }
+
+        .changes-timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 2rem;
+            padding-left: 1.5rem;
+        }
+
+        .timeline-item:not(:last-child)::before {
+            content: '';
+            position: absolute;
+            left: -0.5rem;
+            top: 2rem;
+            width: 2px;
+            height: calc(100% + 1rem);
+            background: var(--vscode-widget-border);
+        }
+
+        .timeline-marker {
+            position: absolute;
+            left: -1rem;
+            top: 0.5rem;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid var(--vscode-editor-background);
+        }
+
+        .timeline-marker.critical {
+            background: rgb(239, 68, 68);
+        }
+
+        .timeline-marker.high {
+            background: rgb(245, 158, 11);
+        }
+
+        .timeline-marker.medium {
+            background: rgb(59, 130, 246);
+        }
+
+        .timeline-marker.minor {
+            background: rgb(107, 114, 128);
+        }
+
+        .timeline-content {
+            background: var(--vscode-editor-background);
+            border: 1px solid var(--vscode-widget-border);
+            border-radius: 6px;
+            padding: 1rem;
+        }
+
+        .change-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 0.5rem 0;
+            color: var(--vscode-foreground);
+        }
+
+        .change-details {
+            margin-top: 1rem;
+        }
+
+        .change-details-summary {
+            font-size: 0.85rem;
+            color: var(--vscode-descriptionForeground);
+            margin-bottom: 0.5rem;
+        }
+
+        .change-details-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .change-detail-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0;
+            font-size: 0.8rem;
+        }
+
+        .detail-type {
+            padding: 0.1rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .detail-type.added {
+            background: rgba(22, 163, 74, 0.1);
+            color: rgb(22, 163, 74);
+        }
+
+        .detail-type.removed {
+            background: rgba(239, 68, 68, 0.1);
+            color: rgb(239, 68, 68);
+        }
+
+        .detail-type.modified {
+            background: rgba(59, 130, 246, 0.1);
+            color: rgb(59, 130, 246);
+        }
+
+        .detail-path {
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            font-size: 0.75rem;
+            color: var(--vscode-foreground);
+            font-weight: 500;
+        }
+
+        .detail-description {
+            color: var(--vscode-descriptionForeground);
+            flex: 1;
+        }
+
+        .change-detail-more {
+            color: var(--vscode-descriptionForeground);
+            font-style: italic;
+            padding: 0.25rem 0;
+        }
+
+        .affected-endpoints {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--vscode-widget-border);
+            font-size: 0.8rem;
+        }
+
+        .endpoints-label {
+            font-weight: 500;
+            color: var(--vscode-descriptionForeground);
+        }
+
+        .endpoints-list {
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            color: var(--vscode-foreground);
+        }
+
+        .empty-state-large {
+            text-align: center;
+            padding: 3rem;
+            color: var(--vscode-descriptionForeground);
+        }
+
+        .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state-large h4 {
+            margin: 0 0 0.5rem 0;
+            color: var(--vscode-foreground);
+        }
+
+        .empty-meta {
+            font-size: 0.8rem;
+            margin-top: 1rem;
+            opacity: 0.8;
+        }
+
+        /* Settings Tab Styles */
+        .settings-tab-content {
+            max-width: 800px;
+        }
+
+        .settings-form {
+            background: var(--vscode-editor-background);
+            border: 1px solid var(--vscode-widget-border);
+            border-radius: 6px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .settings-form h3 {
+            margin: 0 0 1.5rem 0;
+            color: var(--vscode-foreground);
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .form-section h4 {
+            margin: 0 0 1rem 0;
+            color: var(--vscode-foreground);
+            font-size: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--vscode-foreground);
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--vscode-input-border);
+            border-radius: 4px;
+            background: var(--vscode-input-background);
+            color: var(--vscode-input-foreground);
+            font-size: 0.9rem;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: 1px solid var(--vscode-focusBorder);
+            outline-offset: -1px;
+        }
+
+        .form-group.checkbox {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group.checkbox input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+
+        .form-group.checkbox label {
+            margin: 0;
+            flex: 1;
+        }
+
+        .form-group small {
+            display: block;
+            margin-top: 0.25rem;
+            font-size: 0.8rem;
+            color: var(--vscode-descriptionForeground);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--vscode-widget-border);
+            flex-wrap: wrap;
+        }
+
+        .btn-danger {
+            background: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.8);
+        }
+
+        .btn-danger-outline {
+            background: none;
+            color: rgb(239, 68, 68);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+        }
+
+        .btn-danger-outline:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .settings-danger-zone {
+            background: rgba(239, 68, 68, 0.05);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 6px;
+            padding: 1.5rem;
+        }
+
+        .settings-danger-zone h4 {
+            margin: 0 0 0.5rem 0;
+            color: rgb(239, 68, 68);
+            font-size: 1rem;
+        }
+
+        .settings-danger-zone p {
+            margin: 0 0 1rem 0;
+            color: var(--vscode-descriptionForeground);
+            font-size: 0.9rem;
+        }
+
+        .danger-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .api-info-section, .changes-section, .issues-section {
+            background: var(--vscode-sideBar-background);
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 6px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .api-info-section h3, .changes-section h3, .issues-section h3 {
+            margin: 0 0 1rem 0;
+            color: var(--vscode-foreground);
+            font-size: 1.1rem;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .info-item label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--vscode-descriptionForeground);
+        }
+
+        .info-value {
+            color: var(--vscode-foreground);
+            word-break: break-all;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .changes-list, .issues-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .change-item, .issue-item {
+            background: var(--vscode-editor-background);
+            border: 1px solid var(--vscode-widget-border);
+            border-radius: 6px;
+            padding: 1rem;
+        }
+
+        .change-header, .issue-header {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .change-type, .issue-type {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--vscode-foreground);
+        }
+
+        .change-severity, .issue-severity {
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .change-severity.critical, .issue-severity.critical {
+            background: rgba(239, 68, 68, 0.1);
+            color: rgb(239, 68, 68);
+        }
+
+        .change-severity.high, .issue-severity.high {
+            background: rgba(245, 158, 11, 0.1);
+            color: rgb(245, 158, 11);
+        }
+
+        .change-severity.medium, .issue-severity.medium {
+            background: rgba(59, 130, 246, 0.1);
+            color: rgb(59, 130, 246);
+        }
+
+        .change-severity.minor, .issue-severity.low {
+            background: rgba(107, 114, 128, 0.1);
+            color: rgb(107, 114, 128);
+        }
+
+        .change-date, .issue-date {
+            font-size: 0.75rem;
+            color: var(--vscode-descriptionForeground);
+            margin-left: auto;
+        }
+
+        .change-description, .issue-description {
+            color: var(--vscode-descriptionForeground);
+            line-height: 1.4;
+            margin: 0;
+        }
+
+        .issue-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--vscode-foreground);
+            margin: 0 0 0.5rem 0;
+        }
+
+        .btn-link {
+            background: none;
+            color: var(--vscode-textLink-foreground);
+            border: none;
+            padding: 0.25rem 0.5rem;
+            cursor: pointer;
+            text-decoration: underline;
+            font-size: 0.85rem;
+        }
+
+        .btn-link:hover {
+            color: var(--vscode-textLink-activeForeground);
+        }
+
         /* Loading Styles */
         .loading-content {
             display: flex;
@@ -2663,6 +3392,15 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
                 case 'loginResponse':
                     handleLoginResponse(message.data);
                     break;
+                case 'routeChanged':
+                    handleRouteChanged(message.route, message.params);
+                    break;
+                case 'apiDetailData':
+                    appData.currentApiDetail = message.data;
+                    if (currentTab.startsWith('api-detail')) {
+                        renderApiDetail(message.data);
+                    }
+                    break;
                 case 'dashboardData':
                     appData.dashboard = message.data;
                     if (currentTab === 'dashboard') {
@@ -2677,6 +3415,7 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
                     break;
                 case 'issuesData':
                     appData.issues = message.data || [];
+                    appData.loadingIssues = false;
                     if (currentTab === 'issues') {
                         renderIssues();
                     }
@@ -2692,6 +3431,7 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
                     } else {
                         appData.changelogs = [];
                     }
+                    appData.loadingChanges = false;
                     if (currentTab === 'changes') {
                         renderChanges();
                     }
@@ -3510,11 +4250,11 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
         }
         
         function viewApiDetails(apiId) {
-            // Call VSCode command to show API details in the sidebar
-            vscode.postMessage({ 
-                type: 'showApiDetail', 
-                apiId: apiId 
-            });
+            // Navigate to API detail route in main panel
+            vscode.postMessage({ type: 'navigate', path: \`/apis/\${apiId}\` });
+            
+            // Also still support opening in sidebar for users who prefer it
+            // vscode.postMessage({ type: 'showApiDetail', apiId: apiId });
         }
         
         function selectAllApis() {
@@ -3544,8 +4284,21 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
         }
         
         function renderChanges() {
-            if (!appData.changelogs) {
+            // Show loading only if no data exists and not currently loading
+            if (!appData.changelogs && !appData.loadingChanges) {
+                appData.loadingChanges = true;
                 vscode.postMessage({ type: 'getChangelogs', params: {} });
+                document.getElementById('content-body').innerHTML = \`
+                    <div class="loading-content">
+                        <div class="loading-spinner">⏳</div>
+                        <div>Loading changes...</div>
+                    </div>
+                \`;
+                return;
+            }
+            
+            // If loading, show loading state
+            if (appData.loadingChanges && !appData.changelogs) {
                 document.getElementById('content-body').innerHTML = \`
                     <div class="loading-content">
                         <div class="loading-spinner">⏳</div>
@@ -3856,8 +4609,21 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
         }
         
         function renderIssues() {
-            if (!appData.issues) {
+            // Show loading only if no data exists and not currently loading
+            if (!appData.issues && !appData.loadingIssues) {
+                appData.loadingIssues = true;
                 vscode.postMessage({ type: 'getIssues' });
+                document.getElementById('content-body').innerHTML = \`
+                    <div class="loading-content">
+                        <div class="loading-spinner">⏳</div>
+                        <div>Loading issues and alerts...</div>
+                    </div>
+                \`;
+                return;
+            }
+            
+            // If loading, show loading state
+            if (appData.loadingIssues && !appData.issues) {
                 document.getElementById('content-body').innerHTML = \`
                     <div class="loading-content">
                         <div class="loading-spinner">⏳</div>
@@ -5337,6 +6103,381 @@ export class APILensWebviewProvider implements vscode.WebviewViewProvider {
                         <div>Loading dashboard...</div>
                     </div>
                 \`;
+            }
+        }
+        
+        function handleRouteChanged(route, params) {
+            // Handle route changes from the extension router
+            if (route.startsWith('/apis/') && params.id) {
+                // Navigate to API detail view
+                currentTab = \`api-detail-\${params.id}\`;
+                updateContentHeader(\`API Details\`, \`Detailed view for API\`);
+                
+                // Request API detail data
+                vscode.postMessage({ type: 'getApiDetail', apiId: params.id });
+                
+                // Update navigation state (optional visual feedback)
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+            }
+        }
+
+        function renderApiDetail(data) {
+            const { api, changelogs, issues } = data;
+            
+            const content = \`
+                <div class="api-detail-container">
+                    <!-- API Header -->
+                    <div class="api-detail-header">
+                        <div class="api-header-info">
+                            <h1 class="api-title">\${api.apiName || 'Unknown API'}</h1>
+                            <div class="api-status-badges">
+                                <span class="api-status-badge \${api.healthStatus || 'unknown'}">\${api.healthStatus || 'unknown'}</span>
+                                <span class="api-active-badge \${api.isActive ? 'active' : 'inactive'}">\${api.isActive ? 'Active' : 'Inactive'}</span>
+                            </div>
+                            <p class="api-description">\${api.description || 'No description available'}</p>
+                        </div>
+                        <div class="api-actions">
+                            <button class="btn btn-primary" onclick="checkApiNow('\${api._id || api.id}')">Check Now</button>
+                            <button class="btn btn-secondary" onclick="toggleApiStatus('\${api._id || api.id}')">\${api.isActive ? 'Pause' : 'Resume'}</button>
+                            <button class="btn btn-secondary" onclick="editApi('\${api._id || api.id}')">Edit</button>
+                            <button class="btn btn-link" onclick="openApiUrl('\${api.openApiUrl || api.url}')">View OpenAPI ↗</button>
+                        </div>
+                    </div>
+
+                    <!-- Tab Navigation -->
+                    <div class="api-detail-tabs">
+                        <button class="tab-button active" data-tab="overview" onclick="switchApiDetailTab('overview')">
+                            📊 Overview
+                        </button>
+                        <button class="tab-button" data-tab="changes" onclick="switchApiDetailTab('changes')">
+                            🔄 Changes (\${changelogs ? changelogs.length : 0})
+                        </button>
+                        <button class="tab-button" data-tab="settings" onclick="switchApiDetailTab('settings')">
+                            ⚙️ Settings
+                        </button>
+                    </div>
+
+                    <!-- Tab Content -->
+                    <div class="api-detail-content">
+                        <div id="overview-tab" class="tab-content active">
+                            \${renderOverviewTab(api, changelogs, issues)}
+                        </div>
+                        <div id="changes-tab" class="tab-content">
+                            \${renderChangesTab(api, changelogs)}
+                        </div>
+                        <div id="settings-tab" class="tab-content">
+                            \${renderSettingsTab(api)}
+                        </div>
+                    </div>
+                </div>
+            \`;
+            
+            document.getElementById('content-body').innerHTML = content;
+        }
+
+        function editApi(apiId) {
+            // Navigate to add-api form with edit parameter
+            switchTab('add-api');
+            // You could pass apiId as a parameter to pre-populate the form
+        }
+
+        function openApiUrl(url) {
+            if (url) {
+                vscode.postMessage({ type: 'openExternal', url: url });
+            }
+        }
+
+        function switchApiDetailTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(\`[data-tab="\${tabName}"]\`).classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(\`\${tabName}-tab\`).classList.add('active');
+        }
+
+        function renderOverviewTab(api, changelogs, issues) {
+            return \`
+                <!-- API Info Grid -->
+                <div class="api-info-section">
+                    <h3>API Information</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>URL</label>
+                            <span class="info-value">\${api.openApiUrl || api.url || 'N/A'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Check Frequency</label>
+                            <span class="info-value">\${api.checkFrequency || 'N/A'} minutes</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Last Checked</label>
+                            <span class="info-value">\${api.lastChecked ? new Date(api.lastChecked).toLocaleString() : 'Never'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Created</label>
+                            <span class="info-value">\${api.createdAt ? new Date(api.createdAt).toLocaleDateString() : 'Unknown'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Version</label>
+                            <span class="info-value">\${api.version || 'N/A'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Type</label>
+                            <span class="info-value">\${api.type || 'OpenAPI'}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Changes -->
+                <div class="changes-section">
+                    <div class="section-header">
+                        <h3>Recent Changes</h3>
+                        <button class="btn btn-link" onclick="switchApiDetailTab('changes')">View All Changes</button>
+                    </div>
+                    \${changelogs && changelogs.length > 0 ? \`
+                        <div class="changes-list">
+                            \${changelogs.slice(0, 5).map(change => \`
+                                <div class="change-item">
+                                    <div class="change-header">
+                                        <span class="change-type">\${change.changeType || change.type || 'Change'}</span>
+                                        <span class="change-severity \${change.severity || (change.breaking ? 'critical' : 'minor')}">\${change.severity || (change.breaking ? 'Breaking' : 'Minor')}</span>
+                                        <span class="change-date">\${new Date(change.detectedAt || change.timestamp || change.createdAt).toLocaleString()}</span>
+                                    </div>
+                                    <p class="change-description">\${change.summary || change.description || 'API schema has been updated'}</p>
+                                </div>
+                            \`).join('')}
+                        </div>
+                    \` : \`
+                        <div class="empty-state-small">
+                            <p>No changes detected yet. Changes will appear here once monitoring begins.</p>
+                        </div>
+                    \`}
+                </div>
+
+                <!-- Active Issues -->
+                <div class="issues-section">
+                    <div class="section-header">
+                        <h3>Active Issues</h3>
+                        <button class="btn btn-link" onclick="switchTab('issues')">View All Issues</button>
+                    </div>
+                    \${issues && issues.length > 0 ? \`
+                        <div class="issues-list">
+                            \${issues.slice(0, 3).map(issue => \`
+                                <div class="issue-item">
+                                    <div class="issue-header">
+                                        <span class="issue-severity \${issue.severity || issue.priority || 'medium'}">\${issue.severity || issue.priority || 'Medium'}</span>
+                                        <span class="issue-type">\${issue.type || 'Health Issue'}</span>
+                                        <span class="issue-date">\${new Date(issue.timestamp || issue.createdAt || Date.now()).toLocaleString()}</span>
+                                    </div>
+                                    <h4 class="issue-title">\${issue.title || 'API Issue'}</h4>
+                                    <p class="issue-description">\${issue.description || 'No description available'}</p>
+                                </div>
+                            \`).join('')}
+                        </div>
+                    \` : \`
+                        <div class="empty-state-small">
+                            <p>No active issues. This API is running smoothly.</p>
+                        </div>
+                    \`}
+                </div>
+            \`;
+        }
+
+        function renderChangesTab(api, changelogs) {
+            return \`
+                <div class="changes-tab-content">
+                    <!-- Changes Stats -->
+                    <div class="changes-stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">🔄</div>
+                            <div class="stat-content">
+                                <div class="stat-number">\${changelogs ? changelogs.length : 0}</div>
+                                <div class="stat-label">Total Changes</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">⚠️</div>
+                            <div class="stat-content">
+                                <div class="stat-number">\${changelogs ? changelogs.filter(c => c.breaking || c.severity === 'critical').length : 0}</div>
+                                <div class="stat-label">Breaking Changes</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">📅</div>
+                            <div class="stat-content">
+                                <div class="stat-number">\${changelogs ? changelogs.filter(c => {
+                                    const changeDate = new Date(c.detectedAt || c.timestamp || c.createdAt);
+                                    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+                                    return changeDate > weekAgo;
+                                }).length : 0}</div>
+                                <div class="stat-label">Last 7 Days</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Changes Timeline -->
+                    <div class="changes-timeline-section">
+                        <h3>Change History</h3>
+                        \${changelogs && changelogs.length > 0 ? \`
+                            <div class="changes-timeline">
+                                \${changelogs.map((change, index) => \`
+                                    <div class="timeline-item">
+                                        <div class="timeline-marker \${change.severity || (change.breaking ? 'critical' : 'minor')}"></div>
+                                        <div class="timeline-content">
+                                            <div class="change-header">
+                                                <span class="change-type">\${change.changeType || change.type || 'Change'}</span>
+                                                <span class="change-severity \${change.severity || (change.breaking ? 'critical' : 'minor')}">\${change.severity || (change.breaking ? 'Breaking' : 'Minor')}</span>
+                                                <span class="change-date">\${new Date(change.detectedAt || change.timestamp || change.createdAt).toLocaleString()}</span>
+                                            </div>
+                                            <h4 class="change-title">\${change.summary || change.description || 'API schema has been updated'}</h4>
+                                            \${change.changes && Array.isArray(change.changes) ? \`
+                                                <div class="change-details">
+                                                    <p class="change-details-summary">\${change.changes.length} detailed change\${change.changes.length !== 1 ? 's' : ''}:</p>
+                                                    <ul class="change-details-list">
+                                                        \${change.changes.slice(0, 3).map(detail => \`
+                                                            <li class="change-detail-item">
+                                                                <span class="detail-type \${detail.changeType || 'modified'}">\${detail.changeType || 'modified'}</span>
+                                                                <span class="detail-path">\${detail.path}</span>
+                                                                <span class="detail-description">\${detail.description}</span>
+                                                            </li>
+                                                        \`).join('')}
+                                                        \${change.changes.length > 3 ? \`
+                                                            <li class="change-detail-more">... and \${change.changes.length - 3} more changes</li>
+                                                        \` : ''}
+                                                    </ul>
+                                                </div>
+                                            \` : ''}
+                                            \${change.affectedEndpoints && change.affectedEndpoints.length > 0 ? \`
+                                                <div class="affected-endpoints">
+                                                    <span class="endpoints-label">Affected endpoints:</span>
+                                                    <span class="endpoints-list">\${change.affectedEndpoints.slice(0, 3).join(', ')}\${change.affectedEndpoints.length > 3 ? \` +\${change.affectedEndpoints.length - 3} more\` : ''}</span>
+                                                </div>
+                                            \` : ''}
+                                        </div>
+                                    </div>
+                                \`).join('')}
+                            </div>
+                        \` : \`
+                            <div class="empty-state-large">
+                                <div class="empty-icon">🔄</div>
+                                <h4>No Changes Yet</h4>
+                                <p>This API hasn't been monitored long enough to detect changes. Check back later to see the change history.</p>
+                                <p class="empty-meta">Monitoring frequency: Every \${api.checkFrequency || 'N/A'} minutes</p>
+                            </div>
+                        \`}
+                    </div>
+                </div>
+            \`;
+        }
+
+        function renderSettingsTab(api) {
+            return \`
+                <div class="settings-tab-content">
+                    <div class="settings-form">
+                        <h3>API Configuration</h3>
+                        
+                        <div class="form-section">
+                            <div class="form-group">
+                                <label for="api-name">API Name</label>
+                                <input type="text" id="api-name" value="\${api.apiName || ''}" placeholder="Enter API name">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="api-description">Description</label>
+                                <textarea id="api-description" placeholder="Enter API description" rows="3">\${api.description || ''}</textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="api-url">OpenAPI URL</label>
+                                <input type="url" id="api-url" value="\${api.openApiUrl || api.url || ''}" placeholder="https://api.example.com/openapi.json">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="check-frequency">Check Frequency (minutes)</label>
+                                <input type="number" id="check-frequency" value="\${api.checkFrequency || 5}" min="1" max="1440">
+                                <small>How often to check for API changes</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="api-tags">Tags (comma separated)</label>
+                                <input type="text" id="api-tags" value="\${api.tags ? api.tags.join(', ') : ''}" placeholder="production, user-api, v2">
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h4>Monitoring Options</h4>
+                            
+                            <div class="form-group checkbox">
+                                <input type="checkbox" id="is-active" \${api.isActive ? 'checked' : ''}>
+                                <label for="is-active">Enable monitoring for this API</label>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button class="btn btn-primary" onclick="saveApiSettings('\${api._id || api.id}')">Save Changes</button>
+                            <button class="btn btn-secondary" onclick="exportApiData('\${api._id || api.id}')">Export Data</button>
+                            <button class="btn btn-danger" onclick="deleteApiConfirm('\${api._id || api.id}')">Delete API</button>
+                        </div>
+                    </div>
+
+                    <div class="settings-danger-zone">
+                        <h4>Danger Zone</h4>
+                        <p>These actions cannot be undone. Please be careful.</p>
+                        <div class="danger-actions">
+                            <button class="btn btn-danger-outline" onclick="resetApiData('\${api._id || api.id}')">Reset Change History</button>
+                        </div>
+                    </div>
+                </div>
+            \`;
+        }
+
+        function saveApiSettings(apiId) {
+            const formData = {
+                apiName: document.getElementById('api-name').value,
+                description: document.getElementById('api-description').value,
+                openApiUrl: document.getElementById('api-url').value,
+                checkFrequency: parseInt(document.getElementById('check-frequency').value),
+                tags: document.getElementById('api-tags').value.split(',').map(tag => tag.trim()).filter(tag => tag),
+                isActive: document.getElementById('is-active').checked
+            };
+            
+            vscode.postMessage({ 
+                type: 'updateApi', 
+                apiId: apiId,
+                data: formData 
+            });
+        }
+
+        function exportApiData(apiId) {
+            vscode.postMessage({ 
+                type: 'exportApiData', 
+                apiId: apiId 
+            });
+        }
+
+        function deleteApiConfirm(apiId) {
+            if (confirm('Are you sure you want to delete this API? This action cannot be undone and will remove all monitoring data.')) {
+                vscode.postMessage({ 
+                    type: 'deleteApi', 
+                    id: apiId 
+                });
+            }
+        }
+
+        function resetApiData(apiId) {
+            if (confirm('Are you sure you want to reset all change history for this API? This action cannot be undone.')) {
+                vscode.postMessage({ 
+                    type: 'resetApiData', 
+                    apiId: apiId 
+                });
             }
         }
         

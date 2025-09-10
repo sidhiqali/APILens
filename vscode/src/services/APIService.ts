@@ -259,6 +259,15 @@ export class APIService {
         }
     }
 
+    async getApiIssues(apiId: string): Promise<any[]> {
+        try {
+            const response = await this.api.get(`/apis/${apiId}/health-issues`);
+            return response.data.issues || response.data || [];
+        } catch (error) {
+            throw this.handleError(error);
+        }
+    }
+
     async getNotifications(params?: {
         page?: number;
         limit?: number;
@@ -360,6 +369,16 @@ export class APIService {
             return new Error('Network error. Please check your connection.');
         } else {
             return new Error('An unexpected error occurred');
+        }
+    }
+
+    async resetApiData(apiId: string): Promise<any> {
+        try {
+            const response = await this.api.delete(`/apis/${apiId}/reset`);
+            return response.data;
+        } catch (error: any) {
+            console.error('Reset API data error:', error);
+            throw error;
         }
     }
 }

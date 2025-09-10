@@ -53,4 +53,14 @@ module.exports = [
     flipBackEveryMs: 0,
     description: 'New webhooks + 429 responses + header changes'
   }
+  ,
+  {
+    name: 'catalog',
+    port: 4107,
+    v1: '../openapi/catalog/v1.yaml',
+    v2: '../openapi/catalog/v2.yaml',
+    flipAfterMs: 0,        // stay on v1 for manual change demo
+    flipBackEveryMs: 0,
+    description: 'Manual-change demo: rename fields, params, add properties'
+  }
 ];

@@ -148,7 +148,7 @@ export class ApisService {
       throw new Error(`Failed to register API: ${error.message}`);
     }
   }
-
+  // api changes checking
   async checkApiForChanges(apiId: string): Promise<{
     hasChanges: boolean;
     changes?: any[];

@@ -40,7 +40,6 @@ export class APIService {
         this.api = axios.create({
             baseURL,
             timeout: 10000,
-            withCredentials: true,
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -56,7 +55,11 @@ export class APIService {
     private setupInterceptors() {
         this.api.interceptors.request.use(
             async (config) => {
-                // Don't add Authorization header - use session cookies instead
+                // Add Authorization header with stored token
+                const token = await this.getStoredToken();
+                if (token) {
+                    config.headers.Authorization = `Bearer ${token}`;
+                }
                 return config;
             },
             (error) => Promise.reject(error)
@@ -77,9 +80,11 @@ export class APIService {
     async login(email: string, password: string): Promise<AuthResponse> {
         try {
             const response = await this.api.post('/auth/login', { email, password });
-            // Session-based auth - store user data but no token needed
+            // Extract token from response and store it
+            const token = response.data.token || response.data.accessToken || response.data.access_token;
             await this.storeAuth({
                 user: response.data.user,
+                token: token,
                 message: response.data.message
             });
             return response.data;
@@ -310,16 +315,16 @@ export class APIService {
     private async storeAuth(authData: any): Promise<void> {
         if (this.context) {
             await this.context.globalState.update('apilens.user', authData.user);
+            await this.context.globalState.update('apilens.token', authData.token);
             await this.context.globalState.update('apilens.isAuthenticated', true);
-            // Don't store token for session-based auth
         }
     }
 
     private async clearAuth(): Promise<void> {
         if (this.context) {
             await this.context.globalState.update('apilens.user', undefined);
+            await this.context.globalState.update('apilens.token', undefined);
             await this.context.globalState.update('apilens.isAuthenticated', false);
-            // Don't need to clear token for session-based auth
         }
     }
 
@@ -331,7 +336,9 @@ export class APIService {
     }
 
     async getStoredToken(): Promise<string | undefined> {
-        // Session-based auth - no token needed
+        if (this.context) {
+            return this.context.globalState.get('apilens.token');
+        }
         return undefined;
     }
 

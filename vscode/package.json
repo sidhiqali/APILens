@@ -1,9 +1,10 @@
 {
   "name": "apilens-vscode",
-  "displayName": "APILens",
-  "description": "Monitor and track API changes directly in VS Code",
-  "version": "1.0.0",
+  "displayName": "APILens - API Change Monitoring",
+  "description": "Intelligent API change detection, monitoring, and alerting system for OpenAPI specifications",
+  "version": "1.1.0",
   "publisher": "sidhiqali",
+  "icon": "assets/icon.png",
   "engines": {
     "vscode": "^1.80.0"
   },

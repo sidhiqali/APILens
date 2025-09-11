@@ -36,6 +36,7 @@ export class IssueAnalyzerService {
     @InjectModel(ApiChange.name) private apiChangeModel: Model<ApiChange>,
   ) {}
 
+  // analyzes API health and recent changes
   async analyzeApiIssues(
     apiId: string,
     userId: string,
@@ -61,7 +62,7 @@ export class IssueAnalyzerService {
       throw new Error('Access denied');
     }
 
-    // Get recent changes from the last 7 days
+    // Fetch recent changes for analysis 7 days
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
@@ -80,7 +81,7 @@ export class IssueAnalyzerService {
 
     const issues: ApiIssue[] = [];
 
-    // Health-based issues
+    // Health status-based issue detection
     if (api.healthStatus === 'error' && api.lastError) {
       issues.push({
         id: 'api_error',
@@ -118,6 +119,7 @@ export class IssueAnalyzerService {
       });
     }
 
+    // Change-based issue detection
     if (recentChanges.length > 0) {
       const breakingChanges = recentChanges.filter(
         (change) => change.changeType === 'breaking',
@@ -146,6 +148,7 @@ export class IssueAnalyzerService {
         });
       }
 
+      // Schema modifications analysis
       const schemaChanges = recentChanges.filter(
         (change) =>
           change.changeType === 'modified' && change.severity !== 'low',
@@ -170,6 +173,7 @@ export class IssueAnalyzerService {
         });
       }
 
+      // Critical severity changes analysis
       const criticalChanges = recentChanges.filter(
         (change) => change.severity === 'critical',
       );
@@ -197,6 +201,7 @@ export class IssueAnalyzerService {
       }
     }
 
+    // Log analysis results for monitoring
     this.logger.log(
       `Analyzed API ${apiId}: found ${issues.length} issues and ${recentChanges.length} recent changes`,
     );

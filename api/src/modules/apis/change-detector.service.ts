@@ -27,6 +27,7 @@ export class ChangeDetectorService {
     @InjectModel(Api.name) private apiModel: Model<Api>,
   ) {}
 
+  // Main change detection algorithm - compares old vs new OpenAPI specs
   async detectChanges(
     oldSpec: OpenAPISpec,
     newSpec: OpenAPISpec,
@@ -49,6 +50,7 @@ export class ChangeDetectorService {
     const securityChanges = this.detectSecurityChanges(oldSpec, newSpec);
     changes.push(...securityChanges);
 
+    // severity classification rules
     const analysis = this.analyzeChanges(changes);
     severity = analysis.severity;
     changeType = analysis.changeType;
@@ -81,6 +83,7 @@ export class ChangeDetectorService {
     };
   }
 
+  // Detect version and title changes in API info section
   private detectVersionChanges(
     oldSpec: OpenAPISpec,
     newSpec: OpenAPISpec,
@@ -110,6 +113,7 @@ export class ChangeDetectorService {
     return changes;
   }
 
+  // Detect endpoint path additions, removals, and method changes
   private detectPathChanges(
     oldSpec: OpenAPISpec,
     newSpec: OpenAPISpec,
@@ -205,6 +209,7 @@ export class ChangeDetectorService {
     return changes;
   }
 
+  // Detect changes in required parameters (breaking if removed/added)
   private detectParameterChanges(
     oldParams: any[],
     newParams: any[],
@@ -228,6 +233,7 @@ export class ChangeDetectorService {
       }
     });
 
+    // Check for new required parameters (breaking)
     newParams.forEach((newParam) => {
       if (newParam.required) {
         const existedBefore = oldParams.find(
@@ -247,6 +253,7 @@ export class ChangeDetectorService {
     return changes;
   }
 
+  // Detect response code changes
   private detectResponseChanges(
     oldResponses: any,
     newResponses: any,
@@ -317,6 +324,7 @@ export class ChangeDetectorService {
     return changes;
   }
 
+  // Detect security changes (authentication/authorization)
   private detectSecurityChanges(
     oldSpec: OpenAPISpec,
     newSpec: OpenAPISpec,
@@ -339,6 +347,7 @@ export class ChangeDetectorService {
     return changes;
   }
 
+  // classify changes as breaking/non-breaking based on rules
   private analyzeChanges(changes: ChangeDetail[]): {
     severity: 'low' | 'medium' | 'high' | 'critical';
     changeType: 'breaking' | 'non-breaking' | 'deprecation' | 'addition';
@@ -414,6 +423,7 @@ export class ChangeDetectorService {
     }
   }
 
+  // Calculate impact score based on severity and change types
   private calculateImpactScore(
     changes: ChangeDetail[],
     severity: 'low' | 'medium' | 'high' | 'critical',

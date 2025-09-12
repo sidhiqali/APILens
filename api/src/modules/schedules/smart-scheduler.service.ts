@@ -28,7 +28,7 @@ export class SmartSchedulerService {
     }
   }
 
-  @Cron('*/5 * * * *')
+  @Cron('*/1 * * * *')
   async handleApiChecking() {
     this.logger.log('Starting API monitoring cycle...');
 
